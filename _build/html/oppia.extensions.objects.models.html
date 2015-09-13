@@ -1,0 +1,790 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.extensions.objects.models package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-extensions-objects-models-package">
+<h1>oppia.extensions.objects.models package<a class="headerlink" href="#oppia-extensions-objects-models-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.objects.models.objects">
+<span id="oppia-extensions-objects-models-objects-module"></span><h2>oppia.extensions.objects.models.objects module<a class="headerlink" href="#module-oppia.extensions.objects.models.objects" title="Permalink to this headline">¶</a></h2>
+<p>Classes for interpreting typed objects in Oppia.</p>
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.BaseObject">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">BaseObject</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#BaseObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.BaseObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Base object class.</p>
+<p>This is the superclass for typed object specifications in Oppia, such as
+SanitizedUrl and CoordTwoDim.</p>
+<p>Typed objects are initialized from a raw Python object which is expected to
+be derived from a JSON object. They are validated and normalized to basic
+Python objects (primitive types combined via lists and dicts; no sets or
+tuples).</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.BaseObject.description">
+<code class="descname">description</code><em class="property"> = ''</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.BaseObject.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.BaseObject.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = None</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.BaseObject.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.BaseObject.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = None</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.BaseObject.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.objects.models.objects.BaseObject.get_editor_html_template">
+<em class="property">classmethod </em><code class="descname">get_editor_html_template</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#BaseObject.get_editor_html_template"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.BaseObject.get_editor_html_template" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.objects.models.objects.BaseObject.get_editor_js_template">
+<em class="property">classmethod </em><code class="descname">get_editor_js_template</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#BaseObject.get_editor_js_template"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.BaseObject.get_editor_js_template" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.objects.models.objects.BaseObject.has_editor_js_template">
+<em class="property">classmethod </em><code class="descname">has_editor_js_template</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#BaseObject.has_editor_js_template"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.BaseObject.has_editor_js_template" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.objects.models.objects.BaseObject.normalize">
+<em class="property">classmethod </em><code class="descname">normalize</code><span class="sig-paren">(</span><em>raw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#BaseObject.normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.BaseObject.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates and normalizes a raw Python object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a normalized Python object describing the Object specified by this
+class.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> &#8211;
+if the Python object cannot be normalized.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.Boolean">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">Boolean</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#Boolean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.Boolean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>Class for booleans.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Boolean.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'bool'}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Boolean.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Boolean.description">
+<code class="descname">description</code><em class="property"> = 'A boolean.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Boolean.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Boolean.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'boolean_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Boolean.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Boolean.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'BooleanEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Boolean.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.objects.models.objects.Boolean.normalize">
+<em class="property">classmethod </em><code class="descname">normalize</code><span class="sig-paren">(</span><em>raw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#Boolean.normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.Boolean.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates and normalizes a raw Python object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.CheckedProof">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">CheckedProof</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#CheckedProof"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.CheckedProof" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>A proof attempt and any errors it makes.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.CheckedProof.description">
+<code class="descname">description</code><em class="property"> = 'A proof attempt and any errors it makes.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.CheckedProof.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.objects.models.objects.CheckedProof.normalize">
+<em class="property">classmethod </em><code class="descname">normalize</code><span class="sig-paren">(</span><em>raw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#CheckedProof.normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.CheckedProof.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates and normalizes a raw Python object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.ClickOnImage">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">ClickOnImage</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#ClickOnImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.ClickOnImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>A click on an image and the clicked regions.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.ClickOnImage.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'dict', 'properties': [{'name': 'clickPosition', 'schema': {'items': {'type': 'float'}, 'type': 'list', 'len': 2}}, {'name': 'clickedRegions', 'schema': {'items': {'type': 'unicode'}, 'type': 'list'}}]}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.ClickOnImage.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.ClickOnImage.description">
+<code class="descname">description</code><em class="property"> = 'Position of a click and a list of regions clicked.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.ClickOnImage.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.CodeEvaluation">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">CodeEvaluation</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#CodeEvaluation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.CodeEvaluation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>Evaluation result of programming code.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.CodeEvaluation.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'dict', 'properties': [{'name': 'code', 'schema': {'type': 'unicode'}}, {'name': 'output', 'schema': {'type': 'unicode'}}, {'name': 'evaluation', 'schema': {'type': 'unicode'}}, {'name': 'error', 'schema': {'type': 'unicode'}}]}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.CodeEvaluation.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.CodeEvaluation.description">
+<code class="descname">description</code><em class="property"> = 'Code and its evaluation results.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.CodeEvaluation.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.CoordTwoDim">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">CoordTwoDim</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#CoordTwoDim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.CoordTwoDim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>2D coordinate class.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.CoordTwoDim.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'items': {'type': 'float'}, 'type': 'list', 'len': 2}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.CoordTwoDim.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.CoordTwoDim.description">
+<code class="descname">description</code><em class="property"> = 'A two-dimensional coordinate (a pair of reals).'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.CoordTwoDim.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.CoordTwoDim.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'coord_two_dim_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.CoordTwoDim.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.CoordTwoDim.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'CoordTwoDimEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.CoordTwoDim.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.Filepath">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">Filepath</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#Filepath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.Filepath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>A string representing a filepath.</p>
+<p>The path will be prefixed with &#8216;[exploration_id]/assets&#8217;.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Filepath.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'unicode'}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Filepath.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Filepath.description">
+<code class="descname">description</code><em class="property"> = 'A string that represents a filepath'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Filepath.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Filepath.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'filepath_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Filepath.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Filepath.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'FilepathEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Filepath.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.Graph">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">Graph</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#Graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.Graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>A (mathematical) graph with edges and vertices</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Graph.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'dict', 'properties': [{'name': 'vertices', 'schema': {'items': {'type': 'dict', 'properties': [{'name': 'x', 'schema': {'type': 'float'}}, {'name': 'y', 'schema': {'type': 'float'}}, {'name': 'label', 'schema': {'type': 'unicode'}}]}, 'type': 'list'}}, {'name': 'edges', 'schema': {'items': {'type': 'dict', 'properties': [{'name': 'src', 'schema': {'type': 'int'}}, {'name': 'dst', 'schema': {'type': 'int'}}, {'name': 'weight', 'schema': {'type': 'int'}}]}, 'type': 'list'}}, {'name': 'isLabeled', 'schema': {'type': 'bool'}}, {'name': 'isDirected', 'schema': {'type': 'bool'}}, {'name': 'isWeighted', 'schema': {'type': 'bool'}}]}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Graph.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Graph.description">
+<code class="descname">description</code><em class="property"> = 'A (mathematical) graph'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Graph.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Graph.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'graph_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Graph.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Graph.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'GraphEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Graph.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.objects.models.objects.Graph.normalize">
+<em class="property">classmethod </em><code class="descname">normalize</code><span class="sig-paren">(</span><em>raw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#Graph.normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.Graph.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates and normalizes a raw Python object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.Html">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">Html</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#Html"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.Html" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>HTML string class.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Html.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'html'}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Html.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Html.description">
+<code class="descname">description</code><em class="property"> = 'An HTML string.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Html.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Html.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'html_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Html.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Html.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'HtmlEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Html.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.ImageRegion">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">ImageRegion</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#ImageRegion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.ImageRegion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>A region of an image, including its shape and coordinates.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.ImageRegion.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'dict', 'properties': [{'name': 'regionType', 'schema': {'type': 'unicode'}}, {'name': 'area', 'schema': {'items': {'items': {'type': 'float'}, 'type': 'list', 'len': 2}, 'type': 'list', 'len': 2}}]}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.ImageRegion.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.ImageRegion.description">
+<code class="descname">description</code><em class="property"> = 'A region of an image.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.ImageRegion.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.ImageWithRegions">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">ImageWithRegions</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#ImageWithRegions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.ImageWithRegions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>An image overlaid with labeled regions.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.ImageWithRegions.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'dict', 'properties': [{'name': 'imagePath', 'schema': {'type': 'unicode'}}, {'name': 'labeledRegions', 'schema': {'items': {'type': 'dict', 'properties': [{'name': 'label', 'schema': {'type': 'unicode'}}, {'name': 'region', 'schema': {'type': 'dict', 'properties': [{'name': 'regionType', 'schema': {'type': 'unicode'}}, {'name': 'area', 'schema': {'items': {'items': {'type': 'float'}, 'type': 'list', 'len': 2}, 'type': 'list', 'len': 2}}]}}]}, 'type': 'list'}}]}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.ImageWithRegions.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.ImageWithRegions.description">
+<code class="descname">description</code><em class="property"> = 'An image overlaid with regions.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.ImageWithRegions.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.ImageWithRegions.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'image_with_regions_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.ImageWithRegions.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.ImageWithRegions.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'ImageWithRegionsEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.ImageWithRegions.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.Int">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">Int</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#Int"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.Int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>Integer class.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Int.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'int'}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Int.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Int.description">
+<code class="descname">description</code><em class="property"> = 'An integer.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Int.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Int.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'int_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Int.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Int.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'IntEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Int.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.ListOfUnicodeString">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">ListOfUnicodeString</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#ListOfUnicodeString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.ListOfUnicodeString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>List class.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.ListOfUnicodeString.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'items': {'type': 'unicode'}, 'type': 'list'}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.ListOfUnicodeString.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.ListOfUnicodeString.description">
+<code class="descname">description</code><em class="property"> = 'A list.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.ListOfUnicodeString.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.ListOfUnicodeString.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'list_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.ListOfUnicodeString.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.ListOfUnicodeString.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'ListOfUnicodeStringEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.ListOfUnicodeString.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.LogicErrorCategory">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">LogicErrorCategory</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#LogicErrorCategory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.LogicErrorCategory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>A string from a list of possible categories</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.LogicErrorCategory.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'unicode', 'choices': ['parsing', 'typing', 'line', 'layout', 'variables', 'logic', 'target', 'mistake']}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.LogicErrorCategory.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.LogicErrorCategory.description">
+<code class="descname">description</code><em class="property"> = 'One of the possible error categories of a logic proof.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.LogicErrorCategory.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.LogicErrorCategory.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'logic_error_category_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.LogicErrorCategory.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.LogicErrorCategory.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'LogicErrorCategoryEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.LogicErrorCategory.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.LogicQuestion">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">LogicQuestion</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#LogicQuestion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.LogicQuestion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>A question giving a formula to prove</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.LogicQuestion.description">
+<code class="descname">description</code><em class="property"> = 'A question giving a formula to prove.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.LogicQuestion.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.LogicQuestion.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'logic_question_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.LogicQuestion.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.LogicQuestion.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'LogicQuestionEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.LogicQuestion.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.objects.models.objects.LogicQuestion.normalize">
+<em class="property">classmethod </em><code class="descname">normalize</code><span class="sig-paren">(</span><em>raw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#LogicQuestion.normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.LogicQuestion.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates and normalizes a raw Python object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.MathLatexString">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">MathLatexString</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#MathLatexString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.MathLatexString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>Math LaTeX string class</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.MathLatexString.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'unicode'}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.MathLatexString.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.MathLatexString.description">
+<code class="descname">description</code><em class="property"> = 'A LaTeX string.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.MathLatexString.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.MathLatexString.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'math_latex_string_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.MathLatexString.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.MathLatexString.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'MathLatexStringEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.MathLatexString.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.MusicPhrase">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">MusicPhrase</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#MusicPhrase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.MusicPhrase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>List of Objects that represent a musical phrase.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.MusicPhrase.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'items': {'type': 'dict', 'properties': [{'name': 'readableNoteName', 'schema': {'type': 'unicode', 'choices': ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5', 'A5']}}, {'name': 'noteDuration', 'schema': {'type': 'dict', 'properties': [{'name': 'num', 'schema': {'type': 'int', 'validators': [{'min_value': 1, 'id': 'is_at_least'}]}}, {'name': 'den', 'schema': {'type': 'int', 'validators': [{'min_value': 1, 'id': 'is_at_least'}]}}]}}]}, 'type': 'list', 'validators': [{'max_value': 8, 'id': 'has_length_at_most'}]}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.MusicPhrase.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.MusicPhrase.description">
+<code class="descname">description</code><em class="property"> = 'A musical phrase that contains zero or more notes, rests, and time signature.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.MusicPhrase.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.MusicPhrase.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'music_phrase_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.MusicPhrase.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.MusicPhrase.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'MusicPhraseEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.MusicPhrase.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.NonnegativeInt">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">NonnegativeInt</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#NonnegativeInt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.NonnegativeInt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>Nonnegative integer class.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.NonnegativeInt.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'int', 'validators': [{'min_value': 0, 'id': 'is_at_least'}]}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.NonnegativeInt.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.NonnegativeInt.description">
+<code class="descname">description</code><em class="property"> = 'A non-negative integer.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.NonnegativeInt.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.NonnegativeInt.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'nonnegative_int_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.NonnegativeInt.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.NonnegativeInt.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'NonnegativeIntEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.NonnegativeInt.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.NormalizedRectangle2D">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">NormalizedRectangle2D</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#NormalizedRectangle2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.NormalizedRectangle2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>Normalized Rectangle class.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.NormalizedRectangle2D.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'items': {'items': {'type': 'float'}, 'type': 'list', 'len': 2}, 'type': 'list', 'len': 2}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.NormalizedRectangle2D.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.NormalizedRectangle2D.description">
+<code class="descname">description</code><em class="property"> = 'A rectangle normalized so that the coordinates are within the range [0,1].'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.NormalizedRectangle2D.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.objects.models.objects.NormalizedRectangle2D.normalize">
+<em class="property">classmethod </em><code class="descname">normalize</code><span class="sig-paren">(</span><em>raw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#NormalizedRectangle2D.normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.NormalizedRectangle2D.normalize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.NormalizedString">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">NormalizedString</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#NormalizedString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.NormalizedString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>Unicode string with spaces collapsed.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.NormalizedString.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'post_normalizers': [{'id': 'normalize_spaces'}], 'type': 'unicode'}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.NormalizedString.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.NormalizedString.description">
+<code class="descname">description</code><em class="property"> = 'A unicode string with adjacent whitespace collapsed.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.NormalizedString.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.NormalizedString.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'unicode_string_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.NormalizedString.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.NormalizedString.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'NormalizedStringEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.NormalizedString.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.Null">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">Null</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#Null"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.Null" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>Class for a null object.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Null.description">
+<code class="descname">description</code><em class="property"> = 'A null object.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Null.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.objects.models.objects.Null.normalize">
+<em class="property">classmethod </em><code class="descname">normalize</code><span class="sig-paren">(</span><em>raw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#Null.normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.Null.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates and normalizes a raw Python object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.Real">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">Real</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#Real"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.Real" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>Real number class.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Real.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'float'}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Real.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Real.description">
+<code class="descname">description</code><em class="property"> = 'A real number.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Real.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Real.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'real_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Real.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.Real.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'RealEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.Real.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.SanitizedUrl">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">SanitizedUrl</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#SanitizedUrl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.SanitizedUrl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>HTTP or HTTPS url string class.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.SanitizedUrl.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'post_normalizers': [{'id': 'sanitize_url'}], 'type': 'unicode'}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.SanitizedUrl.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.SanitizedUrl.description">
+<code class="descname">description</code><em class="property"> = 'An HTTP or HTTPS url.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.SanitizedUrl.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.SanitizedUrl.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'unicode_string_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.SanitizedUrl.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.SanitizedUrl.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'SanitizedUrlEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.SanitizedUrl.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.SetOfUnicodeString">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">SetOfUnicodeString</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#SetOfUnicodeString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.SetOfUnicodeString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>Class for sets of UnicodeStrings.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.SetOfUnicodeString.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'items': {'type': 'unicode'}, 'type': 'list', 'validators': [{'id': 'is_uniquified'}]}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.SetOfUnicodeString.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.SetOfUnicodeString.description">
+<code class="descname">description</code><em class="property"> = 'A set (a list with unique elements) of unicode strings.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.SetOfUnicodeString.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.SetOfUnicodeString.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'list_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.SetOfUnicodeString.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.SetOfUnicodeString.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'SetOfUnicodeStringEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.SetOfUnicodeString.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.objects.models.objects.UnicodeString">
+<em class="property">class </em><code class="descclassname">oppia.extensions.objects.models.objects.</code><code class="descname">UnicodeString</code><a class="reference internal" href="_modules/oppia/extensions/objects/models/objects.html#UnicodeString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.objects.models.objects.UnicodeString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.objects.models.objects.BaseObject" title="oppia.extensions.objects.models.objects.BaseObject"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.objects.models.objects.BaseObject</span></code></a></p>
+<p>Unicode string class.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.UnicodeString.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'unicode'}</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.UnicodeString.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.UnicodeString.description">
+<code class="descname">description</code><em class="property"> = 'A unicode string.'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.UnicodeString.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.UnicodeString.edit_html_filename">
+<code class="descname">edit_html_filename</code><em class="property"> = 'unicode_string_editor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.UnicodeString.edit_html_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.objects.models.objects.UnicodeString.edit_js_filename">
+<code class="descname">edit_js_filename</code><em class="property"> = 'UnicodeStringEditor'</em><a class="headerlink" href="#oppia.extensions.objects.models.objects.UnicodeString.edit_js_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-extensions-objects-models-objects-test-module">
+<h2>oppia.extensions.objects.models.objects_test module<a class="headerlink" href="#oppia-extensions-objects-models-objects-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.objects.models">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.extensions.objects.models" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.extensions.objects.models package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.objects.models.objects">oppia.extensions.objects.models.objects module</a></li>
+<li><a class="reference internal" href="#oppia-extensions-objects-models-objects-test-module">oppia.extensions.objects.models.objects_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.objects.models">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.extensions.objects.models.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.extensions.objects.models.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

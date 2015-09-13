@@ -1,0 +1,292 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.extensions.interactions.base &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.extensions.interactions.base</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Base class for defining interactions.</span>
+
+<span class="sd">A note on terminology: state_customization_args refers to the values of</span>
+<span class="sd">customization args that are provided by an exploration editor. They are</span>
+<span class="sd">formatted as</span>
+
+<span class="sd">    {ca_name: {value: ca_value}}</span>
+
+<span class="sd">On the other hand, interaction.customization_args refers to a combination of</span>
+<span class="sd">the interaction customization arg spec and the value used. It is a list of</span>
+<span class="sd">dicts, each representing a customization arg -- viz.:</span>
+
+<span class="sd">    [{</span>
+<span class="sd">        &#39;name&#39;: ca_name,</span>
+<span class="sd">        &#39;value&#39;: ca_value,</span>
+<span class="sd">        &#39;default_value&#39;: ...,</span>
+<span class="sd">        ...</span>
+<span class="sd">    }]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">obj_services</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">rule_domain</span>
+<span class="kn">from</span> <span class="nn">extensions</span> <span class="kn">import</span> <span class="n">domain</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">jinja_utils</span>
+<span class="kn">import</span> <span class="nn">schema_utils</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="c"># Indicates that the learner view of the interaction should be displayed in the</span>
+<span class="c"># context of the conversation.</span>
+<span class="n">DISPLAY_MODE_INLINE</span> <span class="o">=</span> <span class="s">&#39;inline&#39;</span>
+<span class="c"># Indicates that the learner view of the interaction should be displayed as a</span>
+<span class="c"># separate object from the conversation.</span>
+<span class="n">DISPLAY_MODE_SUPPLEMENTAL</span> <span class="o">=</span> <span class="s">&#39;supplemental&#39;</span>
+
+<span class="n">ALLOWED_DISPLAY_MODES</span> <span class="o">=</span> <span class="p">[</span><span class="n">DISPLAY_MODE_SUPPLEMENTAL</span><span class="p">,</span> <span class="n">DISPLAY_MODE_INLINE</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="BaseInteraction"><a class="viewcode-back" href="../../../../oppia.extensions.interactions.html#oppia.extensions.interactions.base.BaseInteraction">[docs]</a><span class="k">class</span> <span class="nc">BaseInteraction</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base interaction definition class.</span>
+
+<span class="sd">    This class is not meant to be user-editable. The only methods on it should</span>
+<span class="sd">    be get()-type methods.</span>
+
+<span class="sd">    Note that all interactions should also include a thumbnail image of size</span>
+<span class="sd">    178 x 146 pixels. This image will be shown in the interaction selector.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># The human-readable name of the interaction. Overridden in subclasses.</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="c"># A description of the interaction. Overridden in subclasses.</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="c"># Describes how the interaction should be displayed -- either within the</span>
+    <span class="c"># conversation (&#39;inline&#39;), or as a separate object (&#39;supplemental&#39;). In the</span>
+    <span class="c"># latter case, the interaction instance is reused if two adjacent states</span>
+    <span class="c"># have the same interaction id.</span>
+    <span class="n">display_mode</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="c"># Whether this interaction should be considered terminal, i.e. it ends</span>
+    <span class="c"># the exploration. Defaults to False.</span>
+    <span class="n">is_terminal</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="c"># Additional JS library dependencies that should be loaded in pages</span>
+    <span class="c"># containing this interaction. These should correspond to names of files in</span>
+    <span class="c"># feconf.DEPENDENCIES_TEMPLATES_DIR. Overridden in subclasses.</span>
+    <span class="n">_dependency_ids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c"># The type of answer (as a string) accepted by this interaction, e.g.</span>
+    <span class="c"># &#39;CodeEvaluation&#39;.</span>
+    <span class="n">answer_type</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="c"># Customization arg specifications for the component, including their</span>
+    <span class="c"># descriptions, schemas and default values. Overridden in subclasses.</span>
+    <span class="n">_customization_arg_specs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">customization_arg_specs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">domain</span><span class="o">.</span><span class="n">CustomizationArgSpec</span><span class="p">(</span><span class="o">**</span><span class="n">cas</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cas</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_customization_arg_specs</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dependency_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dependency_ids</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">rule_domain</span><span class="o">.</span><span class="n">get_rules_for_obj_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">answer_type</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BaseInteraction.normalize_answer"><a class="viewcode-back" href="../../../../oppia.extensions.interactions.html#oppia.extensions.interactions.base.BaseInteraction.normalize_answer">[docs]</a>    <span class="k">def</span> <span class="nf">normalize_answer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">answer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Normalizes a learner&#39;s input to this interaction.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">answer_type</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obj_services</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">get_object_class_by_type</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">answer_type</span><span class="p">)</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s">&#39;No answer type initialized for interaction </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_stats_log_template</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The template for reader responses in the stats log.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_file_contents</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">feconf</span><span class="o">.</span><span class="n">INTERACTIONS_DIR</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;stats_response.html&#39;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;{{answer}}&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">html_body</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The HTML code containing directives and templates for the</span>
+<span class="sd">        interaction. This contains everything needed to display the interaction</span>
+<span class="sd">        once the necessary attributes are supplied.</span>
+
+<span class="sd">        Each interaction has two directive/template pairs, one for the</span>
+<span class="sd">        interaction itself and the other for displaying the learner&#39;s response</span>
+<span class="sd">        in a read-only view after it has been submitted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">js_directives</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_file_contents</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">feconf</span><span class="o">.</span><span class="n">INTERACTIONS_DIR</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.js&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+        <span class="n">html_templates</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_file_contents</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">feconf</span><span class="o">.</span><span class="n">INTERACTIONS_DIR</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.html&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;script&gt;</span><span class="si">%s</span><span class="s">&lt;/script&gt;</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">js_directives</span><span class="p">,</span> <span class="n">html_templates</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">validator_html</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The HTML code containing validators for the interaction&#39;s</span>
+<span class="sd">        customization_args and submission handler.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s">&#39;&lt;script&gt;</span><span class="si">%s</span><span class="s">&lt;/script&gt;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">get_file_contents</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">feconf</span><span class="o">.</span><span class="n">INTERACTIONS_DIR</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;validator.js&#39;</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="BaseInteraction.to_dict"><a class="viewcode-back" href="../../../../oppia.extensions.interactions.html#oppia.extensions.interactions.base.BaseInteraction.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets a dict representing this interaction. Only default values are</span>
+<span class="sd">        provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="s">&#39;display_mode&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">display_mode</span><span class="p">,</span>
+            <span class="s">&#39;is_terminal&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_terminal</span><span class="p">,</span>
+            <span class="s">&#39;customization_arg_specs&#39;</span><span class="p">:</span> <span class="p">[{</span>
+                <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">ca_spec</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="n">ca_spec</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                <span class="s">&#39;default_value&#39;</span><span class="p">:</span> <span class="n">ca_spec</span><span class="o">.</span><span class="n">default_value</span><span class="p">,</span>
+                <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">ca_spec</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span>
+            <span class="p">}</span> <span class="k">for</span> <span class="n">ca_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">customization_arg_specs</span><span class="p">],</span>
+        <span class="p">}</span>
+
+        <span class="c"># Add information about rule descriptions corresponding to the answer</span>
+        <span class="c"># type for this interaction.</span>
+        <span class="n">result</span><span class="p">[</span><span class="s">&#39;rule_descriptions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">rule_domain</span><span class="o">.</span><span class="n">get_description_strings_for_obj_type</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">answer_type</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="BaseInteraction.get_rule_by_name"><a class="viewcode-back" href="../../../../oppia.extensions.interactions.html#oppia.extensions.interactions.base.BaseInteraction.get_rule_by_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_rule_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets a rule given its name.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">next</span><span class="p">(</span>
+                <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rules</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">__name__</span> <span class="o">==</span> <span class="n">rule_name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Could not find rule with name </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">rule_name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BaseInteraction.get_stats_log_html"><a class="viewcode-back" href="../../../../oppia.extensions.interactions.html#oppia.extensions.interactions.base.BaseInteraction.get_stats_log_html">[docs]</a>    <span class="k">def</span> <span class="nf">get_stats_log_html</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_customization_args</span><span class="p">,</span> <span class="n">answer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the HTML for recording a learner&#39;s response in the stats log.</span>
+
+<span class="sd">        Returns an HTML string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">customization_args</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">ca_spec</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">state_customization_args</span><span class="p">[</span><span class="n">ca_spec</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="s">&#39;value&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">ca_spec</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">state_customization_args</span>
+                <span class="k">else</span> <span class="n">ca_spec</span><span class="o">.</span><span class="n">default_value</span>
+            <span class="p">)</span> <span class="k">for</span> <span class="n">ca_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">customization_arg_specs</span>
+        <span class="p">}</span>
+        <span class="n">customization_args</span><span class="p">[</span><span class="s">&#39;answer&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">answer</span>
+
+        <span class="k">return</span> <span class="n">jinja_utils</span><span class="o">.</span><span class="n">parse_string</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stats_log_template</span><span class="p">,</span> <span class="n">customization_args</span><span class="p">,</span> <span class="n">autoescape</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

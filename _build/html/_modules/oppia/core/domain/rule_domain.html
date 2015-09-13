@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.rule_domain &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.rule_domain</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Classes relating to rules.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pkgutil</span>
+
+<span class="kn">from</span> <span class="nn">extensions.objects.models</span> <span class="kn">import</span> <span class="n">objects</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">jinja_utils</span>
+
+
+<span class="c"># TODO(sll): In the frontend, use the rule descriptions as the single source</span>
+<span class="c"># of truth for the params.</span>
+
+
+<div class="viewcode-block" id="get_obj_type_for_param_name"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rule_domain.get_obj_type_for_param_name">[docs]</a><span class="k">def</span> <span class="nf">get_obj_type_for_param_name</span><span class="p">(</span><span class="n">rule_class</span><span class="p">,</span> <span class="n">param_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the obj type for a given param name.&quot;&quot;&quot;</span>
+    <span class="n">param_list</span> <span class="o">=</span> <span class="n">get_param_list</span><span class="p">(</span><span class="n">rule_class</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">param_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">param_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+        <span class="s">&#39;Rule </span><span class="si">%s</span><span class="s"> has no param called </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rule_class</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">param_name</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="get_rules_for_obj_type"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rule_domain.get_rules_for_obj_type">[docs]</a><span class="k">def</span> <span class="nf">get_rules_for_obj_type</span><span class="p">(</span><span class="n">obj_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets all rules for a given object type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        obj_type: str. The name of the object type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rule_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">feconf</span><span class="o">.</span><span class="n">RULES_DIR</span><span class="p">)</span>
+    <span class="n">rule_class_name</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">Rule&#39;</span> <span class="o">%</span> <span class="n">obj_type</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">loader</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">pkgutil</span><span class="o">.</span><span class="n">iter_modules</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="p">[</span><span class="n">rule_dir</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;_test&#39;</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">module</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">find_module</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">load_module</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">clazz</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">):</span>
+            <span class="n">ancestors</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="n">__bases__</span>
+            <span class="n">ancestor_class_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">__name__</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">ancestors</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">rule_class_name</span> <span class="ow">in</span> <span class="n">ancestor_class_names</span><span class="p">:</span>
+                <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clazz</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">results</span>
+
+</div>
+<div class="viewcode-block" id="get_description_strings_for_obj_type"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rule_domain.get_description_strings_for_obj_type">[docs]</a><span class="k">def</span> <span class="nf">get_description_strings_for_obj_type</span><span class="p">(</span><span class="n">obj_type</span><span class="p">):</span>
+   <span class="sd">&quot;&quot;&quot;Returns a dict whose keys are rule names and whose values are the</span>
+<span class="sd">   corresponding description strings.</span>
+<span class="sd">   &quot;&quot;&quot;</span>
+   <span class="n">rules</span> <span class="o">=</span> <span class="n">get_rules_for_obj_type</span><span class="p">(</span><span class="n">obj_type</span><span class="p">)</span>
+   <span class="k">return</span> <span class="p">{</span>
+       <span class="n">rule</span><span class="o">.</span><span class="n">__name__</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">description</span>
+       <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">rules</span>
+   <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="get_param_list"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rule_domain.get_param_list">[docs]</a><span class="k">def</span> <span class="nf">get_param_list</span><span class="p">(</span><span class="n">description</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get a parameter list from the rule description.&quot;&quot;&quot;</span>
+    <span class="n">param_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="n">description</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;{{&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">opening_index</span> <span class="o">=</span> <span class="n">description</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;{{&#39;</span><span class="p">)</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="n">description</span><span class="p">[</span><span class="n">opening_index</span> <span class="o">+</span> <span class="mi">2</span><span class="p">:]</span>
+
+        <span class="n">bar_index</span> <span class="o">=</span> <span class="n">description</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;|&#39;</span><span class="p">)</span>
+        <span class="n">param_name</span> <span class="o">=</span> <span class="n">description</span><span class="p">[:</span> <span class="n">bar_index</span><span class="p">]</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="n">description</span><span class="p">[</span><span class="n">bar_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+
+        <span class="n">closing_index</span> <span class="o">=</span> <span class="n">description</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;}}&#39;</span><span class="p">)</span>
+        <span class="n">normalizer_string</span> <span class="o">=</span> <span class="n">description</span><span class="p">[:</span> <span class="n">closing_index</span><span class="p">]</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="n">description</span><span class="p">[</span><span class="n">closing_index</span> <span class="o">+</span> <span class="mi">2</span><span class="p">:]</span>
+
+        <span class="n">param_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">objects</span><span class="p">,</span> <span class="n">normalizer_string</span><span class="p">))</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">param_list</span>
+
+</div>
+<div class="viewcode-block" id="Rule"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rule_domain.Rule">[docs]</a><span class="k">class</span> <span class="nc">Rule</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Abstract base class for a value object that represents a rule.</span>
+
+<span class="sd">    All rules assume that the subject and rule initialization parameters</span>
+<span class="sd">    are JSONifiable objects (such as primitives, lists, dicts, and</span>
+<span class="sd">    compositions of these, but NOT sets, tuples, etc.). This is enforced</span>
+<span class="sd">    by normalizing the subject and rule initialization parameters to</span>
+<span class="sd">    JSONifiable objects before any evaluations are performed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">subject_type</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c"># Description of the rule, e.g. &quot;is equal to {{x|Int}}&quot;. Should be</span>
+    <span class="c"># overridden by subclasses.</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+    <span class="n">_PARAMS</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">_fs</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMS</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># Derive the rule params from its description.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMS</span> <span class="o">=</span> <span class="n">get_param_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMS</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&#39;Expected parameters </span><span class="si">%s</span><span class="s">, received </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">param_tuple</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">):</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">param_tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="n">ind</span><span class="p">]))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_params</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validates the rule object immediately after initialization.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subject</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a boolean indicating the truth value of the evaluation.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="Rule.set_fs"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rule_domain.Rule.set_fs">[docs]</a>    <span class="k">def</span> <span class="nf">set_fs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set an abstract file system to use with this rule.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fs</span> <span class="o">=</span> <span class="n">fs</span>
+        <span class="k">return</span> <span class="bp">self</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fs</span>
+
+<div class="viewcode-block" id="Rule.eval"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rule_domain.Rule.eval">[docs]</a>    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subject</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Public evaluation method.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            subject: the thing to be evaluated.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: the result of the evaluation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_type</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">subject</span><span class="p">))</span>
+
+</div></div>
+<div class="viewcode-block" id="evaluate_rule"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rule_domain.evaluate_rule">[docs]</a><span class="k">def</span> <span class="nf">evaluate_rule</span><span class="p">(</span><span class="n">rule_spec</span><span class="p">,</span> <span class="n">answer_type</span><span class="p">,</span> <span class="n">context_params</span><span class="p">,</span> <span class="n">answer</span><span class="p">,</span> <span class="n">fs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Evaluates a rule spec using context_params. Returns a boolean.&quot;&quot;&quot;</span>
+    <span class="n">all_rule_classes</span> <span class="o">=</span> <span class="n">get_rules_for_obj_type</span><span class="p">(</span><span class="n">answer_type</span><span class="p">)</span>
+    <span class="n">rule</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">all_rule_classes</span>
+                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">__name__</span> <span class="o">==</span> <span class="n">rule_spec</span><span class="o">.</span><span class="n">rule_type</span><span class="p">)</span>
+
+    <span class="n">param_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">param_defns</span> <span class="o">=</span> <span class="n">get_param_list</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">obj_cls</span><span class="p">)</span> <span class="ow">in</span> <span class="n">param_defns</span><span class="p">:</span>
+        <span class="n">parsed_param</span> <span class="o">=</span> <span class="n">rule_spec</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">parsed_param</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">)</span> <span class="ow">and</span> <span class="s">&#39;{{&#39;</span> <span class="ow">in</span> <span class="n">parsed_param</span><span class="p">):</span>
+            <span class="n">parsed_param</span> <span class="o">=</span> <span class="n">jinja_utils</span><span class="o">.</span><span class="n">parse_string</span><span class="p">(</span>
+                <span class="n">parsed_param</span><span class="p">,</span> <span class="n">context_params</span><span class="p">,</span> <span class="n">autoescape</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">normalized_param</span> <span class="o">=</span> <span class="n">obj_cls</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">parsed_param</span><span class="p">)</span>
+        <span class="n">param_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">normalized_param</span><span class="p">)</span>
+
+    <span class="n">constructed_rule</span> <span class="o">=</span> <span class="n">rule</span><span class="p">(</span><span class="o">*</span><span class="n">param_list</span><span class="p">)</span>
+    <span class="n">constructed_rule</span><span class="o">.</span><span class="n">set_fs</span><span class="p">(</span><span class="n">fs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">constructed_rule</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

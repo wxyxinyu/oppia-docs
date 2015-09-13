@@ -1,0 +1,719 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.extensions.objects.models.objects &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.extensions.objects.models.objects</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Classes for interpreting typed objects in Oppia.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">schema_utils</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+
+<div class="viewcode-block" id="BaseObject"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.BaseObject">[docs]</a><span class="k">class</span> <span class="nc">BaseObject</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base object class.</span>
+
+<span class="sd">    This is the superclass for typed object specifications in Oppia, such as</span>
+<span class="sd">    SanitizedUrl and CoordTwoDim.</span>
+
+<span class="sd">    Typed objects are initialized from a raw Python object which is expected to</span>
+<span class="sd">    be derived from a JSON object. They are validated and normalized to basic</span>
+<span class="sd">    Python objects (primitive types combined via lists and dicts; no sets or</span>
+<span class="sd">    tuples).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># These values should be overridden in subclasses.</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseObject.normalize"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.BaseObject.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">raw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validates and normalizes a raw Python object.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          a normalized Python object describing the Object specified by this</span>
+<span class="sd">          class.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">          TypeError: if the Python object cannot be normalized.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">schema_utils</span><span class="o">.</span><span class="n">normalize_against_schema</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseObject.has_editor_js_template"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.BaseObject.has_editor_js_template">[docs]</a>    <span class="k">def</span> <span class="nf">has_editor_js_template</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">edit_js_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseObject.get_editor_js_template"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.BaseObject.get_editor_js_template">[docs]</a>    <span class="k">def</span> <span class="nf">get_editor_js_template</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">edit_js_filename</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;There is no editor template defined for objects of type </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_file_contents</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">feconf</span><span class="o">.</span><span class="n">OBJECT_TEMPLATES_DIR</span><span class="p">,</span>
+            <span class="s">&#39;</span><span class="si">%s</span><span class="s">.js&#39;</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">edit_js_filename</span><span class="p">))</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseObject.get_editor_html_template"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.BaseObject.get_editor_html_template">[docs]</a>    <span class="k">def</span> <span class="nf">get_editor_html_template</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">edit_html_filename</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;There is no editor template defined for objects of type </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_file_contents</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">feconf</span><span class="o">.</span><span class="n">OBJECT_TEMPLATES_DIR</span><span class="p">,</span>
+            <span class="s">&#39;</span><span class="si">%s</span><span class="s">.html&#39;</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">edit_html_filename</span><span class="p">))</span>
+
+</div></div>
+<div class="viewcode-block" id="Null"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.Null">[docs]</a><span class="k">class</span> <span class="nc">Null</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for a null object.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A null object.&#39;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Null.normalize"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.Null.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">raw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validates and normalizes a raw Python object.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+</div></div>
+<div class="viewcode-block" id="Boolean"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.Boolean">[docs]</a><span class="k">class</span> <span class="nc">Boolean</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for booleans.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A boolean.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;boolean_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;BooleanEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;bool&#39;</span>
+    <span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Boolean.normalize"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.Boolean.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">raw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validates and normalizes a raw Python object.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">raw</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">raw</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="n">schema_utils</span><span class="o">.</span><span class="n">normalize_against_schema</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Real"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.Real">[docs]</a><span class="k">class</span> <span class="nc">Real</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Real number class.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A real number.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;real_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;RealEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;float&#39;</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="Int"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.Int">[docs]</a><span class="k">class</span> <span class="nc">Int</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Integer class.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;An integer.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;int_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;IntEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;int&#39;</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="UnicodeString"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.UnicodeString">[docs]</a><span class="k">class</span> <span class="nc">UnicodeString</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Unicode string class.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A unicode string.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;unicode_string_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;UnicodeStringEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;unicode&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="Html"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.Html">[docs]</a><span class="k">class</span> <span class="nc">Html</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;HTML string class.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;An HTML string.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;html_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;HtmlEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;html&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="NonnegativeInt"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.NonnegativeInt">[docs]</a><span class="k">class</span> <span class="nc">NonnegativeInt</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Nonnegative integer class.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A non-negative integer.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;nonnegative_int_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;NonnegativeIntEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;int&#39;</span><span class="p">,</span>
+        <span class="s">&#39;validators&#39;</span><span class="p">:</span> <span class="p">[{</span>
+            <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;is_at_least&#39;</span><span class="p">,</span>
+            <span class="s">&#39;min_value&#39;</span><span class="p">:</span> <span class="mi">0</span>
+        <span class="p">}]</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="CodeEvaluation"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.CodeEvaluation">[docs]</a><span class="k">class</span> <span class="nc">CodeEvaluation</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Evaluation result of programming code.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;Code and its evaluation results.&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;dict&#39;</span><span class="p">,</span>
+        <span class="s">&#39;properties&#39;</span><span class="p">:</span> <span class="p">[{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;code&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">UnicodeString</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">,</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;output&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">UnicodeString</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">,</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;evaluation&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">UnicodeString</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">,</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;error&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">UnicodeString</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">,</span>
+        <span class="p">}]</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="CoordTwoDim"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.CoordTwoDim">[docs]</a><span class="k">class</span> <span class="nc">CoordTwoDim</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;2D coordinate class.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A two-dimensional coordinate (a pair of reals).&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;coord_two_dim_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;CoordTwoDimEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;list&#39;</span><span class="p">,</span>
+        <span class="s">&#39;len&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="n">Real</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">,</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="ListOfUnicodeString"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.ListOfUnicodeString">[docs]</a><span class="k">class</span> <span class="nc">ListOfUnicodeString</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;List class.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A list.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;list_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;ListOfUnicodeStringEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;list&#39;</span><span class="p">,</span>
+        <span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="n">UnicodeString</span><span class="o">.</span><span class="n">SCHEMA</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="SetOfUnicodeString"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.SetOfUnicodeString">[docs]</a><span class="k">class</span> <span class="nc">SetOfUnicodeString</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for sets of UnicodeStrings.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A set (a list with unique elements) of unicode strings.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;list_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;SetOfUnicodeStringEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;list&#39;</span><span class="p">,</span>
+        <span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="n">UnicodeString</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">,</span>
+        <span class="s">&#39;validators&#39;</span><span class="p">:</span> <span class="p">[{</span>
+            <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;is_uniquified&#39;</span>
+        <span class="p">}]</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="NormalizedString"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.NormalizedString">[docs]</a><span class="k">class</span> <span class="nc">NormalizedString</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Unicode string with spaces collapsed.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A unicode string with adjacent whitespace collapsed.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;unicode_string_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;NormalizedStringEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;unicode&#39;</span><span class="p">,</span>
+        <span class="s">&#39;post_normalizers&#39;</span><span class="p">:</span> <span class="p">[{</span>
+            <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;normalize_spaces&#39;</span>
+        <span class="p">}]</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="MathLatexString"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.MathLatexString">[docs]</a><span class="k">class</span> <span class="nc">MathLatexString</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Math LaTeX string class&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A LaTeX string.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;math_latex_string_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;MathLatexStringEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="n">UnicodeString</span><span class="o">.</span><span class="n">SCHEMA</span>
+
+</div>
+<div class="viewcode-block" id="SanitizedUrl"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.SanitizedUrl">[docs]</a><span class="k">class</span> <span class="nc">SanitizedUrl</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;HTTP or HTTPS url string class.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;An HTTP or HTTPS url.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;unicode_string_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;SanitizedUrlEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;unicode&#39;</span><span class="p">,</span>
+        <span class="s">&#39;post_normalizers&#39;</span><span class="p">:</span> <span class="p">[{</span>
+            <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;sanitize_url&#39;</span>
+        <span class="p">}]</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="MusicPhrase"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.MusicPhrase">[docs]</a><span class="k">class</span> <span class="nc">MusicPhrase</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;List of Objects that represent a musical phrase.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;A musical phrase that contains zero or more notes, rests, &#39;</span>
+                   <span class="s">&#39;and time signature.&#39;</span><span class="p">)</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;music_phrase_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;MusicPhraseEditor&#39;</span>
+
+    <span class="c"># The maximum number of notes allowed in a music phrase.</span>
+    <span class="n">_MAX_NOTES_IN_PHRASE</span> <span class="o">=</span> <span class="mi">8</span>
+
+    <span class="n">_FRACTION_PART_SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;int&#39;</span><span class="p">,</span>
+        <span class="s">&#39;validators&#39;</span><span class="p">:</span> <span class="p">[{</span>
+            <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;is_at_least&#39;</span><span class="p">,</span>
+            <span class="s">&#39;min_value&#39;</span><span class="p">:</span> <span class="mi">1</span>
+        <span class="p">}]</span>
+    <span class="p">}</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;list&#39;</span><span class="p">,</span>
+        <span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;dict&#39;</span><span class="p">,</span>
+            <span class="s">&#39;properties&#39;</span><span class="p">:</span> <span class="p">[{</span>
+                <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;readableNoteName&#39;</span><span class="p">,</span>
+                <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;unicode&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;choices&#39;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="s">&#39;C4&#39;</span><span class="p">,</span> <span class="s">&#39;D4&#39;</span><span class="p">,</span> <span class="s">&#39;E4&#39;</span><span class="p">,</span> <span class="s">&#39;F4&#39;</span><span class="p">,</span> <span class="s">&#39;G4&#39;</span><span class="p">,</span> <span class="s">&#39;A4&#39;</span><span class="p">,</span> <span class="s">&#39;B4&#39;</span><span class="p">,</span> <span class="s">&#39;C5&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;D5&#39;</span><span class="p">,</span> <span class="s">&#39;E5&#39;</span><span class="p">,</span> <span class="s">&#39;F5&#39;</span><span class="p">,</span> <span class="s">&#39;G5&#39;</span><span class="p">,</span> <span class="s">&#39;A5&#39;</span>
+                    <span class="p">]</span>
+                <span class="p">}</span>
+            <span class="p">},</span> <span class="p">{</span>
+                <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;noteDuration&#39;</span><span class="p">,</span>
+                <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;dict&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;properties&#39;</span><span class="p">:</span> <span class="p">[{</span>
+                        <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;num&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">_FRACTION_PART_SCHEMA</span>
+                    <span class="p">},</span> <span class="p">{</span>
+                        <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;den&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">_FRACTION_PART_SCHEMA</span>
+                    <span class="p">}]</span>
+                <span class="p">}</span>
+            <span class="p">}],</span>
+        <span class="p">},</span>
+        <span class="s">&#39;validators&#39;</span><span class="p">:</span> <span class="p">[{</span>
+            <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;has_length_at_most&#39;</span><span class="p">,</span>
+            <span class="s">&#39;max_value&#39;</span><span class="p">:</span> <span class="n">_MAX_NOTES_IN_PHRASE</span><span class="p">,</span>
+        <span class="p">}]</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="Filepath"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.Filepath">[docs]</a><span class="k">class</span> <span class="nc">Filepath</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A string representing a filepath.</span>
+
+<span class="sd">    The path will be prefixed with &#39;[exploration_id]/assets&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A string that represents a filepath&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;filepath_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;FilepathEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="n">UnicodeString</span><span class="o">.</span><span class="n">SCHEMA</span>
+
+</div>
+<div class="viewcode-block" id="CheckedProof"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.CheckedProof">[docs]</a><span class="k">class</span> <span class="nc">CheckedProof</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A proof attempt and any errors it makes.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A proof attempt and any errors it makes.&#39;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="CheckedProof.normalize"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.CheckedProof.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">raw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validates and normalizes a raw Python object.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s">&#39;assumptions_string&#39;</span><span class="p">],</span> <span class="nb">basestring</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s">&#39;target_string&#39;</span><span class="p">],</span> <span class="nb">basestring</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s">&#39;proof_string&#39;</span><span class="p">],</span> <span class="nb">basestring</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">raw</span><span class="p">[</span><span class="s">&#39;correct&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">raw</span><span class="p">[</span><span class="s">&#39;correct&#39;</span><span class="p">]:</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s">&#39;error_category&#39;</span><span class="p">],</span> <span class="nb">basestring</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s">&#39;error_code&#39;</span><span class="p">],</span> <span class="nb">basestring</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s">&#39;error_message&#39;</span><span class="p">],</span> <span class="nb">basestring</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s">&#39;error_line_number&#39;</span><span class="p">],</span> <span class="nb">int</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Cannot convert to checked proof </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">raw</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="LogicQuestion"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.LogicQuestion">[docs]</a><span class="k">class</span> <span class="nc">LogicQuestion</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A question giving a formula to prove&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A question giving a formula to prove.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;logic_question_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;LogicQuestionEditor&#39;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="LogicQuestion.normalize"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.LogicQuestion.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">raw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validates and normalizes a raw Python object.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_validateExpression</span><span class="p">(</span><span class="n">expression</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expression</span><span class="p">[</span><span class="s">&#39;top_kind_name&#39;</span><span class="p">],</span> <span class="nb">basestring</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expression</span><span class="p">[</span><span class="s">&#39;top_operator_name&#39;</span><span class="p">],</span> <span class="nb">basestring</span><span class="p">)</span>
+            <span class="n">_validateExpressionArray</span><span class="p">(</span><span class="n">expression</span><span class="p">[</span><span class="s">&#39;arguments&#39;</span><span class="p">])</span>
+            <span class="n">_validateExpressionArray</span><span class="p">(</span><span class="n">expression</span><span class="p">[</span><span class="s">&#39;dummies&#39;</span><span class="p">])</span>
+
+        <span class="k">def</span> <span class="nf">_validateExpressionArray</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">array</span><span class="p">:</span>
+                <span class="n">_validateExpression</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="n">_validateExpressionArray</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s">&#39;assumptions&#39;</span><span class="p">])</span>
+            <span class="n">_validateExpressionArray</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s">&#39;results&#39;</span><span class="p">])</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s">&#39;default_proof_string&#39;</span><span class="p">],</span> <span class="nb">basestring</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Cannot convert to a logic question </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">raw</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="LogicErrorCategory"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.LogicErrorCategory">[docs]</a><span class="k">class</span> <span class="nc">LogicErrorCategory</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A string from a list of possible categories&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;One of the possible error categories of a logic proof.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;logic_error_category_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;LogicErrorCategoryEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;unicode&#39;</span><span class="p">,</span>
+        <span class="s">&#39;choices&#39;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s">&#39;parsing&#39;</span><span class="p">,</span> <span class="s">&#39;typing&#39;</span><span class="p">,</span> <span class="s">&#39;line&#39;</span><span class="p">,</span> <span class="s">&#39;layout&#39;</span><span class="p">,</span> <span class="s">&#39;variables&#39;</span><span class="p">,</span> <span class="s">&#39;logic&#39;</span><span class="p">,</span>
+            <span class="s">&#39;target&#39;</span><span class="p">,</span> <span class="s">&#39;mistake&#39;</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="Graph"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.Graph">[docs]</a><span class="k">class</span> <span class="nc">Graph</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A (mathematical) graph with edges and vertices&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A (mathematical) graph&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;graph_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;GraphEditor&#39;</span>
+
+    <span class="n">_VERTEX_SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;dict&#39;</span><span class="p">,</span>
+        <span class="s">&#39;properties&#39;</span><span class="p">:</span> <span class="p">[{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;x&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">Real</span><span class="o">.</span><span class="n">SCHEMA</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;y&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">Real</span><span class="o">.</span><span class="n">SCHEMA</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;label&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">UnicodeString</span><span class="o">.</span><span class="n">SCHEMA</span>
+        <span class="p">}]</span>
+    <span class="p">}</span>
+    <span class="n">_EDGE_SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;dict&#39;</span><span class="p">,</span>
+        <span class="s">&#39;properties&#39;</span><span class="p">:</span> <span class="p">[{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;src&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">Int</span><span class="o">.</span><span class="n">SCHEMA</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;dst&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">Int</span><span class="o">.</span><span class="n">SCHEMA</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;weight&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">Int</span><span class="o">.</span><span class="n">SCHEMA</span>
+        <span class="p">}]</span>
+    <span class="p">}</span>
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;dict&#39;</span><span class="p">,</span>
+        <span class="s">&#39;properties&#39;</span><span class="p">:</span> <span class="p">[{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;vertices&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;list&#39;</span><span class="p">,</span>
+                <span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="n">_VERTEX_SCHEMA</span>
+            <span class="p">}</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;edges&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;list&#39;</span><span class="p">,</span>
+                <span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="n">_EDGE_SCHEMA</span>
+            <span class="p">}</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;isLabeled&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">Boolean</span><span class="o">.</span><span class="n">SCHEMA</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;isDirected&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">Boolean</span><span class="o">.</span><span class="n">SCHEMA</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;isWeighted&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">Boolean</span><span class="o">.</span><span class="n">SCHEMA</span>
+        <span class="p">}]</span>
+    <span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Graph.normalize"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.Graph.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">raw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validates and normalizes a raw Python object.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks that there are no self-loops or multiple edges.</span>
+<span class="sd">        Checks that unlabeled graphs have all labels empty.</span>
+<span class="sd">        Checks that unweighted graphs have all weights set to 1.</span>
+<span class="sd">        TODO(czx): Think about support for multigraphs?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">schema_utils</span><span class="o">.</span><span class="n">normalize_against_schema</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">raw</span><span class="p">[</span><span class="s">&#39;isLabeled&#39;</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">[</span><span class="s">&#39;vertices&#39;</span><span class="p">]:</span>
+                    <span class="k">assert</span> <span class="p">(</span><span class="n">vertex</span><span class="p">[</span><span class="s">&#39;label&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">[</span><span class="s">&#39;edges&#39;</span><span class="p">]:</span>
+                <span class="k">assert</span> <span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="s">&#39;src&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">edge</span><span class="p">[</span><span class="s">&#39;dst&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">raw</span><span class="p">[</span><span class="s">&#39;isWeighted&#39;</span><span class="p">]:</span>
+                    <span class="k">assert</span> <span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="s">&#39;weight&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">raw</span><span class="p">[</span><span class="s">&#39;isDirected&#39;</span><span class="p">]:</span>
+                <span class="n">edge_pairs</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="s">&#39;src&#39;</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="s">&#39;dst&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">[</span><span class="s">&#39;edges&#39;</span><span class="p">]]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">edge_pairs</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="p">[(</span><span class="n">edge</span><span class="p">[</span><span class="s">&#39;src&#39;</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="s">&#39;dst&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">[</span><span class="s">&#39;edges&#39;</span><span class="p">]]</span> <span class="o">+</span>
+                    <span class="p">[(</span><span class="n">edge</span><span class="p">[</span><span class="s">&#39;dst&#39;</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="s">&#39;src&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">[</span><span class="s">&#39;edges&#39;</span><span class="p">]]</span>
+                <span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">edge_pairs</span><span class="p">))</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">edge_pairs</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Cannot convert to graph </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">raw</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">raw</span>
+
+</div></div>
+<div class="viewcode-block" id="NormalizedRectangle2D"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.NormalizedRectangle2D">[docs]</a><span class="k">class</span> <span class="nc">NormalizedRectangle2D</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Normalized Rectangle class.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s">&#39;A rectangle normalized so that the coordinates are within the range &#39;</span>
+        <span class="s">&#39;[0,1].&#39;</span><span class="p">)</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;list&#39;</span><span class="p">,</span>
+        <span class="s">&#39;len&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;list&#39;</span><span class="p">,</span>
+            <span class="s">&#39;len&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="n">Real</span><span class="o">.</span><span class="n">SCHEMA</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="NormalizedRectangle2D.normalize"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.NormalizedRectangle2D.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">raw</span><span class="p">):</span>
+        <span class="c"># Moves cur_value to the nearest available value in the range</span>
+        <span class="c"># [min_value, max_value].</span>
+        <span class="k">def</span> <span class="nf">clamp</span><span class="p">(</span><span class="n">min_value</span><span class="p">,</span> <span class="n">current_value</span><span class="p">,</span> <span class="n">max_value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">max_value</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">min_value</span><span class="p">,</span> <span class="n">current_value</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">schema_utils</span><span class="o">.</span><span class="n">normalize_against_schema</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">)</span>
+
+            <span class="n">raw</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">clamp</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">raw</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">raw</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">clamp</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">raw</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">raw</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">clamp</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">raw</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">raw</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">clamp</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">raw</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Cannot convert to Normalized Rectangle </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">raw</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">raw</span>
+
+</div></div>
+<div class="viewcode-block" id="ImageRegion"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.ImageRegion">[docs]</a><span class="k">class</span> <span class="nc">ImageRegion</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A region of an image, including its shape and coordinates.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A region of an image.&#39;</span>
+
+    <span class="c"># Note: at the moment, only supports rectangular image regions.</span>
+    <span class="c"># Coordinates are:</span>
+    <span class="c">#   [[top-left-x, top-left-y], [bottom-right-x, bottom-right-y]].</span>
+    <span class="c"># Origin is top-left, increasing x is to the right, increasing y is down.</span>
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;dict&#39;</span><span class="p">,</span>
+        <span class="s">&#39;properties&#39;</span><span class="p">:</span> <span class="p">[{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;regionType&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">UnicodeString</span><span class="o">.</span><span class="n">SCHEMA</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;area&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">NormalizedRectangle2D</span><span class="o">.</span><span class="n">SCHEMA</span>
+        <span class="p">}]</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="ImageWithRegions"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.ImageWithRegions">[docs]</a><span class="k">class</span> <span class="nc">ImageWithRegions</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An image overlaid with labeled regions.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;An image overlaid with regions.&#39;</span>
+    <span class="n">edit_html_filename</span> <span class="o">=</span> <span class="s">&#39;image_with_regions_editor&#39;</span>
+    <span class="n">edit_js_filename</span> <span class="o">=</span> <span class="s">&#39;ImageWithRegionsEditor&#39;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;dict&#39;</span><span class="p">,</span>
+        <span class="s">&#39;properties&#39;</span><span class="p">:</span> <span class="p">[{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;imagePath&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">Filepath</span><span class="o">.</span><span class="n">SCHEMA</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;labeledRegions&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;list&#39;</span><span class="p">,</span>
+                <span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;dict&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;properties&#39;</span><span class="p">:</span> <span class="p">[{</span>
+                        <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;label&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">UnicodeString</span><span class="o">.</span><span class="n">SCHEMA</span>
+                    <span class="p">},</span> <span class="p">{</span>
+                        <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;region&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">ImageRegion</span><span class="o">.</span><span class="n">SCHEMA</span>
+                    <span class="p">}]</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}]</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="ClickOnImage"><a class="viewcode-back" href="../../../../../oppia.extensions.objects.models.html#oppia.extensions.objects.models.objects.ClickOnImage">[docs]</a><span class="k">class</span> <span class="nc">ClickOnImage</span><span class="p">(</span><span class="n">BaseObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A click on an image and the clicked regions.&quot;&quot;&quot;</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&quot;Position of a click and a list of regions clicked.&quot;</span>
+
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;dict&#39;</span><span class="p">,</span>
+        <span class="s">&#39;properties&#39;</span><span class="p">:</span> <span class="p">[{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;clickPosition&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;list&#39;</span><span class="p">,</span>
+                <span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="n">Real</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">,</span>
+                <span class="s">&#39;len&#39;</span><span class="p">:</span> <span class="mi">2</span>
+            <span class="p">}</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;clickedRegions&#39;</span><span class="p">,</span>
+            <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;list&#39;</span><span class="p">,</span>
+                <span class="s">&#39;items&#39;</span><span class="p">:</span> <span class="n">UnicodeString</span><span class="o">.</span><span class="n">SCHEMA</span>
+            <span class="p">}</span>
+        <span class="p">}]</span>
+    <span class="p">}</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.platform.search package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-core-platform-search-package">
+<h1>oppia.core.platform.search package<a class="headerlink" href="#oppia-core-platform-search-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core.platform.search.gae_search_services">
+<span id="oppia-core-platform-search-gae-search-services-module"></span><h2>oppia.core.platform.search.gae_search_services module<a class="headerlink" href="#module-oppia.core.platform.search.gae_search_services" title="Permalink to this headline">¶</a></h2>
+<p>Provides search services.</p>
+<dl class="exception">
+<dt id="oppia.core.platform.search.gae_search_services.SearchFailureError">
+<em class="property">exception </em><code class="descclassname">oppia.core.platform.search.gae_search_services.</code><code class="descname">SearchFailureError</code><span class="sig-paren">(</span><em>original_exception=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/platform/search/gae_search_services.html#SearchFailureError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.search.gae_search_services.SearchFailureError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/exceptions.html#exceptions.Exception" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></a></p>
+<p>This error is raised when a search operation fails.
+The original_exception will point to what went wrong inside the gae sdk.
+Other platform implementations should have a similar way of revealing
+platform specific errors.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.platform.search.gae_search_services.add_documents_to_index">
+<code class="descclassname">oppia.core.platform.search.gae_search_services.</code><code class="descname">add_documents_to_index</code><span class="sig-paren">(</span><em>documents</em>, <em>index</em>, <em>retries=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/platform/search/gae_search_services.html#add_documents_to_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.search.gae_search_services.add_documents_to_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a document to an index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>documents</strong> (<em>-</em>) &#8211; a list of documents. Each document should be a dictionary.
+Every key in the document is a field name, and the corresponding
+value will be the field&#8217;s value.
+If there is a key named &#8216;id&#8217;, its value will be used as the
+document&#8217;s id.
+If there is a key named &#8216;rank&#8217;, its value will be used as
+the document&#8217;s rank.
+By default, search results are returned ordered by descending rank.
+If there is a key named &#8216;language_code&#8217;, its value will be used as
+the document&#8217;s language. Otherwise, feconf.DEFAULT_LANGUAGE_CODE is
+used.</li>
+<li><strong>index</strong> (<em>-</em>) &#8211; the name of the index to insert the document into, a string.</li>
+<li><strong>retries</strong> (<em>-</em>) &#8211; the number of times to retry inserting the documents.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">returns a list of document ids of the documents that were added.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>- SearchFailureError</strong> &#8211;
+raised when the indexing fails. If it fails for any
+document, none will be inserted.</li>
+<li><strong>- ValueError</strong> &#8211;
+raised when invalid values are given.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.platform.search.gae_search_services.clear_index">
+<code class="descclassname">oppia.core.platform.search.gae_search_services.</code><code class="descname">clear_index</code><span class="sig-paren">(</span><em>index_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/platform/search/gae_search_services.html#clear_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.search.gae_search_services.clear_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears an index completely.</p>
+<p>WARNING: This does all the clearing in-request, and may therefore fail if
+there are too many entries in the index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> (<em>-</em>) &#8211; the name of the index to delete the document from, a string.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.platform.search.gae_search_services.delete_documents_from_index">
+<code class="descclassname">oppia.core.platform.search.gae_search_services.</code><code class="descname">delete_documents_from_index</code><span class="sig-paren">(</span><em>doc_ids</em>, <em>index</em>, <em>retries=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/platform/search/gae_search_services.html#delete_documents_from_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.search.gae_search_services.delete_documents_from_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes documents from an index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>doc_ids</strong> (<em>-</em>) &#8211; a list of document ids of documents to be deleted from the
+index.</li>
+<li><strong>index</strong> (<em>-</em>) &#8211; the name of the index to delete the document from, a string.</li>
+<li><strong>retries</strong> (<em>-</em>) &#8211; the number of times to retry deleting the documents.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>- SearchFailureError</strong> &#8211;
+raised when the deletion fails. If it fails for any
+document, none will be deleted.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.platform.search.gae_search_services.get_document_from_index">
+<code class="descclassname">oppia.core.platform.search.gae_search_services.</code><code class="descname">get_document_from_index</code><span class="sig-paren">(</span><em>doc_id</em>, <em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/platform/search/gae_search_services.html#get_document_from_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.search.gae_search_services.get_document_from_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a document with a give doc_id(s) from the index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>doc_id</strong> (<em>-</em>) &#8211; a doc_id as a string</li>
+<li><strong>index</strong> (<em>-</em>) &#8211; the name of an index, a string.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li>the requested document as a dict</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.platform.search.gae_search_services.search">
+<code class="descclassname">oppia.core.platform.search.gae_search_services.</code><code class="descname">search</code><span class="sig-paren">(</span><em>query_string</em>, <em>index</em>, <em>cursor=None</em>, <em>limit=10</em>, <em>sort=''</em>, <em>ids_only=False</em>, <em>retries=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/platform/search/gae_search_services.html#search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.search.gae_search_services.search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches for documents in an index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>query_string</strong> (<em>-</em>) &#8211; the search query.
+The syntax used is described here:
+<a class="reference external" href="https://developers.google.com/appengine/docs/python/search/query_strings">https://developers.google.com/appengine/docs/python/search/query_strings</a></li>
+<li><strong>index</strong> (<em>-</em>) &#8211; the name of the index to search.</li>
+<li><strong>cursor</strong> (<em>-</em>) &#8211; a cursor string, as returned by this function. Pass this in to
+get the next &#8216;page&#8217; of results. Leave as None to start at the
+beginning.</li>
+<li><strong>sort</strong> (<em>-</em>) &#8211; a string indicating how to sort results. This should be a string
+of space separated values. Each value should start with a &#8216;+&#8217; or a
+&#8216;-&#8216; character indicating whether to sort in ascending or descending
+order respectively. This character should be followed by a field name
+to sort on.</li>
+<li><strong>limit</strong> (<em>-</em>) &#8211; the maximum number of documents to return.</li>
+<li><strong>ids_only</strong> (<em>-</em>) &#8211; whether to only return document ids.</li>
+<li><strong>retries</strong> (<em>-</em>) &#8211; the number of times to retry searching the index.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
+<li>a list of dictionaries representing search documents. If ids_only is
+True, this will be a list of strings, doc_ids.</li>
+<li>a cursor that you can pass back in to get the next page of results.
+This wil be a web safe string that you can use in urls.
+It will be None if there is no next page.</li>
+</ul>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">returns a tuple with two elements</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-core-platform-search-gae-search-services-test-module">
+<h2>oppia.core.platform.search.gae_search_services_test module<a class="headerlink" href="#oppia-core-platform-search-gae-search-services-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core.platform.search">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.core.platform.search" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.core.platform.search package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.core.platform.search.gae_search_services">oppia.core.platform.search.gae_search_services module</a></li>
+<li><a class="reference internal" href="#oppia-core-platform-search-gae-search-services-test-module">oppia.core.platform.search.gae_search_services_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.core.platform.search">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.core.platform.search.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.core.platform.search.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

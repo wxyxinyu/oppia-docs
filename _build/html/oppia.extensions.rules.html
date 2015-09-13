@@ -1,0 +1,832 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.extensions.rules package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-extensions-rules-package">
+<h1>oppia.extensions.rules package<a class="headerlink" href="#oppia-extensions-rules-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.rules.base">
+<span id="oppia-extensions-rules-base-module"></span><h2>oppia.extensions.rules.base module<a class="headerlink" href="#module-oppia.extensions.rules.base" title="Permalink to this headline">¶</a></h2>
+<p>Base rules.</p>
+<dl class="class">
+<dt id="oppia.extensions.rules.base.CheckedProofRule">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.base.</code><code class="descname">CheckedProofRule</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/base.html#CheckedProofRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.base.CheckedProofRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.domain.rule_domain.Rule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.base.CheckedProofRule.subject_type">
+<code class="descname">subject_type</code><a class="headerlink" href="#oppia.extensions.rules.base.CheckedProofRule.subject_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">CheckedProof</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.base.ClickOnImageRule">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.base.</code><code class="descname">ClickOnImageRule</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/base.html#ClickOnImageRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.base.ClickOnImageRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.domain.rule_domain.Rule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.base.ClickOnImageRule.subject_type">
+<code class="descname">subject_type</code><a class="headerlink" href="#oppia.extensions.rules.base.ClickOnImageRule.subject_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">ClickOnImage</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.base.CodeEvaluationRule">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.base.</code><code class="descname">CodeEvaluationRule</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/base.html#CodeEvaluationRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.base.CodeEvaluationRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.domain.rule_domain.Rule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.base.CodeEvaluationRule.subject_type">
+<code class="descname">subject_type</code><a class="headerlink" href="#oppia.extensions.rules.base.CodeEvaluationRule.subject_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">CodeEvaluation</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.base.CoordTwoDimRule">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.base.</code><code class="descname">CoordTwoDimRule</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/base.html#CoordTwoDimRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.base.CoordTwoDimRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.domain.rule_domain.Rule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.base.CoordTwoDimRule.subject_type">
+<code class="descname">subject_type</code><a class="headerlink" href="#oppia.extensions.rules.base.CoordTwoDimRule.subject_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">CoordTwoDim</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.base.GraphRule">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.base.</code><code class="descname">GraphRule</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/base.html#GraphRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.base.GraphRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.domain.rule_domain.Rule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.base.GraphRule.subject_type">
+<code class="descname">subject_type</code><a class="headerlink" href="#oppia.extensions.rules.base.GraphRule.subject_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Graph</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.base.ImageWithRegionsRule">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.base.</code><code class="descname">ImageWithRegionsRule</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/base.html#ImageWithRegionsRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.base.ImageWithRegionsRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.domain.rule_domain.Rule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.base.ImageWithRegionsRule.subject_type">
+<code class="descname">subject_type</code><a class="headerlink" href="#oppia.extensions.rules.base.ImageWithRegionsRule.subject_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">ImageWithRegions</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.base.MusicPhraseRule">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.base.</code><code class="descname">MusicPhraseRule</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/base.html#MusicPhraseRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.base.MusicPhraseRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.domain.rule_domain.Rule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.base.MusicPhraseRule.subject_type">
+<code class="descname">subject_type</code><a class="headerlink" href="#oppia.extensions.rules.base.MusicPhraseRule.subject_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">MusicPhrase</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.base.NonnegativeIntRule">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.base.</code><code class="descname">NonnegativeIntRule</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/base.html#NonnegativeIntRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.base.NonnegativeIntRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.domain.rule_domain.Rule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.base.NonnegativeIntRule.subject_type">
+<code class="descname">subject_type</code><a class="headerlink" href="#oppia.extensions.rules.base.NonnegativeIntRule.subject_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">NonnegativeInt</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.base.NormalizedStringRule">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.base.</code><code class="descname">NormalizedStringRule</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/base.html#NormalizedStringRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.base.NormalizedStringRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.domain.rule_domain.Rule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.base.NormalizedStringRule.subject_type">
+<code class="descname">subject_type</code><a class="headerlink" href="#oppia.extensions.rules.base.NormalizedStringRule.subject_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">NormalizedString</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.base.RealRule">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.base.</code><code class="descname">RealRule</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/base.html#RealRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.base.RealRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.domain.rule_domain.Rule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.base.RealRule.subject_type">
+<code class="descname">subject_type</code><a class="headerlink" href="#oppia.extensions.rules.base.RealRule.subject_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">Real</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.base.SetOfUnicodeStringRule">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.base.</code><code class="descname">SetOfUnicodeStringRule</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/base.html#SetOfUnicodeStringRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.base.SetOfUnicodeStringRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.domain.rule_domain.Rule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.base.SetOfUnicodeStringRule.subject_type">
+<code class="descname">subject_type</code><a class="headerlink" href="#oppia.extensions.rules.base.SetOfUnicodeStringRule.subject_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">SetOfUnicodeString</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.base.UnicodeStringRule">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.base.</code><code class="descname">UnicodeStringRule</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/base.html#UnicodeStringRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.base.UnicodeStringRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.domain.rule_domain.Rule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.base.UnicodeStringRule.subject_type">
+<code class="descname">subject_type</code><a class="headerlink" href="#oppia.extensions.rules.base.UnicodeStringRule.subject_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">UnicodeString</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.extensions.rules.checked_proof">
+<span id="oppia-extensions-rules-checked-proof-module"></span><h2>oppia.extensions.rules.checked_proof module<a class="headerlink" href="#module-oppia.extensions.rules.checked_proof" title="Permalink to this headline">¶</a></h2>
+<p>Rules for CheckedProof objects.</p>
+<dl class="class">
+<dt id="oppia.extensions.rules.checked_proof.Correct">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.checked_proof.</code><code class="descname">Correct</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/checked_proof.html#Correct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.checked_proof.Correct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.CheckedProofRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.checked_proof.Correct.description">
+<code class="descname">description</code><em class="property"> = 'is correct'</em><a class="headerlink" href="#oppia.extensions.rules.checked_proof.Correct.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.checked_proof.NotCorrect">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.checked_proof.</code><code class="descname">NotCorrect</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/checked_proof.html#NotCorrect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.checked_proof.NotCorrect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.CheckedProofRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.checked_proof.NotCorrect.description">
+<code class="descname">description</code><em class="property"> = 'is not correct'</em><a class="headerlink" href="#oppia.extensions.rules.checked_proof.NotCorrect.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.checked_proof.NotCorrectByCategory">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.checked_proof.</code><code class="descname">NotCorrectByCategory</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/checked_proof.html#NotCorrectByCategory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.checked_proof.NotCorrectByCategory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.CheckedProofRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.checked_proof.NotCorrectByCategory.description">
+<code class="descname">description</code><em class="property"> = 'is not correct due to {{c|LogicErrorCategory}}'</em><a class="headerlink" href="#oppia.extensions.rules.checked_proof.NotCorrectByCategory.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-extensions-rules-checked-proof-test-module">
+<h2>oppia.extensions.rules.checked_proof_test module<a class="headerlink" href="#oppia-extensions-rules-checked-proof-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.rules.click_on_image">
+<span id="oppia-extensions-rules-click-on-image-module"></span><h2>oppia.extensions.rules.click_on_image module<a class="headerlink" href="#module-oppia.extensions.rules.click_on_image" title="Permalink to this headline">¶</a></h2>
+<p>Rules for ClickOnImage objects.</p>
+<dl class="class">
+<dt id="oppia.extensions.rules.click_on_image.IsInRegion">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.click_on_image.</code><code class="descname">IsInRegion</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/click_on_image.html#IsInRegion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.click_on_image.IsInRegion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.ClickOnImageRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.click_on_image.IsInRegion.description">
+<code class="descname">description</code><em class="property"> = 'is in the region {{x|UnicodeString}}'</em><a class="headerlink" href="#oppia.extensions.rules.click_on_image.IsInRegion.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-extensions-rules-click-on-image-test-module">
+<h2>oppia.extensions.rules.click_on_image_test module<a class="headerlink" href="#oppia-extensions-rules-click-on-image-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.rules.code_evaluation">
+<span id="oppia-extensions-rules-code-evaluation-module"></span><h2>oppia.extensions.rules.code_evaluation module<a class="headerlink" href="#module-oppia.extensions.rules.code_evaluation" title="Permalink to this headline">¶</a></h2>
+<p>Rules for CodeEvaluation objects.</p>
+<dl class="class">
+<dt id="oppia.extensions.rules.code_evaluation.OutputEquals">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.code_evaluation.</code><code class="descname">OutputEquals</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/code_evaluation.html#OutputEquals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.code_evaluation.OutputEquals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.CodeEvaluationRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.code_evaluation.OutputEquals.description">
+<code class="descname">description</code><em class="property"> = 'has output equal to {{x|UnicodeString}} (collapsing spaces)'</em><a class="headerlink" href="#oppia.extensions.rules.code_evaluation.OutputEquals.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.code_evaluation.ResultsInError">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.code_evaluation.</code><code class="descname">ResultsInError</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/code_evaluation.html#ResultsInError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.code_evaluation.ResultsInError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.CodeEvaluationRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.code_evaluation.ResultsInError.description">
+<code class="descname">description</code><em class="property"> = 'results in an error when run'</em><a class="headerlink" href="#oppia.extensions.rules.code_evaluation.ResultsInError.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-extensions-rules-code-evaluation-test-module">
+<h2>oppia.extensions.rules.code_evaluation_test module<a class="headerlink" href="#oppia-extensions-rules-code-evaluation-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.rules.coord_two_dim">
+<span id="oppia-extensions-rules-coord-two-dim-module"></span><h2>oppia.extensions.rules.coord_two_dim module<a class="headerlink" href="#module-oppia.extensions.rules.coord_two_dim" title="Permalink to this headline">¶</a></h2>
+<p>Rules for CoordTwoDim objects.</p>
+<dl class="class">
+<dt id="oppia.extensions.rules.coord_two_dim.NotWithin">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.coord_two_dim.</code><code class="descname">NotWithin</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/coord_two_dim.html#NotWithin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.coord_two_dim.NotWithin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.CoordTwoDimRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.coord_two_dim.NotWithin.description">
+<code class="descname">description</code><em class="property"> = 'is not within {{d|Real}} km of {{p|CoordTwoDim}}'</em><a class="headerlink" href="#oppia.extensions.rules.coord_two_dim.NotWithin.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.coord_two_dim.Within">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.coord_two_dim.</code><code class="descname">Within</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/coord_two_dim.html#Within"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.coord_two_dim.Within" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.CoordTwoDimRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.coord_two_dim.Within.description">
+<code class="descname">description</code><em class="property"> = 'is within {{d|Real}} km of {{p|CoordTwoDim}}'</em><a class="headerlink" href="#oppia.extensions.rules.coord_two_dim.Within.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-extensions-rules-coord-two-dim-test-module">
+<h2>oppia.extensions.rules.coord_two_dim_test module<a class="headerlink" href="#oppia-extensions-rules-coord-two-dim-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.rules.graph">
+<span id="oppia-extensions-rules-graph-module"></span><h2>oppia.extensions.rules.graph module<a class="headerlink" href="#module-oppia.extensions.rules.graph" title="Permalink to this headline">¶</a></h2>
+<p>Rules for Graph objects.</p>
+<dl class="class">
+<dt id="oppia.extensions.rules.graph.IsIsomorphicTo">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.graph.</code><code class="descname">IsIsomorphicTo</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/graph.html#IsIsomorphicTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.graph.IsIsomorphicTo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.GraphRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.graph.IsIsomorphicTo.description">
+<code class="descname">description</code><em class="property"> = 'is isomorphic to {{g|Graph}}, including matching labels'</em><a class="headerlink" href="#oppia.extensions.rules.graph.IsIsomorphicTo.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-extensions-rules-graph-test-module">
+<h2>oppia.extensions.rules.graph_test module<a class="headerlink" href="#oppia-extensions-rules-graph-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.rules.music_phrase">
+<span id="oppia-extensions-rules-music-phrase-module"></span><h2>oppia.extensions.rules.music_phrase module<a class="headerlink" href="#module-oppia.extensions.rules.music_phrase" title="Permalink to this headline">¶</a></h2>
+<p>Rules for MusicPhrase objects.</p>
+<dl class="class">
+<dt id="oppia.extensions.rules.music_phrase.Equals">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.music_phrase.</code><code class="descname">Equals</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/music_phrase.html#Equals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.music_phrase.Equals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.MusicPhraseRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.music_phrase.Equals.description">
+<code class="descname">description</code><em class="property"> = 'is equal to {{x|MusicPhrase}}'</em><a class="headerlink" href="#oppia.extensions.rules.music_phrase.Equals.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.music_phrase.HasLengthInclusivelyBetween">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.music_phrase.</code><code class="descname">HasLengthInclusivelyBetween</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/music_phrase.html#HasLengthInclusivelyBetween"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.music_phrase.HasLengthInclusivelyBetween" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.MusicPhraseRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.music_phrase.HasLengthInclusivelyBetween.description">
+<code class="descname">description</code><em class="property"> = 'has between {{a|NonnegativeInt}} and {{b|NonnegativeInt}} notes, inclusive'</em><a class="headerlink" href="#oppia.extensions.rules.music_phrase.HasLengthInclusivelyBetween.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.music_phrase.IsEqualToExceptFor">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.music_phrase.</code><code class="descname">IsEqualToExceptFor</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/music_phrase.html#IsEqualToExceptFor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.music_phrase.IsEqualToExceptFor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.MusicPhraseRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.music_phrase.IsEqualToExceptFor.description">
+<code class="descname">description</code><em class="property"> = 'is equal to {{x|MusicPhrase}} except for {{k|NonnegativeInt}} notes'</em><a class="headerlink" href="#oppia.extensions.rules.music_phrase.IsEqualToExceptFor.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.music_phrase.IsLongerThan">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.music_phrase.</code><code class="descname">IsLongerThan</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/music_phrase.html#IsLongerThan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.music_phrase.IsLongerThan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.MusicPhraseRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.music_phrase.IsLongerThan.description">
+<code class="descname">description</code><em class="property"> = 'has more than {{k|NonnegativeInt}} notes'</em><a class="headerlink" href="#oppia.extensions.rules.music_phrase.IsLongerThan.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.music_phrase.IsTranspositionOf">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.music_phrase.</code><code class="descname">IsTranspositionOf</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/music_phrase.html#IsTranspositionOf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.music_phrase.IsTranspositionOf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.MusicPhraseRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.music_phrase.IsTranspositionOf.description">
+<code class="descname">description</code><em class="property"> = 'is a transposition of {{x|MusicPhrase}} by {{y|Int}} semitones'</em><a class="headerlink" href="#oppia.extensions.rules.music_phrase.IsTranspositionOf.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.music_phrase.IsTranspositionOfExceptFor">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.music_phrase.</code><code class="descname">IsTranspositionOfExceptFor</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/music_phrase.html#IsTranspositionOfExceptFor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.music_phrase.IsTranspositionOfExceptFor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.MusicPhraseRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.music_phrase.IsTranspositionOfExceptFor.description">
+<code class="descname">description</code><em class="property"> = 'is a transposition of {{x|MusicPhrase}} by {{y|Int}} semitones except for {{k|NonnegativeInt}} notes'</em><a class="headerlink" href="#oppia.extensions.rules.music_phrase.IsTranspositionOfExceptFor.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-extensions-rules-music-phrase-test-module">
+<h2>oppia.extensions.rules.music_phrase_test module<a class="headerlink" href="#oppia-extensions-rules-music-phrase-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.rules.nonnegative_int">
+<span id="oppia-extensions-rules-nonnegative-int-module"></span><h2>oppia.extensions.rules.nonnegative_int module<a class="headerlink" href="#module-oppia.extensions.rules.nonnegative_int" title="Permalink to this headline">¶</a></h2>
+<p>Rules for NonnegativeInts.</p>
+<dl class="class">
+<dt id="oppia.extensions.rules.nonnegative_int.Equals">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.nonnegative_int.</code><code class="descname">Equals</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/nonnegative_int.html#Equals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.nonnegative_int.Equals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.NonnegativeIntRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.nonnegative_int.Equals.description">
+<code class="descname">description</code><em class="property"> = 'is equal to {{x|NonnegativeInt}}'</em><a class="headerlink" href="#oppia.extensions.rules.nonnegative_int.Equals.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-extensions-rules-nonnegative-int-test-module">
+<h2>oppia.extensions.rules.nonnegative_int_test module<a class="headerlink" href="#oppia-extensions-rules-nonnegative-int-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.rules.normalized_string">
+<span id="oppia-extensions-rules-normalized-string-module"></span><h2>oppia.extensions.rules.normalized_string module<a class="headerlink" href="#module-oppia.extensions.rules.normalized_string" title="Permalink to this headline">¶</a></h2>
+<p>Rules for NormalizedStrings.</p>
+<dl class="class">
+<dt id="oppia.extensions.rules.normalized_string.CaseSensitiveEquals">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.normalized_string.</code><code class="descname">CaseSensitiveEquals</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/normalized_string.html#CaseSensitiveEquals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.normalized_string.CaseSensitiveEquals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.NormalizedStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.normalized_string.CaseSensitiveEquals.description">
+<code class="descname">description</code><em class="property"> = 'is equal to {{x|NormalizedString}}, taking case into account'</em><a class="headerlink" href="#oppia.extensions.rules.normalized_string.CaseSensitiveEquals.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.normalized_string.Contains">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.normalized_string.</code><code class="descname">Contains</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/normalized_string.html#Contains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.normalized_string.Contains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.NormalizedStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.normalized_string.Contains.description">
+<code class="descname">description</code><em class="property"> = 'contains {{x|NormalizedString}}'</em><a class="headerlink" href="#oppia.extensions.rules.normalized_string.Contains.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.normalized_string.Equals">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.normalized_string.</code><code class="descname">Equals</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/normalized_string.html#Equals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.normalized_string.Equals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.NormalizedStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.normalized_string.Equals.description">
+<code class="descname">description</code><em class="property"> = 'is equal to {{x|NormalizedString}}'</em><a class="headerlink" href="#oppia.extensions.rules.normalized_string.Equals.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.normalized_string.FuzzyEquals">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.normalized_string.</code><code class="descname">FuzzyEquals</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/normalized_string.html#FuzzyEquals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.normalized_string.FuzzyEquals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.NormalizedStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.normalized_string.FuzzyEquals.description">
+<code class="descname">description</code><em class="property"> = 'is equal to {{x|NormalizedString}}, misspelled by at most one character'</em><a class="headerlink" href="#oppia.extensions.rules.normalized_string.FuzzyEquals.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.normalized_string.StartsWith">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.normalized_string.</code><code class="descname">StartsWith</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/normalized_string.html#StartsWith"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.normalized_string.StartsWith" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.NormalizedStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.normalized_string.StartsWith.description">
+<code class="descname">description</code><em class="property"> = 'starts with {{x|NormalizedString}}'</em><a class="headerlink" href="#oppia.extensions.rules.normalized_string.StartsWith.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-extensions-rules-normalized-string-test-module">
+<h2>oppia.extensions.rules.normalized_string_test module<a class="headerlink" href="#oppia-extensions-rules-normalized-string-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.rules.real">
+<span id="oppia-extensions-rules-real-module"></span><h2>oppia.extensions.rules.real module<a class="headerlink" href="#module-oppia.extensions.rules.real" title="Permalink to this headline">¶</a></h2>
+<p>Rules for Reals.</p>
+<dl class="class">
+<dt id="oppia.extensions.rules.real.Equals">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.real.</code><code class="descname">Equals</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/real.html#Equals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.real.Equals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.RealRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.real.Equals.description">
+<code class="descname">description</code><em class="property"> = 'is equal to {{x|Real}}'</em><a class="headerlink" href="#oppia.extensions.rules.real.Equals.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.real.IsGreaterThan">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.real.</code><code class="descname">IsGreaterThan</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/real.html#IsGreaterThan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.real.IsGreaterThan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.RealRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.real.IsGreaterThan.description">
+<code class="descname">description</code><em class="property"> = 'is greater than {{x|Real}}'</em><a class="headerlink" href="#oppia.extensions.rules.real.IsGreaterThan.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.real.IsGreaterThanOrEqualTo">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.real.</code><code class="descname">IsGreaterThanOrEqualTo</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/real.html#IsGreaterThanOrEqualTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.real.IsGreaterThanOrEqualTo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.RealRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.real.IsGreaterThanOrEqualTo.description">
+<code class="descname">description</code><em class="property"> = 'is greater than or equal to {{x|Real}}'</em><a class="headerlink" href="#oppia.extensions.rules.real.IsGreaterThanOrEqualTo.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.real.IsInclusivelyBetween">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.real.</code><code class="descname">IsInclusivelyBetween</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/real.html#IsInclusivelyBetween"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.real.IsInclusivelyBetween" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.RealRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.real.IsInclusivelyBetween.description">
+<code class="descname">description</code><em class="property"> = 'is between {{a|Real}} and {{b|Real}}, inclusive'</em><a class="headerlink" href="#oppia.extensions.rules.real.IsInclusivelyBetween.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.real.IsLessThan">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.real.</code><code class="descname">IsLessThan</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/real.html#IsLessThan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.real.IsLessThan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.RealRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.real.IsLessThan.description">
+<code class="descname">description</code><em class="property"> = 'is less than {{x|Real}}'</em><a class="headerlink" href="#oppia.extensions.rules.real.IsLessThan.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.real.IsLessThanOrEqualTo">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.real.</code><code class="descname">IsLessThanOrEqualTo</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/real.html#IsLessThanOrEqualTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.real.IsLessThanOrEqualTo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.RealRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.real.IsLessThanOrEqualTo.description">
+<code class="descname">description</code><em class="property"> = 'is less than or equal to {{x|Real}}'</em><a class="headerlink" href="#oppia.extensions.rules.real.IsLessThanOrEqualTo.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.real.IsWithinTolerance">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.real.</code><code class="descname">IsWithinTolerance</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/real.html#IsWithinTolerance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.real.IsWithinTolerance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.RealRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.real.IsWithinTolerance.description">
+<code class="descname">description</code><em class="property"> = 'is within {{tol|Real}} of {{x|Real}}'</em><a class="headerlink" href="#oppia.extensions.rules.real.IsWithinTolerance.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-extensions-rules-real-test-module">
+<h2>oppia.extensions.rules.real_test module<a class="headerlink" href="#oppia-extensions-rules-real-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.rules.set_of_unicode_string">
+<span id="oppia-extensions-rules-set-of-unicode-string-module"></span><h2>oppia.extensions.rules.set_of_unicode_string module<a class="headerlink" href="#module-oppia.extensions.rules.set_of_unicode_string" title="Permalink to this headline">¶</a></h2>
+<p>Rules for SetOfUnicodeString objects.</p>
+<dl class="class">
+<dt id="oppia.extensions.rules.set_of_unicode_string.Equals">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.set_of_unicode_string.</code><code class="descname">Equals</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/set_of_unicode_string.html#Equals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.Equals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.SetOfUnicodeStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.set_of_unicode_string.Equals.description">
+<code class="descname">description</code><em class="property"> = 'is equal to {{x|SetOfUnicodeString}}'</em><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.Equals.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.set_of_unicode_string.HasElementsIn">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.set_of_unicode_string.</code><code class="descname">HasElementsIn</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/set_of_unicode_string.html#HasElementsIn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.HasElementsIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.SetOfUnicodeStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.set_of_unicode_string.HasElementsIn.description">
+<code class="descname">description</code><em class="property"> = 'has elements in common with {{x|SetOfUnicodeString}}'</em><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.HasElementsIn.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.set_of_unicode_string.HasElementsNotIn">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.set_of_unicode_string.</code><code class="descname">HasElementsNotIn</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/set_of_unicode_string.html#HasElementsNotIn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.HasElementsNotIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.SetOfUnicodeStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.set_of_unicode_string.HasElementsNotIn.description">
+<code class="descname">description</code><em class="property"> = 'has elements not in {{x|SetOfUnicodeString}}'</em><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.HasElementsNotIn.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.set_of_unicode_string.IsDisjointFrom">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.set_of_unicode_string.</code><code class="descname">IsDisjointFrom</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/set_of_unicode_string.html#IsDisjointFrom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.IsDisjointFrom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.SetOfUnicodeStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.set_of_unicode_string.IsDisjointFrom.description">
+<code class="descname">description</code><em class="property"> = 'has no elements in common with {{x|SetOfUnicodeString}}'</em><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.IsDisjointFrom.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.set_of_unicode_string.IsSubsetOf">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.set_of_unicode_string.</code><code class="descname">IsSubsetOf</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/set_of_unicode_string.html#IsSubsetOf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.IsSubsetOf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.SetOfUnicodeStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.set_of_unicode_string.IsSubsetOf.description">
+<code class="descname">description</code><em class="property"> = 'is a proper subset of {{x|SetOfUnicodeString}}'</em><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.IsSubsetOf.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.set_of_unicode_string.IsSupersetOf">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.set_of_unicode_string.</code><code class="descname">IsSupersetOf</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/set_of_unicode_string.html#IsSupersetOf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.IsSupersetOf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.SetOfUnicodeStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.set_of_unicode_string.IsSupersetOf.description">
+<code class="descname">description</code><em class="property"> = 'is a proper superset of {{x|SetOfUnicodeString}}'</em><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.IsSupersetOf.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.set_of_unicode_string.OmitsElementsIn">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.set_of_unicode_string.</code><code class="descname">OmitsElementsIn</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/set_of_unicode_string.html#OmitsElementsIn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.OmitsElementsIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.SetOfUnicodeStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.set_of_unicode_string.OmitsElementsIn.description">
+<code class="descname">description</code><em class="property"> = 'omits some elements of {{x|SetOfUnicodeString}}'</em><a class="headerlink" href="#oppia.extensions.rules.set_of_unicode_string.OmitsElementsIn.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-extensions-rules-set-of-unicode-string-test-module">
+<h2>oppia.extensions.rules.set_of_unicode_string_test module<a class="headerlink" href="#oppia-extensions-rules-set-of-unicode-string-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.rules.unicode_string">
+<span id="oppia-extensions-rules-unicode-string-module"></span><h2>oppia.extensions.rules.unicode_string module<a class="headerlink" href="#module-oppia.extensions.rules.unicode_string" title="Permalink to this headline">¶</a></h2>
+<p>Rules for UnicodeString.</p>
+<dl class="class">
+<dt id="oppia.extensions.rules.unicode_string.CaseSensitiveEquals">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.unicode_string.</code><code class="descname">CaseSensitiveEquals</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/unicode_string.html#CaseSensitiveEquals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.unicode_string.CaseSensitiveEquals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.UnicodeStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.unicode_string.CaseSensitiveEquals.description">
+<code class="descname">description</code><em class="property"> = 'is equal to {{x|UnicodeString}}, taking case into account'</em><a class="headerlink" href="#oppia.extensions.rules.unicode_string.CaseSensitiveEquals.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.unicode_string.Contains">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.unicode_string.</code><code class="descname">Contains</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/unicode_string.html#Contains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.unicode_string.Contains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.UnicodeStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.unicode_string.Contains.description">
+<code class="descname">description</code><em class="property"> = 'contains {{x|UnicodeString}}'</em><a class="headerlink" href="#oppia.extensions.rules.unicode_string.Contains.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.unicode_string.Equals">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.unicode_string.</code><code class="descname">Equals</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/unicode_string.html#Equals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.unicode_string.Equals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.UnicodeStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.unicode_string.Equals.description">
+<code class="descname">description</code><em class="property"> = 'is equal to {{x|UnicodeString}}'</em><a class="headerlink" href="#oppia.extensions.rules.unicode_string.Equals.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.unicode_string.MatchesBase64EncodedFile">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.unicode_string.</code><code class="descname">MatchesBase64EncodedFile</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/unicode_string.html#MatchesBase64EncodedFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.unicode_string.MatchesBase64EncodedFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.UnicodeStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.unicode_string.MatchesBase64EncodedFile.description">
+<code class="descname">description</code><em class="property"> = 'has same content as the file located at {{filepath|UnicodeString}}'</em><a class="headerlink" href="#oppia.extensions.rules.unicode_string.MatchesBase64EncodedFile.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.rules.unicode_string.StartsWith">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.unicode_string.</code><code class="descname">StartsWith</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/unicode_string.html#StartsWith"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.unicode_string.StartsWith" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">extensions.rules.base.UnicodeStringRule</span></code></p>
+<dl class="attribute">
+<dt id="oppia.extensions.rules.unicode_string.StartsWith.description">
+<code class="descname">description</code><em class="property"> = 'starts with {{x|UnicodeString}}'</em><a class="headerlink" href="#oppia.extensions.rules.unicode_string.StartsWith.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.extensions.rules.unicode_string_test">
+<span id="oppia-extensions-rules-unicode-string-test-module"></span><h2>oppia.extensions.rules.unicode_string_test module<a class="headerlink" href="#module-oppia.extensions.rules.unicode_string_test" title="Permalink to this headline">¶</a></h2>
+<p>Tests for classification of UnicodeStrings.</p>
+<dl class="class">
+<dt id="oppia.extensions.rules.unicode_string_test.UnicodeStringRuleUnitTests">
+<em class="property">class </em><code class="descclassname">oppia.extensions.rules.unicode_string_test.</code><code class="descname">UnicodeStringRuleUnitTests</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/unicode_string_test.html#UnicodeStringRuleUnitTests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.unicode_string_test.UnicodeStringRuleUnitTests" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for rules operating on UnicodeString objects.</p>
+<dl class="method">
+<dt id="oppia.extensions.rules.unicode_string_test.UnicodeStringRuleUnitTests.test_case_sensitive_equals_rule">
+<code class="descname">test_case_sensitive_equals_rule</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/unicode_string_test.html#UnicodeStringRuleUnitTests.test_case_sensitive_equals_rule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.unicode_string_test.UnicodeStringRuleUnitTests.test_case_sensitive_equals_rule" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.extensions.rules.unicode_string_test.UnicodeStringRuleUnitTests.test_contains_rule">
+<code class="descname">test_contains_rule</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/unicode_string_test.html#UnicodeStringRuleUnitTests.test_contains_rule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.unicode_string_test.UnicodeStringRuleUnitTests.test_contains_rule" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.extensions.rules.unicode_string_test.UnicodeStringRuleUnitTests.test_equals_rule">
+<code class="descname">test_equals_rule</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/unicode_string_test.html#UnicodeStringRuleUnitTests.test_equals_rule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.unicode_string_test.UnicodeStringRuleUnitTests.test_equals_rule" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.extensions.rules.unicode_string_test.UnicodeStringRuleUnitTests.test_matches_base64encoded_file_rule">
+<code class="descname">test_matches_base64encoded_file_rule</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/unicode_string_test.html#UnicodeStringRuleUnitTests.test_matches_base64encoded_file_rule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.unicode_string_test.UnicodeStringRuleUnitTests.test_matches_base64encoded_file_rule" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.extensions.rules.unicode_string_test.UnicodeStringRuleUnitTests.test_starts_with_rule">
+<code class="descname">test_starts_with_rule</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/rules/unicode_string_test.html#UnicodeStringRuleUnitTests.test_starts_with_rule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.rules.unicode_string_test.UnicodeStringRuleUnitTests.test_starts_with_rule" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.extensions.rules">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.extensions.rules" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.extensions.rules package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules.base">oppia.extensions.rules.base module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules.checked_proof">oppia.extensions.rules.checked_proof module</a></li>
+<li><a class="reference internal" href="#oppia-extensions-rules-checked-proof-test-module">oppia.extensions.rules.checked_proof_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules.click_on_image">oppia.extensions.rules.click_on_image module</a></li>
+<li><a class="reference internal" href="#oppia-extensions-rules-click-on-image-test-module">oppia.extensions.rules.click_on_image_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules.code_evaluation">oppia.extensions.rules.code_evaluation module</a></li>
+<li><a class="reference internal" href="#oppia-extensions-rules-code-evaluation-test-module">oppia.extensions.rules.code_evaluation_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules.coord_two_dim">oppia.extensions.rules.coord_two_dim module</a></li>
+<li><a class="reference internal" href="#oppia-extensions-rules-coord-two-dim-test-module">oppia.extensions.rules.coord_two_dim_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules.graph">oppia.extensions.rules.graph module</a></li>
+<li><a class="reference internal" href="#oppia-extensions-rules-graph-test-module">oppia.extensions.rules.graph_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules.music_phrase">oppia.extensions.rules.music_phrase module</a></li>
+<li><a class="reference internal" href="#oppia-extensions-rules-music-phrase-test-module">oppia.extensions.rules.music_phrase_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules.nonnegative_int">oppia.extensions.rules.nonnegative_int module</a></li>
+<li><a class="reference internal" href="#oppia-extensions-rules-nonnegative-int-test-module">oppia.extensions.rules.nonnegative_int_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules.normalized_string">oppia.extensions.rules.normalized_string module</a></li>
+<li><a class="reference internal" href="#oppia-extensions-rules-normalized-string-test-module">oppia.extensions.rules.normalized_string_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules.real">oppia.extensions.rules.real module</a></li>
+<li><a class="reference internal" href="#oppia-extensions-rules-real-test-module">oppia.extensions.rules.real_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules.set_of_unicode_string">oppia.extensions.rules.set_of_unicode_string module</a></li>
+<li><a class="reference internal" href="#oppia-extensions-rules-set-of-unicode-string-test-module">oppia.extensions.rules.set_of_unicode_string_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules.unicode_string">oppia.extensions.rules.unicode_string module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules.unicode_string_test">oppia.extensions.rules.unicode_string_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.rules">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.extensions.rules.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.extensions.rules.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

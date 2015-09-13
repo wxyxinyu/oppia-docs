@@ -1,0 +1,1347 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.exp_services &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.exp_services</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Commands that can be used to operate on explorations.</span>
+
+<span class="sd">All functions here should be agnostic of how ExplorationModel objects are</span>
+<span class="sd">stored in the database. In particular, the various query methods should</span>
+<span class="sd">delegate to the Exploration model class. This will enable the exploration</span>
+<span class="sd">storage model to be changed without affecting this module and others above it.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">StringIO</span>
+<span class="kn">import</span> <span class="nn">zipfile</span>
+
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">event_services</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_domain</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">fs_domain</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">rights_manager</span>
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="n">memcache_services</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_memcache_services</span><span class="p">()</span>
+<span class="n">search_services</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_search_services</span><span class="p">()</span>
+<span class="n">taskqueue_services</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_taskqueue_services</span><span class="p">()</span>
+<span class="p">(</span><span class="n">exp_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span><span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">exploration</span><span class="p">])</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="c"># This takes additional &#39;title&#39; and &#39;category&#39; parameters.</span>
+<span class="n">CMD_CREATE_NEW</span> <span class="o">=</span> <span class="s">&#39;create_new&#39;</span>
+
+<span class="c">#Name for the exploration search index</span>
+<span class="n">SEARCH_INDEX_EXPLORATIONS</span> <span class="o">=</span> <span class="s">&#39;explorations&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">_migrate_states_schema</span><span class="p">(</span><span class="n">versioned_exploration_states</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Holds the responsibility of performing a step-by-step, sequential update</span>
+<span class="sd">    of an exploration states structure based on the schema version of the input</span>
+<span class="sd">    exploration dictionary. This is very similar to the YAML conversion process</span>
+<span class="sd">    found in exp_domain.py and, in fact, many of the conversion functions for</span>
+<span class="sd">    states are also used in the YAML conversion pipeline. If the current</span>
+<span class="sd">    exploration states schema version changes</span>
+<span class="sd">    (feconf.CURRENT_EXPLORATION_STATES_SCHEMA_VERSION), a new conversion</span>
+<span class="sd">    function must be added and some code appended to this function to account</span>
+<span class="sd">    for that new version.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        versioned_exploration_states: A dict with two keys:</span>
+<span class="sd">          - states_schema_version: the states schema version for the</span>
+<span class="sd">            exploration.</span>
+<span class="sd">          - states: the dict of states comprising the exploration. The keys in</span>
+<span class="sd">            this dict are state names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exploration_states_schema_version</span> <span class="o">=</span> <span class="n">versioned_exploration_states</span><span class="p">[</span>
+        <span class="s">&#39;states_schema_version&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">exploration_states_schema_version</span> <span class="ow">is</span> <span class="bp">None</span>
+            <span class="ow">or</span> <span class="n">exploration_states_schema_version</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">exploration_states_schema_version</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">exploration_states_schema_version</span>
+            <span class="o">&lt;=</span> <span class="n">feconf</span><span class="o">.</span><span class="n">CURRENT_EXPLORATION_STATES_SCHEMA_VERSION</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s">&#39;Sorry, we can only process v1-v</span><span class="si">%d</span><span class="s"> and unversioned exploration &#39;</span>
+            <span class="s">&#39;state schemas at present.&#39;</span> <span class="o">%</span>
+            <span class="n">feconf</span><span class="o">.</span><span class="n">CURRENT_EXPLORATION_STATES_SCHEMA_VERSION</span><span class="p">)</span>
+
+    <span class="c"># Check for conversion to v1.</span>
+    <span class="k">if</span> <span class="n">exploration_states_schema_version</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">exp_domain</span><span class="o">.</span><span class="n">Exploration</span><span class="o">.</span><span class="n">update_states_v0_to_v1_from_model</span><span class="p">(</span>
+            <span class="n">versioned_exploration_states</span><span class="p">)</span>
+        <span class="n">exploration_states_schema_version</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c"># Check for conversion to v2.</span>
+    <span class="k">if</span> <span class="n">exploration_states_schema_version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">exp_domain</span><span class="o">.</span><span class="n">Exploration</span><span class="o">.</span><span class="n">update_states_v1_to_v2_from_model</span><span class="p">(</span>
+            <span class="n">versioned_exploration_states</span><span class="p">)</span>
+        <span class="n">exploration_states_schema_version</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="c"># Check for conversion to v3.</span>
+    <span class="k">if</span> <span class="n">exploration_states_schema_version</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">exp_domain</span><span class="o">.</span><span class="n">Exploration</span><span class="o">.</span><span class="n">update_states_v2_to_v3_from_model</span><span class="p">(</span>
+            <span class="n">versioned_exploration_states</span><span class="p">)</span>
+        <span class="n">exploration_states_schema_version</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="c"># Check for conversion to v4.</span>
+    <span class="k">if</span> <span class="n">exploration_states_schema_version</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">exp_domain</span><span class="o">.</span><span class="n">Exploration</span><span class="o">.</span><span class="n">update_states_v3_to_v4_from_model</span><span class="p">(</span>
+            <span class="n">versioned_exploration_states</span><span class="p">)</span>
+        <span class="n">exploration_states_schema_version</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="c"># Check for conversion to v5.</span>
+    <span class="k">if</span> <span class="n">exploration_states_schema_version</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">exp_domain</span><span class="o">.</span><span class="n">Exploration</span><span class="o">.</span><span class="n">update_states_v4_to_v5_from_model</span><span class="p">(</span>
+            <span class="n">versioned_exploration_states</span><span class="p">)</span>
+        <span class="n">exploration_states_schema_version</span> <span class="o">=</span> <span class="mi">5</span>
+
+
+<span class="c"># Repository GET methods.</span>
+<span class="k">def</span> <span class="nf">_get_exploration_memcache_key</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a memcache key for an exploration.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">version</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;exploration-version:</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;exploration:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">exploration_id</span>
+
+
+<div class="viewcode-block" id="get_exploration_from_model"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_exploration_from_model">[docs]</a><span class="k">def</span> <span class="nf">get_exploration_from_model</span><span class="p">(</span><span class="n">exploration_model</span><span class="p">,</span> <span class="n">run_conversion</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns an Exploration domain object given an exploration model loaded</span>
+<span class="sd">    from the datastore.</span>
+
+<span class="sd">    If run_conversion is True, then the exploration&#39;s states schema version</span>
+<span class="sd">    will be checked against the current states schema version. If they do not</span>
+<span class="sd">    match, the exploration will be automatically updated to the latest states</span>
+<span class="sd">    schema version.</span>
+
+<span class="sd">    IMPORTANT NOTE TO DEVELOPERS: In general, run_conversion should never be</span>
+<span class="sd">    False. This option is only used for testing that the states schema version</span>
+<span class="sd">    migration works correctly, and it should never be changed otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># Ensure the original exploration model does not get altered.</span>
+    <span class="n">versioned_exploration_states</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;states_schema_version&#39;</span><span class="p">:</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">states_schema_version</span><span class="p">,</span>
+        <span class="s">&#39;states&#39;</span><span class="p">:</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">exploration_model</span><span class="o">.</span><span class="n">states</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="c"># If the exploration uses the latest states schema version, no conversion</span>
+    <span class="c"># is necessary.</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">run_conversion</span> <span class="ow">and</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">states_schema_version</span> <span class="o">!=</span>
+            <span class="n">feconf</span><span class="o">.</span><span class="n">CURRENT_EXPLORATION_STATES_SCHEMA_VERSION</span><span class="p">):</span>
+        <span class="n">_migrate_states_schema</span><span class="p">(</span><span class="n">versioned_exploration_states</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">Exploration</span><span class="p">(</span>
+        <span class="n">exploration_model</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">exploration_model</span><span class="o">.</span><span class="n">category</span><span class="p">,</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">objective</span><span class="p">,</span>
+        <span class="n">exploration_model</span><span class="o">.</span><span class="n">language_code</span><span class="p">,</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">tags</span><span class="p">,</span>
+        <span class="n">exploration_model</span><span class="o">.</span><span class="n">blurb</span><span class="p">,</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">author_notes</span><span class="p">,</span>
+        <span class="n">exploration_model</span><span class="o">.</span><span class="n">default_skin</span><span class="p">,</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">skin_customizations</span><span class="p">,</span>
+        <span class="n">versioned_exploration_states</span><span class="p">[</span><span class="s">&#39;states_schema_version&#39;</span><span class="p">],</span>
+        <span class="n">exploration_model</span><span class="o">.</span><span class="n">init_state_name</span><span class="p">,</span>
+        <span class="n">versioned_exploration_states</span><span class="p">[</span><span class="s">&#39;states&#39;</span><span class="p">],</span>
+        <span class="n">exploration_model</span><span class="o">.</span><span class="n">param_specs</span><span class="p">,</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">param_changes</span><span class="p">,</span>
+        <span class="n">exploration_model</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">created_on</span><span class="p">,</span>
+        <span class="n">exploration_model</span><span class="o">.</span><span class="n">last_updated</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_exploration_summary_from_model"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_exploration_summary_from_model">[docs]</a><span class="k">def</span> <span class="nf">get_exploration_summary_from_model</span><span class="p">(</span><span class="n">exp_summary_model</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">ExplorationSummary</span><span class="p">(</span>
+        <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">category</span><span class="p">,</span> <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">objective</span><span class="p">,</span>
+        <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">language_code</span><span class="p">,</span> <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">tags</span><span class="p">,</span>
+        <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">ratings</span><span class="p">,</span> <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">community_owned</span><span class="p">,</span> <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">,</span>
+        <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">editor_ids</span><span class="p">,</span> <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">viewer_ids</span><span class="p">,</span>
+        <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+        <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">exploration_model_created_on</span><span class="p">,</span>
+        <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">exploration_model_last_updated</span>
+    <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_exploration_by_id"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_exploration_by_id">[docs]</a><span class="k">def</span> <span class="nf">get_exploration_by_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a domain object representing an exploration.&quot;&quot;&quot;</span>
+    <span class="n">exploration_memcache_key</span> <span class="o">=</span> <span class="n">_get_exploration_memcache_key</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
+    <span class="n">memcached_exploration</span> <span class="o">=</span> <span class="n">memcache_services</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">exploration_memcache_key</span><span class="p">])</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">exploration_memcache_key</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">memcached_exploration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">memcached_exploration</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">exploration_model</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">exploration_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">exploration_model</span><span class="p">:</span>
+            <span class="n">exploration</span> <span class="o">=</span> <span class="n">get_exploration_from_model</span><span class="p">(</span><span class="n">exploration_model</span><span class="p">)</span>
+            <span class="n">memcache_services</span><span class="o">.</span><span class="n">set_multi</span><span class="p">({</span>
+                <span class="n">exploration_memcache_key</span><span class="p">:</span> <span class="n">exploration</span><span class="p">})</span>
+            <span class="k">return</span> <span class="n">exploration</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="get_exploration_summary_by_id"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_exploration_summary_by_id">[docs]</a><span class="k">def</span> <span class="nf">get_exploration_summary_by_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a domain object representing an exploration summary.&quot;&quot;&quot;</span>
+    <span class="c"># TODO(msl): Maybe use memcache similarly to get_exploration_by_id.</span>
+    <span class="n">exp_summary_model</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">exp_summary_model</span><span class="p">:</span>
+        <span class="n">exp_summary</span> <span class="o">=</span> <span class="n">get_exploration_summary_from_model</span><span class="p">(</span><span class="n">exp_summary_model</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">exp_summary</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="get_multiple_explorations_by_id"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_multiple_explorations_by_id">[docs]</a><span class="k">def</span> <span class="nf">get_multiple_explorations_by_id</span><span class="p">(</span><span class="n">exp_ids</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a dict of domain objects representing explorations with the</span>
+<span class="sd">    given ids as keys. If an exp_id is not present it is not included in the</span>
+<span class="sd">    return dict.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exp_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exp_ids</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">uncached</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">memcache_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">_get_exploration_memcache_key</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">exp_ids</span><span class="p">]</span>
+    <span class="n">cache_result</span> <span class="o">=</span> <span class="n">memcache_services</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span><span class="n">memcache_keys</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">exp_obj</span> <span class="ow">in</span> <span class="n">cache_result</span><span class="o">.</span><span class="n">itervalues</span><span class="p">():</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">exp_obj</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">exp_obj</span>
+
+    <span class="k">for</span> <span class="n">_id</span> <span class="ow">in</span> <span class="n">exp_ids</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">uncached</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_id</span><span class="p">)</span>
+
+    <span class="n">db_exp_models</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span><span class="n">uncached</span><span class="p">)</span>
+    <span class="n">db_results_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">not_found</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">eid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">uncached</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">db_exp_models</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">model</span><span class="p">:</span>
+            <span class="n">exploration</span> <span class="o">=</span> <span class="n">get_exploration_from_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+            <span class="n">db_results_dict</span><span class="p">[</span><span class="n">eid</span><span class="p">]</span> <span class="o">=</span> <span class="n">exploration</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Tried to fetch exploration with id </span><span class="si">%s</span><span class="s">, but no such &#39;</span>
+                         <span class="s">&#39;exploration exists in the datastore&#39;</span> <span class="o">%</span> <span class="n">eid</span><span class="p">)</span>
+            <span class="n">not_found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eid</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">strict</span> <span class="ow">and</span> <span class="n">not_found</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s">&#39;Couldn</span><span class="se">\&#39;</span><span class="s">t find explorations with the following ids:</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span>
+            <span class="o">%</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">not_found</span><span class="p">))</span>
+
+    <span class="n">cache_update</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">eid</span><span class="p">:</span> <span class="n">db_results_dict</span><span class="p">[</span><span class="n">eid</span><span class="p">]</span> <span class="k">for</span> <span class="n">eid</span> <span class="ow">in</span> <span class="n">db_results_dict</span><span class="o">.</span><span class="n">iterkeys</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">db_results_dict</span><span class="p">[</span><span class="n">eid</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">cache_update</span><span class="p">:</span>
+        <span class="n">memcache_services</span><span class="o">.</span><span class="n">set_multi</span><span class="p">(</span><span class="n">cache_update</span><span class="p">)</span>
+
+    <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">db_results_dict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="get_new_exploration_id"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_new_exploration_id">[docs]</a><span class="k">def</span> <span class="nf">get_new_exploration_id</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns a new exploration id.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">get_new_id</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="is_exp_summary_editable"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.is_exp_summary_editable">[docs]</a><span class="k">def</span> <span class="nf">is_exp_summary_editable</span><span class="p">(</span><span class="n">exp_summary</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks if a given user may edit an exploration by checking</span>
+<span class="sd">    the given domain object.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">user_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="n">user_id</span> <span class="ow">in</span> <span class="n">exp_summary</span><span class="o">.</span><span class="n">editor_ids</span>
+        <span class="ow">or</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="n">exp_summary</span><span class="o">.</span><span class="n">owner_ids</span>
+        <span class="ow">or</span> <span class="n">exp_summary</span><span class="o">.</span><span class="n">community_owned</span><span class="p">)</span>
+
+
+<span class="c"># Query methods.</span></div>
+<div class="viewcode-block" id="get_exploration_titles_and_categories"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_exploration_titles_and_categories">[docs]</a><span class="k">def</span> <span class="nf">get_exploration_titles_and_categories</span><span class="p">(</span><span class="n">exp_ids</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns exploration titles and categories for the given ids.</span>
+
+<span class="sd">    The result is a dict with exploration ids as keys. The corresponding values</span>
+<span class="sd">    are dicts with the keys &#39;title&#39; and &#39;category&#39;.</span>
+
+<span class="sd">    Any invalid exp_ids will not be included in the return dict. No error will</span>
+<span class="sd">    be raised.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">explorations</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">get_exploration_from_model</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">if</span> <span class="n">e</span> <span class="k">else</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span><span class="n">exp_ids</span><span class="p">)]</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">exploration</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">explorations</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">exploration</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">&#39;Could not find exploration corresponding to id&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s">&#39;title&#39;</span><span class="p">:</span> <span class="n">exploration</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                <span class="s">&#39;category&#39;</span><span class="p">:</span> <span class="n">exploration</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+            <span class="p">}</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_get_exploration_summary_dicts_from_models</span><span class="p">(</span><span class="n">exp_summary_models</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given an iterable of ExpSummaryModel instances, create a dict containing</span>
+<span class="sd">    corresponding exploration summary domain objects, keyed by id.&quot;&quot;&quot;</span>
+    <span class="n">exploration_summaries</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">get_exploration_summary_from_model</span><span class="p">(</span><span class="n">exp_summary_model</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">exp_summary_model</span> <span class="ow">in</span> <span class="n">exp_summary_models</span><span class="p">]</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">exp_summary</span> <span class="ow">in</span> <span class="n">exploration_summaries</span><span class="p">:</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">exp_summary</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">exp_summary</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="get_exploration_summaries_matching_ids"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_exploration_summaries_matching_ids">[docs]</a><span class="k">def</span> <span class="nf">get_exploration_summaries_matching_ids</span><span class="p">(</span><span class="n">exp_ids</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given a list of exploration ids, return a list with the corresponding</span>
+<span class="sd">    summary domain objects (or None if the corresponding summary does not</span>
+<span class="sd">    exist).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">get_exploration_summary_from_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="k">if</span> <span class="n">model</span> <span class="k">else</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span><span class="n">exp_ids</span><span class="p">)]</span>
+
+</div>
+<div class="viewcode-block" id="get_exploration_summaries_matching_query"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_exploration_summaries_matching_query">[docs]</a><span class="k">def</span> <span class="nf">get_exploration_summaries_matching_query</span><span class="p">(</span><span class="n">query_string</span><span class="p">,</span> <span class="n">cursor</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list with all exploration summary domain objects matching the</span>
+<span class="sd">    given search query string, as well as a search cursor for future fetches.</span>
+
+<span class="sd">    This method returns exactly feconf.GALLERY_PAGE_SIZE results if there are</span>
+<span class="sd">    at least that many, otherwise it returns all remaining results. (If this</span>
+<span class="sd">    behaviour does not occur, an error will be logged.) The method also returns</span>
+<span class="sd">    a search cursor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">MAX_ITERATIONS</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">summary_models</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">search_cursor</span> <span class="o">=</span> <span class="n">cursor</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">MAX_ITERATIONS</span><span class="p">):</span>
+        <span class="n">remaining_to_fetch</span> <span class="o">=</span> <span class="n">feconf</span><span class="o">.</span><span class="n">GALLERY_PAGE_SIZE</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">summary_models</span><span class="p">)</span>
+
+        <span class="n">exp_ids</span><span class="p">,</span> <span class="n">search_cursor</span> <span class="o">=</span> <span class="n">search_explorations</span><span class="p">(</span>
+            <span class="n">query_string</span><span class="p">,</span> <span class="n">remaining_to_fetch</span><span class="p">,</span> <span class="n">cursor</span><span class="o">=</span><span class="n">search_cursor</span><span class="p">)</span>
+
+        <span class="n">invalid_exp_ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="n">exp_models</span><span class="o">.</span><span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span><span class="n">exp_ids</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">summary_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">invalid_exp_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exp_ids</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">summary_models</span><span class="p">)</span> <span class="o">==</span> <span class="n">feconf</span><span class="o">.</span><span class="n">GALLERY_PAGE_SIZE</span> <span class="ow">or</span> <span class="p">(</span>
+                <span class="n">search_cursor</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">&#39;Search index contains stale exploration ids: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">invalid_exp_ids</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">summary_models</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">feconf</span><span class="o">.</span><span class="n">GALLERY_PAGE_SIZE</span>
+            <span class="ow">and</span> <span class="n">search_cursor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">&#39;Could not fulfill search request for query string </span><span class="si">%s</span><span class="s">; at least &#39;</span>
+            <span class="s">&#39;</span><span class="si">%s</span><span class="s"> retries were needed.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">query_string</span><span class="p">,</span> <span class="n">MAX_ITERATIONS</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">([</span>
+        <span class="n">get_exploration_summary_from_model</span><span class="p">(</span><span class="n">summary_model</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">summary_model</span> <span class="ow">in</span> <span class="n">summary_models</span>
+    <span class="p">],</span> <span class="n">search_cursor</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_non_private_exploration_summaries"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_non_private_exploration_summaries">[docs]</a><span class="k">def</span> <span class="nf">get_non_private_exploration_summaries</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns a dict with all non-private exploration summary domain objects,</span>
+<span class="sd">    keyed by their id.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_get_exploration_summary_dicts_from_models</span><span class="p">(</span>
+        <span class="n">exp_models</span><span class="o">.</span><span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">get_non_private</span><span class="p">())</span>
+
+</div>
+<div class="viewcode-block" id="get_all_exploration_summaries"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_all_exploration_summaries">[docs]</a><span class="k">def</span> <span class="nf">get_all_exploration_summaries</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns a dict with all exploration summary domain objects,</span>
+<span class="sd">    keyed by their id.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_get_exploration_summary_dicts_from_models</span><span class="p">(</span>
+        <span class="n">exp_models</span><span class="o">.</span><span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">get_all</span><span class="p">())</span>
+
+</div>
+<div class="viewcode-block" id="get_private_at_least_viewable_exploration_summaries"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_private_at_least_viewable_exploration_summaries">[docs]</a><span class="k">def</span> <span class="nf">get_private_at_least_viewable_exploration_summaries</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a dict with all exploration summary domain objects that are</span>
+<span class="sd">    at least viewable by given user. The dict is keyed by exploration id.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_get_exploration_summary_dicts_from_models</span><span class="p">(</span>
+        <span class="n">exp_models</span><span class="o">.</span><span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">get_private_at_least_viewable</span><span class="p">(</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="get_at_least_editable_exploration_summaries"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_at_least_editable_exploration_summaries">[docs]</a><span class="k">def</span> <span class="nf">get_at_least_editable_exploration_summaries</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a dict with all exploration summary domain objects that are</span>
+<span class="sd">    at least editable by given user. The dict is keyed by exploration id.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_get_exploration_summary_dicts_from_models</span><span class="p">(</span>
+        <span class="n">exp_models</span><span class="o">.</span><span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">get_at_least_editable</span><span class="p">(</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="count_explorations"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.count_explorations">[docs]</a><span class="k">def</span> <span class="nf">count_explorations</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns the total number of explorations.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">get_exploration_count</span><span class="p">()</span>
+
+
+<span class="c"># Methods for exporting states and explorations to other formats.</span></div>
+<div class="viewcode-block" id="export_to_zip_file"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.export_to_zip_file">[docs]</a><span class="k">def</span> <span class="nf">export_to_zip_file</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a ZIP archive of the exploration.&quot;&quot;&quot;</span>
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">get_exploration_by_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
+    <span class="n">yaml_repr</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">()</span>
+
+    <span class="n">o</span> <span class="o">=</span> <span class="n">StringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">)</span> <span class="k">as</span> <span class="n">zf</span><span class="p">:</span>
+        <span class="n">zf</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">.yaml&#39;</span> <span class="o">%</span> <span class="n">exploration</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">yaml_repr</span><span class="p">)</span>
+
+        <span class="n">fs</span> <span class="o">=</span> <span class="n">fs_domain</span><span class="o">.</span><span class="n">AbstractFileSystem</span><span class="p">(</span>
+            <span class="n">fs_domain</span><span class="o">.</span><span class="n">ExplorationFileSystem</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">))</span>
+        <span class="n">dir_list</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="n">dir_list</span><span class="p">:</span>
+            <span class="c"># Currently, the version number of all files is 1, since they are</span>
+            <span class="c"># not modifiable post-upload.</span>
+            <span class="c"># TODO(sll): When allowing editing of files, implement versioning</span>
+            <span class="c"># for them.</span>
+            <span class="n">file_contents</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">str_filepath</span> <span class="o">=</span> <span class="s">&#39;assets/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">filepath</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">str_filepath</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="n">unicode_filepath</span> <span class="o">=</span> <span class="n">str_filepath</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+            <span class="n">zf</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span><span class="n">unicode_filepath</span><span class="p">,</span> <span class="n">file_contents</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">o</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="export_states_to_yaml"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.export_states_to_yaml">[docs]</a><span class="k">def</span> <span class="nf">export_states_to_yaml</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">80</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a python dictionary of the exploration, whose keys are state</span>
+<span class="sd">    names and values are yaml strings representing the state contents with</span>
+<span class="sd">    lines wrapped at &#39;width&#39; characters.&quot;&quot;&quot;</span>
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">get_exploration_by_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
+    <span class="n">exploration_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">exploration</span><span class="o">.</span><span class="n">states</span><span class="p">:</span>
+        <span class="n">exploration_dict</span><span class="p">[</span><span class="n">state</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">yaml_from_dict</span><span class="p">(</span>
+            <span class="n">exploration</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">state</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">exploration_dict</span>
+
+
+<span class="c"># Repository SAVE and DELETE methods.</span></div>
+<div class="viewcode-block" id="apply_change_list"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.apply_change_list">[docs]</a><span class="k">def</span> <span class="nf">apply_change_list</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">change_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Applies a changelist to a pristine exploration and returns the result.</span>
+
+<span class="sd">    Each entry in change_list is a dict that represents an ExplorationChange</span>
+<span class="sd">    object.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      the resulting exploration domain object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">get_exploration_by_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">changes</span> <span class="o">=</span> <span class="p">[</span><span class="n">exp_domain</span><span class="o">.</span><span class="n">ExplorationChange</span><span class="p">(</span><span class="n">change_dict</span><span class="p">)</span>
+                   <span class="k">for</span> <span class="n">change_dict</span> <span class="ow">in</span> <span class="n">change_list</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">change</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">CMD_ADD_STATE</span><span class="p">:</span>
+                <span class="n">exploration</span><span class="o">.</span><span class="n">add_states</span><span class="p">([</span><span class="n">change</span><span class="o">.</span><span class="n">state_name</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">CMD_RENAME_STATE</span><span class="p">:</span>
+                <span class="n">exploration</span><span class="o">.</span><span class="n">rename_state</span><span class="p">(</span>
+                    <span class="n">change</span><span class="o">.</span><span class="n">old_state_name</span><span class="p">,</span> <span class="n">change</span><span class="o">.</span><span class="n">new_state_name</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">CMD_DELETE_STATE</span><span class="p">:</span>
+                <span class="n">exploration</span><span class="o">.</span><span class="n">delete_state</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">state_name</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">CMD_EDIT_STATE_PROPERTY</span><span class="p">:</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">change</span><span class="o">.</span><span class="n">state_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span>
+                        <span class="n">exp_domain</span><span class="o">.</span><span class="n">STATE_PROPERTY_PARAM_CHANGES</span><span class="p">):</span>
+                    <span class="n">state</span><span class="o">.</span><span class="n">update_param_changes</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">STATE_PROPERTY_CONTENT</span><span class="p">:</span>
+                    <span class="n">state</span><span class="o">.</span><span class="n">update_content</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span>
+                        <span class="n">exp_domain</span><span class="o">.</span><span class="n">STATE_PROPERTY_INTERACTION_ID</span><span class="p">):</span>
+                    <span class="n">state</span><span class="o">.</span><span class="n">update_interaction_id</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span>
+                        <span class="n">exp_domain</span><span class="o">.</span><span class="n">STATE_PROPERTY_INTERACTION_CUST_ARGS</span><span class="p">):</span>
+                    <span class="n">state</span><span class="o">.</span><span class="n">update_interaction_customization_args</span><span class="p">(</span>
+                        <span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span>
+                        <span class="n">exp_domain</span><span class="o">.</span><span class="n">STATE_PROPERTY_INTERACTION_HANDLERS</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">InvalidInputException</span><span class="p">(</span>
+                        <span class="s">&#39;Editing interaction handlers is no longer supported&#39;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span>
+                        <span class="n">exp_domain</span><span class="o">.</span><span class="n">STATE_PROPERTY_INTERACTION_ANSWER_GROUPS</span><span class="p">):</span>
+                    <span class="n">state</span><span class="o">.</span><span class="n">update_interaction_answer_groups</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span>
+                        <span class="n">exp_domain</span><span class="o">.</span><span class="n">STATE_PROPERTY_INTERACTION_DEFAULT_OUTCOME</span><span class="p">):</span>
+                    <span class="n">state</span><span class="o">.</span><span class="n">update_interaction_default_outcome</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">CMD_EDIT_EXPLORATION_PROPERTY</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span> <span class="s">&#39;title&#39;</span><span class="p">:</span>
+                    <span class="n">exploration</span><span class="o">.</span><span class="n">update_title</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span> <span class="s">&#39;category&#39;</span><span class="p">:</span>
+                    <span class="n">exploration</span><span class="o">.</span><span class="n">update_category</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span> <span class="s">&#39;objective&#39;</span><span class="p">:</span>
+                    <span class="n">exploration</span><span class="o">.</span><span class="n">update_objective</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span> <span class="s">&#39;language_code&#39;</span><span class="p">:</span>
+                    <span class="n">exploration</span><span class="o">.</span><span class="n">update_language_code</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span> <span class="s">&#39;tags&#39;</span><span class="p">:</span>
+                    <span class="n">exploration</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span> <span class="s">&#39;blurb&#39;</span><span class="p">:</span>
+                    <span class="n">exploration</span><span class="o">.</span><span class="n">update_blurb</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span> <span class="s">&#39;author_notes&#39;</span><span class="p">:</span>
+                    <span class="n">exploration</span><span class="o">.</span><span class="n">update_author_notes</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span> <span class="s">&#39;param_specs&#39;</span><span class="p">:</span>
+                    <span class="n">exploration</span><span class="o">.</span><span class="n">update_param_specs</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span> <span class="s">&#39;param_changes&#39;</span><span class="p">:</span>
+                    <span class="n">exploration</span><span class="o">.</span><span class="n">update_param_changes</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span> <span class="s">&#39;default_skin_id&#39;</span><span class="p">:</span>
+                    <span class="n">exploration</span><span class="o">.</span><span class="n">update_default_skin_id</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span> <span class="o">==</span> <span class="s">&#39;init_state_name&#39;</span><span class="p">:</span>
+                    <span class="n">exploration</span><span class="o">.</span><span class="n">update_init_state_name</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span>
+                    <span class="n">exp_domain</span><span class="o">.</span><span class="n">CMD_MIGRATE_STATES_SCHEMA_TO_LATEST_VERSION</span><span class="p">):</span>
+                <span class="c"># Loading the exploration model from the datastore into an</span>
+                <span class="c"># Eploration domain object automatically converts it to use the</span>
+                <span class="c"># latest states schema version. As a result, simply resaving the</span>
+                <span class="c"># exploration is sufficient to apply the states schema update.</span>
+                <span class="k">continue</span>
+        <span class="k">return</span> <span class="n">exploration</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">change_list</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">raise</span>
+
+</div>
+<div class="viewcode-block" id="get_summary_of_change_list"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_summary_of_change_list">[docs]</a><span class="k">def</span> <span class="nf">get_summary_of_change_list</span><span class="p">(</span><span class="n">base_exploration</span><span class="p">,</span> <span class="n">change_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Applies a changelist to a pristine exploration and returns a summary.</span>
+
+<span class="sd">    Each entry in change_list is a dict that represents an ExplorationChange</span>
+<span class="sd">    object.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      a dict with five keys:</span>
+<span class="sd">        exploration_property_changes: a dict, where each key is a property_name</span>
+<span class="sd">          of the exploration, and the corresponding values are dicts with keys</span>
+<span class="sd">          old_value and new_value.</span>
+<span class="sd">        state_property_changes: a dict, where each key is a state name, and the</span>
+<span class="sd">          corresponding values are dicts; the keys of these dicts represent</span>
+<span class="sd">          properties of the state, and the corresponding values are dicts with</span>
+<span class="sd">          keys old_value and new_value. If a state name is changed, this is</span>
+<span class="sd">          listed as a property name change under the old state name in the</span>
+<span class="sd">          outer dict.</span>
+<span class="sd">        changed_states: a list of state names. This indicates that the state</span>
+<span class="sd">          has changed but we do not know what the changes are. This can happen</span>
+<span class="sd">          for complicated operations like removing a state and later adding a</span>
+<span class="sd">          new state with the same name as the removed state.</span>
+<span class="sd">        added_states: a list of added state names.</span>
+<span class="sd">        deleted_states: a list of deleted state names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># TODO(sll): This really needs tests, especially the diff logic. Probably</span>
+    <span class="c"># worth comparing with the actual changed exploration.</span>
+
+    <span class="c"># Ensure that the original exploration does not get altered.</span>
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">base_exploration</span><span class="p">)</span>
+
+    <span class="n">changes</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">exp_domain</span><span class="o">.</span><span class="n">ExplorationChange</span><span class="p">(</span><span class="n">change_dict</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">change_dict</span> <span class="ow">in</span> <span class="n">change_list</span><span class="p">]</span>
+
+    <span class="n">exploration_property_changes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">state_property_changes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">changed_states</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">added_states</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">deleted_states</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">original_state_names</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">state_name</span><span class="p">:</span> <span class="n">state_name</span> <span class="k">for</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="n">exploration</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">change</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">CMD_ADD_STATE</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">state_name</span> <span class="ow">in</span> <span class="n">changed_states</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">state_name</span> <span class="ow">in</span> <span class="n">deleted_states</span><span class="p">:</span>
+                <span class="n">changed_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">state_name</span><span class="p">)</span>
+                <span class="k">del</span> <span class="n">state_property_changes</span><span class="p">[</span><span class="n">change</span><span class="o">.</span><span class="n">state_name</span><span class="p">]</span>
+                <span class="n">deleted_states</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">state_name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">added_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">state_name</span><span class="p">)</span>
+                <span class="n">original_state_names</span><span class="p">[</span><span class="n">change</span><span class="o">.</span><span class="n">state_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">state_name</span>
+        <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">CMD_RENAME_STATE</span><span class="p">:</span>
+            <span class="n">orig_state_name</span> <span class="o">=</span> <span class="n">original_state_names</span><span class="p">[</span><span class="n">change</span><span class="o">.</span><span class="n">old_state_name</span><span class="p">]</span>
+            <span class="n">original_state_names</span><span class="p">[</span><span class="n">change</span><span class="o">.</span><span class="n">new_state_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">orig_state_name</span>
+
+            <span class="k">if</span> <span class="n">orig_state_name</span> <span class="ow">in</span> <span class="n">changed_states</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">orig_state_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state_property_changes</span><span class="p">:</span>
+                <span class="n">state_property_changes</span><span class="p">[</span><span class="n">orig_state_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="s">&#39;name&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state_property_changes</span><span class="p">[</span><span class="n">orig_state_name</span><span class="p">]:</span>
+                <span class="n">state_property_changes</span><span class="p">[</span><span class="n">orig_state_name</span><span class="p">][</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s">&#39;old_value&#39;</span><span class="p">:</span> <span class="n">change</span><span class="o">.</span><span class="n">old_state_name</span>
+                <span class="p">}</span>
+            <span class="n">state_property_changes</span><span class="p">[</span><span class="n">orig_state_name</span><span class="p">][</span><span class="s">&#39;name&#39;</span><span class="p">][</span><span class="s">&#39;new_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">change</span><span class="o">.</span><span class="n">new_state_name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">CMD_DELETE_STATE</span><span class="p">:</span>
+            <span class="n">orig_state_name</span> <span class="o">=</span> <span class="n">original_state_names</span><span class="p">[</span><span class="n">change</span><span class="o">.</span><span class="n">state_name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">orig_state_name</span> <span class="ow">in</span> <span class="n">changed_states</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">orig_state_name</span> <span class="ow">in</span> <span class="n">added_states</span><span class="p">:</span>
+                <span class="n">added_states</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">orig_state_name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">deleted_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">orig_state_name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">CMD_EDIT_STATE_PROPERTY</span><span class="p">:</span>
+            <span class="n">orig_state_name</span> <span class="o">=</span> <span class="n">original_state_names</span><span class="p">[</span><span class="n">change</span><span class="o">.</span><span class="n">state_name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">orig_state_name</span> <span class="ow">in</span> <span class="n">changed_states</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">property_name</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span>
+
+            <span class="k">if</span> <span class="n">orig_state_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state_property_changes</span><span class="p">:</span>
+                <span class="n">state_property_changes</span><span class="p">[</span><span class="n">orig_state_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">property_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state_property_changes</span><span class="p">[</span><span class="n">orig_state_name</span><span class="p">]:</span>
+                <span class="n">state_property_changes</span><span class="p">[</span><span class="n">orig_state_name</span><span class="p">][</span><span class="n">property_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s">&#39;old_value&#39;</span><span class="p">:</span> <span class="n">change</span><span class="o">.</span><span class="n">old_value</span>
+                <span class="p">}</span>
+            <span class="n">state_property_changes</span><span class="p">[</span><span class="n">orig_state_name</span><span class="p">][</span><span class="n">property_name</span><span class="p">][</span>
+                <span class="s">&#39;new_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">new_value</span>
+        <span class="k">elif</span> <span class="n">change</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">CMD_EDIT_EXPLORATION_PROPERTY</span><span class="p">:</span>
+            <span class="n">property_name</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">property_name</span>
+
+            <span class="k">if</span> <span class="n">property_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exploration_property_changes</span><span class="p">:</span>
+                <span class="n">exploration_property_changes</span><span class="p">[</span><span class="n">property_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s">&#39;old_value&#39;</span><span class="p">:</span> <span class="n">change</span><span class="o">.</span><span class="n">old_value</span>
+                <span class="p">}</span>
+            <span class="n">exploration_property_changes</span><span class="p">[</span><span class="n">property_name</span><span class="p">][</span><span class="s">&#39;new_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">change</span><span class="o">.</span><span class="n">new_value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">change</span><span class="o">.</span><span class="n">cmd</span> <span class="o">==</span>
+                <span class="n">exp_domain</span><span class="o">.</span><span class="n">CMD_MIGRATE_STATES_SCHEMA_TO_LATEST_VERSION</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+    <span class="n">unchanged_exploration_properties</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">property_name</span> <span class="ow">in</span> <span class="n">exploration_property_changes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">exploration_property_changes</span><span class="p">[</span><span class="n">property_name</span><span class="p">][</span><span class="s">&#39;old_value&#39;</span><span class="p">]</span> <span class="o">==</span>
+                <span class="n">exploration_property_changes</span><span class="p">[</span><span class="n">property_name</span><span class="p">][</span><span class="s">&#39;new_value&#39;</span><span class="p">]):</span>
+            <span class="n">unchanged_exploration_properties</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">property_name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">property_name</span> <span class="ow">in</span> <span class="n">unchanged_exploration_properties</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">exploration_property_changes</span><span class="p">[</span><span class="n">property_name</span><span class="p">]</span>
+
+    <span class="n">unchanged_state_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="n">state_property_changes</span><span class="p">:</span>
+        <span class="n">unchanged_state_properties</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">changes</span> <span class="o">=</span> <span class="n">state_property_changes</span><span class="p">[</span><span class="n">state_name</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">property_name</span> <span class="ow">in</span> <span class="n">changes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">changes</span><span class="p">[</span><span class="n">property_name</span><span class="p">][</span><span class="s">&#39;old_value&#39;</span><span class="p">]</span> <span class="o">==</span>
+                    <span class="n">changes</span><span class="p">[</span><span class="n">property_name</span><span class="p">][</span><span class="s">&#39;new_value&#39;</span><span class="p">]):</span>
+                <span class="n">unchanged_state_properties</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">property_name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">property_name</span> <span class="ow">in</span> <span class="n">unchanged_state_properties</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">changes</span><span class="p">[</span><span class="n">property_name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">changes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">unchanged_state_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state_name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="n">unchanged_state_names</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">state_property_changes</span><span class="p">[</span><span class="n">state_name</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s">&#39;exploration_property_changes&#39;</span><span class="p">:</span> <span class="n">exploration_property_changes</span><span class="p">,</span>
+        <span class="s">&#39;state_property_changes&#39;</span><span class="p">:</span> <span class="n">state_property_changes</span><span class="p">,</span>
+        <span class="s">&#39;changed_states&#39;</span><span class="p">:</span> <span class="n">changed_states</span><span class="p">,</span>
+        <span class="s">&#39;added_states&#39;</span><span class="p">:</span> <span class="n">added_states</span><span class="p">,</span>
+        <span class="s">&#39;deleted_states&#39;</span><span class="p">:</span> <span class="n">deleted_states</span><span class="p">,</span>
+    <span class="p">}</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_save_exploration</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">change_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Validates an exploration and commits it to persistent storage.</span>
+
+<span class="sd">    If successful, increments the version number of the incoming exploration</span>
+<span class="sd">    domain object by 1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">change_list</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">change_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">exploration_rights</span> <span class="o">=</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">exploration_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">:</span>
+        <span class="n">exploration</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">exploration</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+
+    <span class="n">exploration_model</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">exploration_model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">exploration_model</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">exploration</span><span class="o">.</span><span class="n">version</span> <span class="o">&gt;</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">version</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Unexpected error: trying to update version </span><span class="si">%s</span><span class="s"> of exploration &#39;</span>
+                <span class="s">&#39;from version </span><span class="si">%s</span><span class="s">. Please reload the page and try again.&#39;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">exploration_model</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">exploration</span><span class="o">.</span><span class="n">version</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">exploration</span><span class="o">.</span><span class="n">version</span> <span class="o">&lt;</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">version</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Trying to update version </span><span class="si">%s</span><span class="s"> of exploration from version </span><span class="si">%s</span><span class="s">, &#39;</span>
+                <span class="s">&#39;which is too old. Please reload the page and try again.&#39;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">exploration_model</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">exploration</span><span class="o">.</span><span class="n">version</span><span class="p">))</span>
+
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">category</span>
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">title</span>
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">objective</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">objective</span>
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">language_code</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">language_code</span>
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">tags</span>
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">blurb</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">blurb</span>
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">author_notes</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">author_notes</span>
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">default_skin</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">default_skin</span>
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">skin_customizations</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">exploration</span><span class="o">.</span><span class="n">skin_instance</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()[</span><span class="s">&#39;skin_customizations&#39;</span><span class="p">])</span>
+
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">states_schema_version</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">states_schema_version</span>
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">init_state_name</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">init_state_name</span>
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">states</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">state_name</span><span class="p">:</span> <span class="n">state</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">state_name</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span> <span class="ow">in</span> <span class="n">exploration</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()}</span>
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">param_specs</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">param_specs_dict</span>
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">param_changes</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">param_change_dicts</span>
+
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">change_list</span><span class="p">)</span>
+    <span class="n">memcache_services</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">_get_exploration_memcache_key</span><span class="p">(</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+    <span class="n">event_services</span><span class="o">.</span><span class="n">ExplorationContentChangeEventHandler</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="n">index_explorations_given_ids</span><span class="p">([</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">])</span>
+
+    <span class="n">exploration</span><span class="o">.</span><span class="n">version</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+<span class="k">def</span> <span class="nf">_create_exploration</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Ensures that rights for a new exploration are saved first.</span>
+
+<span class="sd">    This is because _save_exploration() depends on the rights object being</span>
+<span class="sd">    present to tell it whether to do strict validation or not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># This line is needed because otherwise a rights object will be created,</span>
+    <span class="c"># but the creation of an exploration object will fail.</span>
+    <span class="n">exploration</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+    <span class="n">rights_manager</span><span class="o">.</span><span class="n">create_new_exploration_rights</span><span class="p">(</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">committer_id</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">objective</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">objective</span><span class="p">,</span>
+        <span class="n">language_code</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">language_code</span><span class="p">,</span>
+        <span class="n">tags</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">tags</span><span class="p">,</span>
+        <span class="n">blurb</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">blurb</span><span class="p">,</span>
+        <span class="n">author_notes</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">author_notes</span><span class="p">,</span>
+        <span class="n">default_skin</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">default_skin</span><span class="p">,</span>
+        <span class="n">skin_customizations</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">skin_instance</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span>
+            <span class="p">)[</span><span class="s">&#39;skin_customizations&#39;</span><span class="p">],</span>
+        <span class="n">states_schema_version</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">states_schema_version</span><span class="p">,</span>
+        <span class="n">init_state_name</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">init_state_name</span><span class="p">,</span>
+        <span class="n">states</span><span class="o">=</span><span class="p">{</span>
+            <span class="n">state_name</span><span class="p">:</span> <span class="n">state</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">state_name</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span> <span class="ow">in</span> <span class="n">exploration</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()},</span>
+        <span class="n">param_specs</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">param_specs_dict</span><span class="p">,</span>
+        <span class="n">param_changes</span><span class="o">=</span><span class="n">exploration</span><span class="o">.</span><span class="n">param_change_dicts</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+    <span class="n">event_services</span><span class="o">.</span><span class="n">ExplorationContentChangeEventHandler</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="n">exploration</span><span class="o">.</span><span class="n">version</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">create_exploration_summary</span><span class="p">(</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="save_new_exploration"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.save_new_exploration">[docs]</a><span class="k">def</span> <span class="nf">save_new_exploration</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration</span><span class="p">):</span>
+    <span class="n">commit_message</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s">&#39;New exploration created with title </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="n">exploration</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">_create_exploration</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="p">[{</span>
+        <span class="s">&#39;cmd&#39;</span><span class="p">:</span> <span class="n">CMD_CREATE_NEW</span><span class="p">,</span>
+        <span class="s">&#39;title&#39;</span><span class="p">:</span> <span class="n">exploration</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="s">&#39;category&#39;</span><span class="p">:</span> <span class="n">exploration</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+    <span class="p">}])</span>
+
+</div>
+<div class="viewcode-block" id="delete_exploration"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.delete_exploration">[docs]</a><span class="k">def</span> <span class="nf">delete_exploration</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">force_deletion</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Deletes the exploration with the given exploration_id.</span>
+
+<span class="sd">    IMPORTANT: Callers of this function should ensure that committer_id has</span>
+<span class="sd">    permissions to delete this exploration, prior to calling this function.</span>
+
+<span class="sd">    If force_deletion is True the exploration and its history are fully deleted</span>
+<span class="sd">    and are unrecoverable. Otherwise, the exploration and all its history are</span>
+<span class="sd">    marked as deleted, but the corresponding models are still retained in the</span>
+<span class="sd">    datastore. This last option is the preferred one.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># TODO(sll): Delete the files too?</span>
+
+    <span class="n">exploration_rights_model</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationRightsModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">)</span>
+    <span class="n">exploration_rights_model</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">force_deletion</span><span class="o">=</span><span class="n">force_deletion</span><span class="p">)</span>
+
+    <span class="n">exploration_model</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="n">exploration_model</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">feconf</span><span class="o">.</span><span class="n">COMMIT_MESSAGE_EXPLORATION_DELETED</span><span class="p">,</span>
+        <span class="n">force_deletion</span><span class="o">=</span><span class="n">force_deletion</span><span class="p">)</span>
+
+    <span class="c"># This must come after the exploration is retrieved. Otherwise the memcache</span>
+    <span class="c"># key will be reinstated.</span>
+    <span class="n">exploration_memcache_key</span> <span class="o">=</span> <span class="n">_get_exploration_memcache_key</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="n">memcache_services</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">exploration_memcache_key</span><span class="p">)</span>
+
+    <span class="c">#delete the exploration from search.</span>
+    <span class="n">delete_documents_from_search_index</span><span class="p">([</span><span class="n">exploration_id</span><span class="p">])</span>
+
+    <span class="c"># delete summary of exploration</span>
+    <span class="n">delete_exploration_summary</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">force_deletion</span><span class="o">=</span><span class="n">force_deletion</span><span class="p">)</span>
+
+
+<span class="c"># Operations on exploration snapshots.</span></div>
+<div class="viewcode-block" id="get_exploration_snapshots_metadata"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_exploration_snapshots_metadata">[docs]</a><span class="k">def</span> <span class="nf">get_exploration_snapshots_metadata</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the snapshots for this exploration, as dicts.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        exploration_id: str. The id of the exploration in question.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list of dicts, each representing a recent snapshot. Each dict has the</span>
+<span class="sd">        following keys: committer_id, commit_message, commit_cmds, commit_type,</span>
+<span class="sd">        created_on_ms, version_number. The version numbers are consecutive and</span>
+<span class="sd">        in ascending order. There are exploration.version_number items in the</span>
+<span class="sd">        returned list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">get_exploration_by_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="n">current_version</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">version</span>
+    <span class="n">version_nums</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">current_version</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">get_snapshots_metadata</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">version_nums</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="update_exploration"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.update_exploration">[docs]</a><span class="k">def</span> <span class="nf">update_exploration</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">change_list</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Update an exploration. Commits changes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">    - committer_id: str. The id of the user who is performing the update</span>
+<span class="sd">        action.</span>
+<span class="sd">    - exploration_id: str. The exploration id.</span>
+<span class="sd">    - change_list: list of dicts, each representing a _Change object. These</span>
+<span class="sd">        changes are applied in sequence to produce the resulting exploration.</span>
+<span class="sd">    - commit_message: str or None. A description of changes made to the state.</span>
+<span class="sd">        For published explorations, this must be present; for unpublished</span>
+<span class="sd">        explorations, it should be equal to None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_public</span> <span class="o">=</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">is_exploration_public</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_public</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">commit_message</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s">&#39;Exploration is public so expected a commit message but &#39;</span>
+            <span class="s">&#39;received none.&#39;</span><span class="p">)</span>
+
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">apply_change_list</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">change_list</span><span class="p">)</span>
+    <span class="n">_save_exploration</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">change_list</span><span class="p">)</span>
+
+    <span class="c"># update summary of changed exploration</span>
+    <span class="n">update_exploration_summary</span><span class="p">(</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="create_exploration_summary"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.create_exploration_summary">[docs]</a><span class="k">def</span> <span class="nf">create_exploration_summary</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create summary of an exploration and store in datastore.&quot;&quot;&quot;</span>
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">get_exploration_by_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="n">exp_summary</span> <span class="o">=</span> <span class="n">get_summary_of_exploration</span><span class="p">(</span><span class="n">exploration</span><span class="p">)</span>
+    <span class="n">save_exploration_summary</span><span class="p">(</span><span class="n">exp_summary</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="update_exploration_summary"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.update_exploration_summary">[docs]</a><span class="k">def</span> <span class="nf">update_exploration_summary</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Update the summary of an exploration.&quot;&quot;&quot;</span>
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">get_exploration_by_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="n">exp_summary</span> <span class="o">=</span> <span class="n">get_summary_of_exploration</span><span class="p">(</span><span class="n">exploration</span><span class="p">)</span>
+    <span class="n">save_exploration_summary</span><span class="p">(</span><span class="n">exp_summary</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_summary_of_exploration"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_summary_of_exploration">[docs]</a><span class="k">def</span> <span class="nf">get_summary_of_exploration</span><span class="p">(</span><span class="n">exploration</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create ExplorationSummary domain object for a given Exploration</span>
+<span class="sd">    domain object and return it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationRightsModel</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="n">exp_summary_model</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">exp_summary_model</span><span class="p">:</span>
+        <span class="n">old_exp_summary</span> <span class="o">=</span> <span class="n">get_exploration_summary_from_model</span><span class="p">(</span><span class="n">exp_summary_model</span><span class="p">)</span>
+        <span class="n">ratings</span> <span class="o">=</span> <span class="n">old_exp_summary</span><span class="o">.</span><span class="n">ratings</span> <span class="ow">or</span> <span class="n">feconf</span><span class="o">.</span><span class="n">get_empty_ratings</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ratings</span> <span class="o">=</span> <span class="n">feconf</span><span class="o">.</span><span class="n">get_empty_ratings</span><span class="p">()</span>
+
+    <span class="n">exploration_model_last_updated</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">last_updated</span>
+    <span class="n">exploration_model_created_on</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">created_on</span>
+
+    <span class="n">exp_summary</span> <span class="o">=</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">ExplorationSummary</span><span class="p">(</span>
+        <span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">exploration</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">exploration</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+        <span class="n">exploration</span><span class="o">.</span><span class="n">objective</span><span class="p">,</span> <span class="n">exploration</span><span class="o">.</span><span class="n">language_code</span><span class="p">,</span>
+        <span class="n">exploration</span><span class="o">.</span><span class="n">tags</span><span class="p">,</span> <span class="n">ratings</span><span class="p">,</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="n">exp_rights</span><span class="o">.</span><span class="n">community_owned</span><span class="p">,</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">,</span>
+        <span class="n">exp_rights</span><span class="o">.</span><span class="n">editor_ids</span><span class="p">,</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">viewer_ids</span><span class="p">,</span> <span class="n">exploration</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+        <span class="n">exploration_model_created_on</span><span class="p">,</span> <span class="n">exploration_model_last_updated</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">exp_summary</span>
+
+</div>
+<div class="viewcode-block" id="save_exploration_summary"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.save_exploration_summary">[docs]</a><span class="k">def</span> <span class="nf">save_exploration_summary</span><span class="p">(</span><span class="n">exp_summary</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Save exploration summary domain object as ExpSummaryModel</span>
+<span class="sd">    entity in datastore.&quot;&quot;&quot;</span>
+
+    <span class="n">exp_summary_model</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExpSummaryModel</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">exp_summary</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">exp_summary</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">exp_summary</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+        <span class="n">objective</span><span class="o">=</span><span class="n">exp_summary</span><span class="o">.</span><span class="n">objective</span><span class="p">,</span>
+        <span class="n">language_code</span><span class="o">=</span><span class="n">exp_summary</span><span class="o">.</span><span class="n">language_code</span><span class="p">,</span>
+        <span class="n">tags</span><span class="o">=</span><span class="n">exp_summary</span><span class="o">.</span><span class="n">tags</span><span class="p">,</span>
+        <span class="n">ratings</span> <span class="o">=</span> <span class="n">exp_summary</span><span class="o">.</span><span class="n">ratings</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">exp_summary</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="n">community_owned</span><span class="o">=</span><span class="n">exp_summary</span><span class="o">.</span><span class="n">community_owned</span><span class="p">,</span>
+        <span class="n">owner_ids</span><span class="o">=</span><span class="n">exp_summary</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">,</span>
+        <span class="n">editor_ids</span><span class="o">=</span><span class="n">exp_summary</span><span class="o">.</span><span class="n">editor_ids</span><span class="p">,</span>
+        <span class="n">viewer_ids</span><span class="o">=</span><span class="n">exp_summary</span><span class="o">.</span><span class="n">viewer_ids</span><span class="p">,</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">exp_summary</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+        <span class="n">exploration_model_last_updated</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">exp_summary</span><span class="o">.</span><span class="n">exploration_model_last_updated</span><span class="p">),</span>
+        <span class="n">exploration_model_created_on</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">exp_summary</span><span class="o">.</span><span class="n">exploration_model_created_on</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">exp_summary_model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="delete_exploration_summary"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.delete_exploration_summary">[docs]</a><span class="k">def</span> <span class="nf">delete_exploration_summary</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">force_deletion</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Delete an exploration summary model.&quot;&quot;&quot;</span>
+
+    <span class="n">exp_models</span><span class="o">.</span><span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="revert_exploration"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.revert_exploration">[docs]</a><span class="k">def</span> <span class="nf">revert_exploration</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">current_version</span><span class="p">,</span> <span class="n">revert_to_version</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reverts an exploration to the given version number. Commits changes.&quot;&quot;&quot;</span>
+    <span class="n">exploration_model</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">current_version</span> <span class="o">&gt;</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">version</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s">&#39;Unexpected error: trying to update version </span><span class="si">%s</span><span class="s"> of exploration &#39;</span>
+            <span class="s">&#39;from version </span><span class="si">%s</span><span class="s">. Please reload the page and try again.&#39;</span>
+            <span class="o">%</span> <span class="p">(</span><span class="n">exploration_model</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">current_version</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">current_version</span> <span class="o">&lt;</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">version</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s">&#39;Trying to update version </span><span class="si">%s</span><span class="s"> of exploration from version </span><span class="si">%s</span><span class="s">, &#39;</span>
+            <span class="s">&#39;which is too old. Please reload the page and try again.&#39;</span>
+            <span class="o">%</span> <span class="p">(</span><span class="n">exploration_model</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">current_version</span><span class="p">))</span>
+
+    <span class="c"># Validate the previous version of the exploration before committing the</span>
+    <span class="c"># change.</span>
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">get_exploration_by_id</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">revert_to_version</span><span class="p">)</span>
+    <span class="n">exploration_rights</span> <span class="o">=</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">exploration_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">:</span>
+        <span class="n">exploration</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">exploration</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+
+    <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">revert</span><span class="p">(</span><span class="n">exploration_model</span><span class="p">,</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="s">&#39;Reverted exploration to version </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">revert_to_version</span><span class="p">,</span>
+        <span class="n">revert_to_version</span><span class="p">)</span>
+    <span class="n">memcache_services</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">_get_exploration_memcache_key</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">))</span>
+
+    <span class="n">update_exploration_summary</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+
+
+<span class="c"># Creation and deletion methods.</span></div>
+<div class="viewcode-block" id="get_demo_exploration_components"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_demo_exploration_components">[docs]</a><span class="k">def</span> <span class="nf">get_demo_exploration_components</span><span class="p">(</span><span class="n">demo_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the content of `demo_path` in the sample explorations folder.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      demo_path: the file or folder path for the content of an exploration</span>
+<span class="sd">        in SAMPLE_EXPLORATIONS_DIR. E.g.: &#39;adventure.yaml&#39; or &#39;tar/&#39;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      a 2-tuple, the first element of which is a yaml string, and the second</span>
+<span class="sd">      element of which is a list of (filepath, content) 2-tuples. The filepath</span>
+<span class="sd">      does not include the assets/ prefix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">demo_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">feconf</span><span class="o">.</span><span class="n">SAMPLE_EXPLORATIONS_DIR</span><span class="p">,</span> <span class="n">demo_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">demo_filepath</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;yaml&#39;</span><span class="p">):</span>
+        <span class="n">file_contents</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_file_contents</span><span class="p">(</span><span class="n">demo_filepath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">file_contents</span><span class="p">,</span> <span class="p">[]</span>
+    <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">demo_filepath</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_exploration_components_from_dir</span><span class="p">(</span><span class="n">demo_filepath</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Unrecognized file path: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">demo_path</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="save_new_exploration_from_yaml_and_assets"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.save_new_exploration_from_yaml_and_assets">[docs]</a><span class="k">def</span> <span class="nf">save_new_exploration_from_yaml_and_assets</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">yaml_content</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">category</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span>
+        <span class="n">assets_list</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">assets_list</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">assets_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">Exploration</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">category</span><span class="p">,</span> <span class="n">yaml_content</span><span class="p">)</span>
+    <span class="n">commit_message</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s">&#39;New exploration created from YAML file with title </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s">.&#39;</span>
+        <span class="o">%</span> <span class="n">exploration</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+
+    <span class="n">_create_exploration</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="p">[{</span>
+        <span class="s">&#39;cmd&#39;</span><span class="p">:</span> <span class="n">CMD_CREATE_NEW</span><span class="p">,</span>
+        <span class="s">&#39;title&#39;</span><span class="p">:</span> <span class="n">exploration</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="s">&#39;category&#39;</span><span class="p">:</span> <span class="n">exploration</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+    <span class="p">}])</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">asset_filename</span><span class="p">,</span> <span class="n">asset_content</span><span class="p">)</span> <span class="ow">in</span> <span class="n">assets_list</span><span class="p">:</span>
+        <span class="n">fs</span> <span class="o">=</span> <span class="n">fs_domain</span><span class="o">.</span><span class="n">AbstractFileSystem</span><span class="p">(</span>
+            <span class="n">fs_domain</span><span class="o">.</span><span class="n">ExplorationFileSystem</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">))</span>
+        <span class="n">fs</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">asset_filename</span><span class="p">,</span> <span class="n">asset_content</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="delete_demo"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.delete_demo">[docs]</a><span class="k">def</span> <span class="nf">delete_demo</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Deletes a single demo exploration.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">feconf</span><span class="o">.</span><span class="n">DEMO_EXPLORATIONS</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Invalid demo exploration id </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">exploration_id</span><span class="p">)</span>
+
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">get_exploration_by_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">exploration</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Exploration with id </span><span class="si">%s</span><span class="s"> was not deleted, because it &#39;</span>
+                     <span class="s">&#39;does not exist.&#39;</span> <span class="o">%</span> <span class="n">exploration_id</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">delete_exploration</span><span class="p">(</span>
+            <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_COMMITTER_ID</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">force_deletion</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="load_demo"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.load_demo">[docs]</a><span class="k">def</span> <span class="nf">load_demo</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Loads a demo exploration.</span>
+
+<span class="sd">    The resulting exploration will have version 2 (one for its initial</span>
+<span class="sd">    creation and one for its subsequent modification.)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># TODO(sll): Speed this method up. It is too slow.</span>
+    <span class="n">delete_demo</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">feconf</span><span class="o">.</span><span class="n">DEMO_EXPLORATIONS</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Invalid demo exploration id </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">exploration_id</span><span class="p">)</span>
+
+    <span class="n">exploration_info</span> <span class="o">=</span> <span class="n">feconf</span><span class="o">.</span><span class="n">DEMO_EXPLORATIONS</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">exploration_info</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">exp_filename</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">category</span><span class="p">)</span> <span class="o">=</span> <span class="n">exploration_info</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Invalid demo exploration: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">exploration_info</span><span class="p">)</span>
+
+    <span class="n">yaml_content</span><span class="p">,</span> <span class="n">assets_list</span> <span class="o">=</span> <span class="n">get_demo_exploration_components</span><span class="p">(</span><span class="n">exp_filename</span><span class="p">)</span>
+    <span class="n">save_new_exploration_from_yaml_and_assets</span><span class="p">(</span>
+        <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_COMMITTER_ID</span><span class="p">,</span> <span class="n">yaml_content</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">category</span><span class="p">,</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">assets_list</span><span class="p">)</span>
+
+    <span class="n">rights_manager</span><span class="o">.</span><span class="n">publish_exploration</span><span class="p">(</span>
+        <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_COMMITTER_ID</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">)</span>
+    <span class="c"># Release ownership of all explorations.</span>
+    <span class="n">rights_manager</span><span class="o">.</span><span class="n">release_ownership</span><span class="p">(</span>
+        <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_COMMITTER_ID</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">)</span>
+
+    <span class="n">index_explorations_given_ids</span><span class="p">([</span><span class="n">exploration_id</span><span class="p">])</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Exploration with id </span><span class="si">%s</span><span class="s"> was loaded.&#39;</span> <span class="o">%</span> <span class="n">exploration_id</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_next_page_of_all_commits"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_next_page_of_all_commits">[docs]</a><span class="k">def</span> <span class="nf">get_next_page_of_all_commits</span><span class="p">(</span>
+        <span class="n">page_size</span><span class="o">=</span><span class="n">feconf</span><span class="o">.</span><span class="n">COMMIT_LIST_PAGE_SIZE</span><span class="p">,</span> <span class="n">urlsafe_start_cursor</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a page of commits to all explorations in reverse time order.</span>
+
+<span class="sd">    The return value is a triple (results, cursor, more) as described in</span>
+<span class="sd">    fetch_page() at:</span>
+
+<span class="sd">        https://developers.google.com/appengine/docs/python/ndb/queryclass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">results</span><span class="p">,</span> <span class="n">new_urlsafe_start_cursor</span><span class="p">,</span> <span class="n">more</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationCommitLogEntryModel</span><span class="o">.</span><span class="n">get_all_commits</span><span class="p">(</span>
+            <span class="n">page_size</span><span class="p">,</span> <span class="n">urlsafe_start_cursor</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">([</span><span class="n">exp_domain</span><span class="o">.</span><span class="n">ExplorationCommitLogEntry</span><span class="p">(</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">created_on</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">last_updated</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">commit_type</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">commit_message</span><span class="p">,</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">commit_cmds</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">post_commit_status</span><span class="p">,</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">post_commit_community_owned</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">post_commit_is_private</span>
+    <span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">results</span><span class="p">],</span> <span class="n">new_urlsafe_start_cursor</span><span class="p">,</span> <span class="n">more</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_next_page_of_all_non_private_commits"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.get_next_page_of_all_non_private_commits">[docs]</a><span class="k">def</span> <span class="nf">get_next_page_of_all_non_private_commits</span><span class="p">(</span>
+        <span class="n">page_size</span><span class="o">=</span><span class="n">feconf</span><span class="o">.</span><span class="n">COMMIT_LIST_PAGE_SIZE</span><span class="p">,</span> <span class="n">urlsafe_start_cursor</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">max_age</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a page of non-private commits in reverse time order. If max_age</span>
+<span class="sd">    is given, it should be a datetime.timedelta instance.</span>
+
+<span class="sd">    The return value is a triple (results, cursor, more) as described in</span>
+<span class="sd">    fetch_page() at:</span>
+
+<span class="sd">        https://developers.google.com/appengine/docs/python/ndb/queryclass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">max_age</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_age</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s">&quot;max_age must be a datetime.timedelta instance. or None.&quot;</span><span class="p">)</span>
+
+    <span class="n">results</span><span class="p">,</span> <span class="n">new_urlsafe_start_cursor</span><span class="p">,</span> <span class="n">more</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationCommitLogEntryModel</span><span class="o">.</span><span class="n">get_all_non_private_commits</span><span class="p">(</span>
+            <span class="n">page_size</span><span class="p">,</span> <span class="n">urlsafe_start_cursor</span><span class="p">,</span> <span class="n">max_age</span><span class="o">=</span><span class="n">max_age</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">([</span><span class="n">exp_domain</span><span class="o">.</span><span class="n">ExplorationCommitLogEntry</span><span class="p">(</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">created_on</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">last_updated</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">commit_type</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">commit_message</span><span class="p">,</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">commit_cmds</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">post_commit_status</span><span class="p">,</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">post_commit_community_owned</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">post_commit_is_private</span>
+    <span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">results</span><span class="p">],</span> <span class="n">new_urlsafe_start_cursor</span><span class="p">,</span> <span class="n">more</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_exp_rights_to_search_dict</span><span class="p">(</span><span class="n">rights</span><span class="p">):</span>
+    <span class="c"># Allow searches like &quot;is:featured&quot;.</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">rights</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">EXPLORATION_STATUS_PUBLICIZED</span><span class="p">:</span>
+        <span class="n">doc</span><span class="p">[</span><span class="s">&#39;is&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;featured&#39;</span>
+    <span class="k">return</span> <span class="n">doc</span>
+
+
+<span class="k">def</span> <span class="nf">_should_index</span><span class="p">(</span><span class="n">exp</span><span class="p">):</span>
+    <span class="n">rights</span> <span class="o">=</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exp</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rights</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">EXPLORATION_STATUS_PRIVATE</span>
+
+
+<span class="k">def</span> <span class="nf">_get_search_rank</span><span class="p">(</span><span class="n">exp_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns an integer determining the document&#39;s rank in search.</span>
+
+<span class="sd">    Featured explorations get a ranking bump, and so do explorations that</span>
+<span class="sd">    have been more recently updated. Good ratings will increase the ranking</span>
+<span class="sd">    and bad ones will lower it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># TODO(sll): Improve this calculation.</span>
+    <span class="n">_STATUS_PUBLICIZED_BONUS</span> <span class="o">=</span> <span class="mi">30</span>
+    <span class="c"># This is done to prevent the rank hitting 0 too easily. Note that</span>
+    <span class="c"># negative ranks are disallowed in the Search API.</span>
+    <span class="n">_DEFAULT_RANK</span> <span class="o">=</span> <span class="mi">20</span>
+
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">get_exploration_by_id</span><span class="p">(</span><span class="n">exp_id</span><span class="p">)</span>
+    <span class="n">rights</span> <span class="o">=</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exp_id</span><span class="p">)</span>
+    <span class="n">summary</span> <span class="o">=</span> <span class="n">get_exploration_summary_by_id</span><span class="p">(</span><span class="n">exp_id</span><span class="p">)</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="n">_DEFAULT_RANK</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="n">_STATUS_PUBLICIZED_BONUS</span>
+        <span class="k">if</span> <span class="n">rights</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">EXPLORATION_STATUS_PUBLICIZED</span>
+        <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">summary</span><span class="o">.</span><span class="n">ratings</span><span class="p">:</span>
+        <span class="n">RATING_WEIGHTINGS</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;1&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="s">&#39;2&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;3&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;4&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s">&#39;5&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">rating_value</span> <span class="ow">in</span> <span class="n">summary</span><span class="o">.</span><span class="n">ratings</span><span class="p">:</span>
+            <span class="n">rank</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="n">summary</span><span class="o">.</span><span class="n">ratings</span><span class="p">[</span><span class="n">rating_value</span><span class="p">]</span> <span class="o">*</span>
+                <span class="n">RATING_WEIGHTINGS</span><span class="p">[</span><span class="n">rating_value</span><span class="p">])</span>
+
+    <span class="c"># Iterate backwards through the exploration history metadata until we find</span>
+    <span class="c"># the most recent snapshot that was committed by a human.</span>
+    <span class="n">last_human_update_ms</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">snapshots_metadata</span> <span class="o">=</span> <span class="n">get_exploration_snapshots_metadata</span><span class="p">(</span><span class="n">exp_id</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">snapshot_metadata</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">snapshots_metadata</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">snapshot_metadata</span><span class="p">[</span><span class="s">&#39;committer_id&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">feconf</span><span class="o">.</span><span class="n">MIGRATION_BOT_USER_ID</span><span class="p">:</span>
+            <span class="n">last_human_update_ms</span> <span class="o">=</span> <span class="n">snapshot_metadata</span><span class="p">[</span><span class="s">&#39;created_on_ms&#39;</span><span class="p">]</span>
+            <span class="k">break</span>
+
+    <span class="n">_TIME_NOW_MS</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()</span>
+    <span class="n">_MS_IN_ONE_DAY</span> <span class="o">=</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">1000</span>
+    <span class="n">time_delta_days</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">_TIME_NOW_MS</span> <span class="o">-</span> <span class="n">last_human_update_ms</span><span class="p">)</span> <span class="o">/</span> <span class="n">_MS_IN_ONE_DAY</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">time_delta_days</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">rank</span> <span class="o">+=</span> <span class="mi">80</span>
+    <span class="k">elif</span> <span class="n">time_delta_days</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">rank</span> <span class="o">+=</span> <span class="mi">50</span>
+    <span class="k">elif</span> <span class="mi">2</span> <span class="o">&lt;=</span> <span class="n">time_delta_days</span> <span class="o">&lt;=</span> <span class="mi">7</span><span class="p">:</span>
+        <span class="n">rank</span> <span class="o">+=</span> <span class="mi">35</span>
+
+    <span class="c"># Ranks must be non-negative.</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_exp_to_search_dict</span><span class="p">(</span><span class="n">exp</span><span class="p">):</span>
+    <span class="n">rights</span> <span class="o">=</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exp</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">exp</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="s">&#39;language_code&#39;</span><span class="p">:</span> <span class="n">exp</span><span class="o">.</span><span class="n">language_code</span><span class="p">,</span>
+        <span class="s">&#39;title&#39;</span><span class="p">:</span> <span class="n">exp</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="s">&#39;category&#39;</span><span class="p">:</span> <span class="n">exp</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+        <span class="s">&#39;tags&#39;</span><span class="p">:</span> <span class="n">exp</span><span class="o">.</span><span class="n">tags</span><span class="p">,</span>
+        <span class="s">&#39;blurb&#39;</span><span class="p">:</span> <span class="n">exp</span><span class="o">.</span><span class="n">blurb</span><span class="p">,</span>
+        <span class="s">&#39;objective&#39;</span><span class="p">:</span> <span class="n">exp</span><span class="o">.</span><span class="n">objective</span><span class="p">,</span>
+        <span class="s">&#39;author_notes&#39;</span><span class="p">:</span> <span class="n">exp</span><span class="o">.</span><span class="n">author_notes</span><span class="p">,</span>
+        <span class="s">&#39;rank&#39;</span><span class="p">:</span> <span class="n">_get_search_rank</span><span class="p">(</span><span class="n">exp</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">doc</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_exp_rights_to_search_dict</span><span class="p">(</span><span class="n">rights</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">doc</span>
+
+
+<div class="viewcode-block" id="clear_search_index"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.clear_search_index">[docs]</a><span class="k">def</span> <span class="nf">clear_search_index</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;WARNING: This runs in-request, and may therefore fail if there are too</span>
+<span class="sd">    many entries in the index.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">search_services</span><span class="o">.</span><span class="n">clear_index</span><span class="p">(</span><span class="n">SEARCH_INDEX_EXPLORATIONS</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="index_explorations_given_ids"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.index_explorations_given_ids">[docs]</a><span class="k">def</span> <span class="nf">index_explorations_given_ids</span><span class="p">(</span><span class="n">exp_ids</span><span class="p">):</span>
+    <span class="c"># We pass &#39;strict=False&#39; so as not to index deleted explorations.</span>
+    <span class="n">exploration_models</span> <span class="o">=</span> <span class="n">get_multiple_explorations_by_id</span><span class="p">(</span><span class="n">exp_ids</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">search_services</span><span class="o">.</span><span class="n">add_documents_to_index</span><span class="p">([</span>
+        <span class="n">_exp_to_search_dict</span><span class="p">(</span><span class="n">exp</span><span class="p">)</span> <span class="k">for</span> <span class="n">exp</span> <span class="ow">in</span> <span class="n">exploration_models</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">_should_index</span><span class="p">(</span><span class="n">exp</span><span class="p">)</span>
+    <span class="p">],</span> <span class="n">SEARCH_INDEX_EXPLORATIONS</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="patch_exploration_search_document"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.patch_exploration_search_document">[docs]</a><span class="k">def</span> <span class="nf">patch_exploration_search_document</span><span class="p">(</span><span class="n">exp_id</span><span class="p">,</span> <span class="n">update</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Patches an exploration&#39;s current search document, with the values</span>
+<span class="sd">    from the &#39;update&#39; dictionary.&quot;&quot;&quot;</span>
+
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">search_services</span><span class="o">.</span><span class="n">get_document_from_index</span><span class="p">(</span>
+        <span class="n">exp_id</span><span class="p">,</span> <span class="n">SEARCH_INDEX_EXPLORATIONS</span><span class="p">)</span>
+    <span class="n">doc</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">update</span><span class="p">)</span>
+    <span class="n">search_services</span><span class="o">.</span><span class="n">add_documents_to_index</span><span class="p">([</span><span class="n">doc</span><span class="p">],</span> <span class="n">SEARCH_INDEX_EXPLORATIONS</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="update_exploration_status_in_search"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.update_exploration_status_in_search">[docs]</a><span class="k">def</span> <span class="nf">update_exploration_status_in_search</span><span class="p">(</span><span class="n">exp_id</span><span class="p">):</span>
+    <span class="n">rights</span> <span class="o">=</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exp_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rights</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">:</span>
+        <span class="n">delete_documents_from_search_index</span><span class="p">([</span><span class="n">exp_id</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">patch_exploration_search_document</span><span class="p">(</span>
+            <span class="n">rights</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">_exp_rights_to_search_dict</span><span class="p">(</span><span class="n">rights</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="delete_documents_from_search_index"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.delete_documents_from_search_index">[docs]</a><span class="k">def</span> <span class="nf">delete_documents_from_search_index</span><span class="p">(</span><span class="n">exploration_ids</span><span class="p">):</span>
+    <span class="n">search_services</span><span class="o">.</span><span class="n">delete_documents_from_index</span><span class="p">(</span>
+        <span class="n">exploration_ids</span><span class="p">,</span> <span class="n">SEARCH_INDEX_EXPLORATIONS</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="search_explorations"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_services.search_explorations">[docs]</a><span class="k">def</span> <span class="nf">search_explorations</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cursor</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Searches through the available explorations.</span>
+
+<span class="sd">    args:</span>
+<span class="sd">      - query_string: the query string to search for.</span>
+<span class="sd">      - sort: a string indicating how to sort results. This should be a string</span>
+<span class="sd">          of space separated values. Each value should start with a &#39;+&#39; or a</span>
+<span class="sd">          &#39;-&#39; character indicating whether to sort in ascending or descending</span>
+<span class="sd">          order respectively. This character should be followed by a field name</span>
+<span class="sd">          to sort on. When this is None, results are based on &#39;rank&#39;. See</span>
+<span class="sd">          _get_search_rank to see how rank is determined.</span>
+<span class="sd">      - limit: the maximum number of results to return.</span>
+<span class="sd">      - cursor: A cursor, used to get the next page of results.</span>
+<span class="sd">          If there are more documents that match the query than &#39;limit&#39;, this</span>
+<span class="sd">          function will return a cursor to get the next page.</span>
+
+<span class="sd">    returns: a tuple:</span>
+<span class="sd">      - a list of exploration ids that match the query.</span>
+<span class="sd">      - a cursor if there are more matching explorations to fetch, None</span>
+<span class="sd">          otherwise. If a cursor is returned, it will be a web-safe string that</span>
+<span class="sd">          can be used in URLs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">search_services</span><span class="o">.</span><span class="n">search</span><span class="p">(</span>
+        <span class="n">query</span><span class="p">,</span> <span class="n">SEARCH_INDEX_EXPLORATIONS</span><span class="p">,</span> <span class="n">cursor</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">sort</span><span class="p">,</span> <span class="n">ids_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

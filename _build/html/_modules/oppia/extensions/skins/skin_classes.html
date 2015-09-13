@@ -1,0 +1,385 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.extensions.skins.skin_classes &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.extensions.skins.skin_classes</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Classes corresponding to skins for the learner view.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">jinja_utils</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+<span class="kn">import</span> <span class="nn">jinja2</span>
+
+<span class="n">DEFAULT_ENTRY_POINT_PATH</span> <span class="o">=</span> <span class="s">&#39;player.html&#39;</span>
+
+
+<div class="viewcode-block" id="BaseSkin"><a class="viewcode-back" href="../../../../oppia.extensions.skins.html#oppia.extensions.skins.skin_classes.BaseSkin">[docs]</a><span class="k">class</span> <span class="nc">BaseSkin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base skin class.</span>
+
+<span class="sd">    This is the superclass for all skin classes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># These values should be overridden in subclasses.</span>
+    <span class="n">skin_id</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">skin_name</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="c"># This path is relative to /extensions/skins/{{SKIN_ID}}. It defaults to</span>
+    <span class="c"># player.html.</span>
+    <span class="n">entry_point_path</span> <span class="o">=</span> <span class="n">DEFAULT_ENTRY_POINT_PATH</span>
+    <span class="n">js_path</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="c"># This tag name should match the name of the directive pointed to by</span>
+    <span class="c"># js_path.</span>
+    <span class="n">tag_name</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="c"># Properties of the gadget panels present in the skin.</span>
+    <span class="n">panels_properties</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c"># Configurable options in the UI.</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c"># Skins can support gadget panels that extend along horizontal or vertical</span>
+    <span class="c"># axis.</span>
+    <span class="n">_GADGET_PANEL_AXIS_HORIZONTAL</span> <span class="o">=</span> <span class="s">&#39;horizontal&#39;</span>
+    <span class="n">_GADGET_PANEL_AXIS_VERTICAL</span> <span class="o">=</span> <span class="s">&#39;vertical&#39;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseSkin.get_html"><a class="viewcode-back" href="../../../../oppia.extensions.skins.html#oppia.extensions.skins.skin_classes.BaseSkin.get_html">[docs]</a>    <span class="k">def</span> <span class="nf">get_html</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">entry_point_path</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;No entry-point specified for skin </span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">skin_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Markup</span><span class="p">(</span><span class="n">jinja_utils</span><span class="o">.</span><span class="n">get_jinja_env</span><span class="p">(</span>
+            <span class="n">feconf</span><span class="o">.</span><span class="n">SKINS_TEMPLATES_DIR</span><span class="p">)</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">skin_id</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">entry_point_path</span><span class="p">))</span><span class="o">.</span><span class="n">render</span><span class="p">())</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseSkin.get_js_url"><a class="viewcode-back" href="../../../../oppia.extensions.skins.html#oppia.extensions.skins.skin_classes.BaseSkin.get_js_url">[docs]</a>    <span class="k">def</span> <span class="nf">get_js_url</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the relative path of the skin JS template from</span>
+<span class="sd">        feconf.SKINS_TEMPLATES_DIR.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">js_path</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;No JS path specified for skin </span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">skin_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">skin_id</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">js_path</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseSkin.get_tag"><a class="viewcode-back" href="../../../../oppia.extensions.skins.html#oppia.extensions.skins.skin_classes.BaseSkin.get_tag">[docs]</a>    <span class="k">def</span> <span class="nf">get_tag</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a tag used to load the skin template.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">tag_name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;No tag name specified for skin </span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">skin_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;</span><span class="si">%s</span><span class="s">&gt;&lt;/</span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">tag_name</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseSkin.validate_panel"><a class="viewcode-back" href="../../../../oppia.extensions.skins.html#oppia.extensions.skins.skin_classes.BaseSkin.validate_panel">[docs]</a>    <span class="k">def</span> <span class="nf">validate_panel</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">panel_name</span><span class="p">,</span> <span class="n">gadget_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validates that a panel is able to contain a given set of gadgets.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        - panel_name: string. Unique name for a gadget panel in this skin.</span>
+<span class="sd">        - gadget_list: list of GadgetInstance instances.&quot;&quot;&quot;</span>
+
+        <span class="n">panel_properties_dict</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">panels_properties</span><span class="p">[</span><span class="n">panel_name</span><span class="p">]</span>
+        <span class="n">gadget_panel</span> <span class="o">=</span> <span class="n">GadgetPanelSpec</span><span class="p">(</span>
+            <span class="n">panel_name</span><span class="p">,</span> <span class="n">panel_properties_dict</span><span class="p">[</span><span class="s">&#39;width&#39;</span><span class="p">],</span>
+            <span class="n">panel_properties_dict</span><span class="p">[</span><span class="s">&#39;height&#39;</span><span class="p">],</span>
+            <span class="n">panel_properties_dict</span><span class="p">[</span><span class="s">&#39;stackable_axis&#39;</span><span class="p">],</span>
+            <span class="n">panel_properties_dict</span><span class="p">[</span><span class="s">&#39;pixels_between_gadgets&#39;</span><span class="p">],</span>
+            <span class="n">panel_properties_dict</span><span class="p">[</span><span class="s">&#39;max_gadgets&#39;</span><span class="p">])</span>
+
+        <span class="n">gadget_panel</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">gadget_list</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="GadgetPanelSpec"><a class="viewcode-back" href="../../../../oppia.extensions.skins.html#oppia.extensions.skins.skin_classes.GadgetPanelSpec">[docs]</a><span class="k">class</span> <span class="nc">GadgetPanelSpec</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Specification for the structure of a gadget panel.&quot;&quot;&quot;</span>
+
+    <span class="c"># Possible values for a panel&#39;s stackable_axis.</span>
+    <span class="n">AXIS_HORIZONTAL</span> <span class="o">=</span> <span class="s">&#39;horizontal&#39;</span>
+    <span class="n">AXIS_VERTICAL</span> <span class="o">=</span> <span class="s">&#39;vertical&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">stackable_axis</span><span class="p">,</span>
+            <span class="n">pixels_between_gadgets</span><span class="p">,</span> <span class="n">max_gadgets</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">        - name: str. Unique name that identifies this panel in the skin.</span>
+<span class="sd">        - width: int. Width of panel, in pixels.</span>
+<span class="sd">        - height: int. Height of panel, in pixels.</span>
+<span class="sd">        - stackable_axis: str. Specifies axis multiple gadgets extend along.</span>
+<span class="sd">            Valid options: [AXIS_HORIZONTAL, AXIS_VERTICAL]</span>
+<span class="sd">        - pixels_between_gadgets: int. Number of pixels spacing between gadgets</span>
+<span class="sd">        - max_gadgets: int. Maximum number of gadgets this panel supports.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_width</span> <span class="o">=</span> <span class="n">width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_height</span> <span class="o">=</span> <span class="n">height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stackable_axis</span> <span class="o">=</span> <span class="n">stackable_axis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pixels_between_gadgets</span> <span class="o">=</span> <span class="n">pixels_between_gadgets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_gadgets</span> <span class="o">=</span> <span class="n">max_gadgets</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_names_of_states_with_visible_gadgets</span><span class="p">(</span><span class="n">gadget_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list of state names where gadgets are visible.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        - gadget_list: list of GadgetInstance instances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">state_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">gadget_instance</span> <span class="ow">in</span> <span class="n">gadget_list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="n">gadget_instance</span><span class="o">.</span><span class="n">visible_in_states</span><span class="p">:</span>
+                <span class="n">state_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">state_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">state_names</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_gadgets_visibility_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gadget_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a dict whose keys are state names, and whose corresponding</span>
+<span class="sd">        values are lists of GadgetInstance instances representing the gadgets</span>
+<span class="sd">        visible in that state.</span>
+
+<span class="sd">        Note that the keys of this dict only include states for which at least</span>
+<span class="sd">        one gadget is visible.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        - gadget_list: list of GadgetInstance instances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">visibility_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">state_name</span><span class="p">:</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_names_of_states_with_visible_gadgets</span><span class="p">(</span>
+                <span class="n">gadget_list</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">gadget_instance</span> <span class="ow">in</span> <span class="n">gadget_list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">gadget_instance</span><span class="o">.</span><span class="n">visible_in_states</span><span class="p">):</span>
+                <span class="n">visibility_map</span><span class="p">[</span><span class="n">state_name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gadget_instance</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">visibility_map</span>
+
+<div class="viewcode-block" id="GadgetPanelSpec.validate"><a class="viewcode-back" href="../../../../oppia.extensions.skins.html#oppia.extensions.skins.skin_classes.GadgetPanelSpec.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gadget_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validate proper fit given space requirements specified by skin.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        - gadget_list: list of GadgetInstance instances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># If the panel contains no gadgets, max() will raise an error,</span>
+        <span class="c"># so we return early.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">gadget_list</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c"># Validate limitations and fit considering visibility for each state.</span>
+        <span class="n">gadget_visibility_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_gadgets_visibility_map</span><span class="p">(</span><span class="n">gadget_list</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">state_name</span><span class="p">,</span> <span class="n">gadget_instances</span> <span class="ow">in</span> <span class="n">gadget_visibility_map</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gadget_instances</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_gadgets</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+
+                    <span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; panel expected at most </span><span class="si">%d</span><span class="s"> gadget</span><span class="si">%s</span><span class="s">, but </span><span class="si">%d</span><span class="s"> gadgets&quot;</span>
+                    <span class="s">&quot; are visible in state &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_max_gadgets</span><span class="p">,</span>
+                        <span class="s">&#39;s&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_gadgets</span> <span class="o">!=</span> <span class="mi">1</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+                        <span class="nb">len</span><span class="p">(</span><span class="n">gadget_instances</span><span class="p">),</span>
+                        <span class="n">state_name</span><span class="p">))</span>
+
+            <span class="c"># Calculate total width and height of gadgets given custom args and</span>
+            <span class="c"># panel stackable axis.</span>
+            <span class="n">total_width</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">total_height</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stackable_axis</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">AXIS_VERTICAL</span><span class="p">:</span>
+                <span class="c"># Factor in pixels between gadgets, if any.</span>
+                <span class="n">total_height</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels_between_gadgets</span> <span class="o">*</span> <span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">gadget_instances</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">total_height</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span>
+                    <span class="n">gadget</span><span class="o">.</span><span class="n">height</span> <span class="k">for</span> <span class="n">gadget</span> <span class="ow">in</span> <span class="n">gadget_instances</span><span class="p">)</span>
+                <span class="n">total_width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                    <span class="n">gadget</span><span class="o">.</span><span class="n">width</span> <span class="k">for</span> <span class="n">gadget</span> <span class="ow">in</span> <span class="n">gadget_instances</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stackable_axis</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">AXIS_HORIZONTAL</span><span class="p">:</span>
+                <span class="n">total_width</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pixels_between_gadgets</span> <span class="o">*</span> <span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">gadget_instances</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">total_width</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span>
+                    <span class="n">gadget</span><span class="o">.</span><span class="n">width</span> <span class="k">for</span> <span class="n">gadget</span> <span class="ow">in</span> <span class="n">gadget_instances</span><span class="p">)</span>
+                <span class="n">total_height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                    <span class="n">gadget</span><span class="o">.</span><span class="n">height</span> <span class="k">for</span> <span class="n">gadget</span> <span class="ow">in</span> <span class="n">gadget_instances</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                    <span class="s">&quot;Unrecognized axis for &#39;</span><span class="si">%s</span><span class="s">&#39; panel. Valid options are: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span>
+                        <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_valid_axes</span><span class="p">)))</span>
+
+            <span class="c"># Validate fit for each dimension.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_height</span> <span class="o">&lt;</span> <span class="n">total_height</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                    <span class="s">&quot;Size exceeded: </span><span class="si">%s</span><span class="s"> panel height of </span><span class="si">%d</span><span class="s"> exceeds limit of </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span>
+                        <span class="n">total_height</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_height</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_width</span> <span class="o">&lt;</span> <span class="n">total_width</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                    <span class="s">&quot;Size exceeded: </span><span class="si">%s</span><span class="s"> panel width of </span><span class="si">%d</span><span class="s"> exceeds limit of </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span>
+                        <span class="n">total_width</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_width</span><span class="p">))</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_valid_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Valid values for stackable &amp; fixed axis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">AXIS_HORIZONTAL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">AXIS_VERTICAL</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="ConversationV1"><a class="viewcode-back" href="../../../../oppia.extensions.skins.html#oppia.extensions.skins.skin_classes.ConversationV1">[docs]</a><span class="k">class</span> <span class="nc">ConversationV1</span><span class="p">(</span><span class="n">BaseSkin</span><span class="p">):</span>
+    <span class="n">skin_id</span> <span class="o">=</span> <span class="s">&#39;conversation_v1&#39;</span>
+    <span class="n">skin_name</span> <span class="o">=</span> <span class="s">&#39;Conversation&#39;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A vertically-scrolling conversation.&#39;</span>
+    <span class="n">js_path</span> <span class="o">=</span> <span class="s">&#39;Conversation.js&#39;</span>
+    <span class="n">tag_name</span> <span class="o">=</span> <span class="s">&#39;conversation-skin&#39;</span>
+
+    <span class="n">panels_properties</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;left&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">&#39;width&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+            <span class="s">&#39;height&#39;</span><span class="p">:</span> <span class="mi">350</span><span class="p">,</span>
+            <span class="s">&#39;stackable_axis&#39;</span><span class="p">:</span> <span class="n">BaseSkin</span><span class="o">.</span><span class="n">_GADGET_PANEL_AXIS_VERTICAL</span><span class="p">,</span>
+            <span class="s">&#39;pixels_between_gadgets&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+            <span class="s">&#39;max_gadgets&#39;</span><span class="p">:</span> <span class="mi">1</span>
+        <span class="p">},</span>
+        <span class="s">&#39;right&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">&#39;width&#39;</span><span class="p">:</span> <span class="mi">160</span><span class="p">,</span>
+            <span class="s">&#39;height&#39;</span><span class="p">:</span> <span class="mi">350</span><span class="p">,</span>
+            <span class="s">&#39;stackable_axis&#39;</span><span class="p">:</span> <span class="n">BaseSkin</span><span class="o">.</span><span class="n">_GADGET_PANEL_AXIS_VERTICAL</span><span class="p">,</span>
+            <span class="s">&#39;pixels_between_gadgets&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+            <span class="s">&#39;max_gadgets&#39;</span><span class="p">:</span> <span class="mi">1</span>
+        <span class="p">},</span>
+        <span class="s">&#39;bottom&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">&#39;width&#39;</span><span class="p">:</span> <span class="mi">350</span><span class="p">,</span>
+            <span class="s">&#39;height&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+            <span class="s">&#39;stackable_axis&#39;</span><span class="p">:</span> <span class="n">BaseSkin</span><span class="o">.</span><span class="n">_GADGET_PANEL_AXIS_HORIZONTAL</span><span class="p">,</span>
+            <span class="s">&#39;pixels_between_gadgets&#39;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+            <span class="s">&#39;max_gadgets&#39;</span><span class="p">:</span> <span class="mi">1</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="p">[{</span>
+        <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;show_feedback_button&#39;</span><span class="p">,</span>
+        <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Whether to show the feedback button.&#39;</span><span class="p">,</span>
+        <span class="s">&#39;default_value&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="s">&#39;obj_type&#39;</span><span class="p">:</span> <span class="s">&#39;Boolean&#39;</span>
+    <span class="p">}]</span>
+
+</div>
+<div class="viewcode-block" id="SnapshotsV1"><a class="viewcode-back" href="../../../../oppia.extensions.skins.html#oppia.extensions.skins.skin_classes.SnapshotsV1">[docs]</a><span class="k">class</span> <span class="nc">SnapshotsV1</span><span class="p">(</span><span class="n">BaseSkin</span><span class="p">):</span>
+    <span class="n">skin_id</span> <span class="o">=</span> <span class="s">&#39;snapshots_v1&#39;</span>
+    <span class="n">skin_name</span> <span class="o">=</span> <span class="s">&#39;Snapshots&#39;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;A sequence of snapshots.&#39;</span>
+    <span class="n">js_path</span> <span class="o">=</span> <span class="s">&#39;Snapshots.js&#39;</span>
+    <span class="n">tag_name</span> <span class="o">=</span> <span class="s">&#39;snapshots-skin&#39;</span>
+
+    <span class="n">panels_properties</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;main&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">&#39;width&#39;</span><span class="p">:</span> <span class="mi">800</span><span class="p">,</span>
+            <span class="s">&#39;height&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+            <span class="s">&#39;stackable_axis&#39;</span><span class="p">:</span> <span class="s">&#39;vertical&#39;</span><span class="p">,</span>
+            <span class="s">&#39;pixels_between_gadgets&#39;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+            <span class="s">&#39;max_gadgets&#39;</span><span class="p">:</span> <span class="mi">1</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="p">[{</span>
+        <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;show_back_button&#39;</span><span class="p">,</span>
+        <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Whether to show the back button.&#39;</span><span class="p">,</span>
+        <span class="s">&#39;default_value&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="s">&#39;obj_type&#39;</span><span class="p">:</span> <span class="s">&#39;Boolean&#39;</span>
+    <span class="p">}]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

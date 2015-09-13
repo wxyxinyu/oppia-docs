@@ -1,0 +1,298 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.extensions.skins package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-extensions-skins-package">
+<h1>oppia.extensions.skins package<a class="headerlink" href="#oppia-extensions-skins-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.skins.skin_classes">
+<span id="oppia-extensions-skins-skin-classes-module"></span><h2>oppia.extensions.skins.skin_classes module<a class="headerlink" href="#module-oppia.extensions.skins.skin_classes" title="Permalink to this headline">¶</a></h2>
+<p>Classes corresponding to skins for the learner view.</p>
+<dl class="class">
+<dt id="oppia.extensions.skins.skin_classes.BaseSkin">
+<em class="property">class </em><code class="descclassname">oppia.extensions.skins.skin_classes.</code><code class="descname">BaseSkin</code><a class="reference internal" href="_modules/oppia/extensions/skins/skin_classes.html#BaseSkin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.skins.skin_classes.BaseSkin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Base skin class.</p>
+<p>This is the superclass for all skin classes.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.BaseSkin.description">
+<code class="descname">description</code><em class="property"> = ''</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.BaseSkin.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.BaseSkin.entry_point_path">
+<code class="descname">entry_point_path</code><em class="property"> = 'player.html'</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.BaseSkin.entry_point_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.skins.skin_classes.BaseSkin.get_html">
+<em class="property">classmethod </em><code class="descname">get_html</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/skins/skin_classes.html#BaseSkin.get_html"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.skins.skin_classes.BaseSkin.get_html" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.skins.skin_classes.BaseSkin.get_js_url">
+<em class="property">classmethod </em><code class="descname">get_js_url</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/skins/skin_classes.html#BaseSkin.get_js_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.skins.skin_classes.BaseSkin.get_js_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the relative path of the skin JS template from
+feconf.SKINS_TEMPLATES_DIR.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.skins.skin_classes.BaseSkin.get_tag">
+<em class="property">classmethod </em><code class="descname">get_tag</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/skins/skin_classes.html#BaseSkin.get_tag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.skins.skin_classes.BaseSkin.get_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tag used to load the skin template.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.BaseSkin.js_path">
+<code class="descname">js_path</code><em class="property"> = None</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.BaseSkin.js_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.BaseSkin.options">
+<code class="descname">options</code><em class="property"> = {}</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.BaseSkin.options" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.BaseSkin.panels_properties">
+<code class="descname">panels_properties</code><em class="property"> = {}</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.BaseSkin.panels_properties" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.BaseSkin.skin_id">
+<code class="descname">skin_id</code><em class="property"> = None</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.BaseSkin.skin_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.BaseSkin.skin_name">
+<code class="descname">skin_name</code><em class="property"> = None</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.BaseSkin.skin_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.BaseSkin.tag_name">
+<code class="descname">tag_name</code><em class="property"> = None</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.BaseSkin.tag_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.skins.skin_classes.BaseSkin.validate_panel">
+<em class="property">classmethod </em><code class="descname">validate_panel</code><span class="sig-paren">(</span><em>panel_name</em>, <em>gadget_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/skins/skin_classes.html#BaseSkin.validate_panel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.skins.skin_classes.BaseSkin.validate_panel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates that a panel is able to contain a given set of gadgets.</p>
+<p>Args:
+- panel_name: string. Unique name for a gadget panel in this skin.
+- gadget_list: list of GadgetInstance instances.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.skins.skin_classes.ConversationV1">
+<em class="property">class </em><code class="descclassname">oppia.extensions.skins.skin_classes.</code><code class="descname">ConversationV1</code><a class="reference internal" href="_modules/oppia/extensions/skins/skin_classes.html#ConversationV1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.skins.skin_classes.ConversationV1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.skins.skin_classes.BaseSkin" title="oppia.extensions.skins.skin_classes.BaseSkin"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.skins.skin_classes.BaseSkin</span></code></a></p>
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.ConversationV1.description">
+<code class="descname">description</code><em class="property"> = 'A vertically-scrolling conversation.'</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.ConversationV1.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.ConversationV1.js_path">
+<code class="descname">js_path</code><em class="property"> = 'Conversation.js'</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.ConversationV1.js_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.ConversationV1.options">
+<code class="descname">options</code><em class="property"> = [{'default_value': True, 'obj_type': 'Boolean', 'name': 'show_feedback_button', 'description': 'Whether to show the feedback button.'}]</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.ConversationV1.options" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.ConversationV1.panels_properties">
+<code class="descname">panels_properties</code><em class="property"> = {'right': {'width': 160, 'stackable_axis': 'vertical', 'max_gadgets': 1, 'pixels_between_gadgets': 50, 'height': 350}, 'bottom': {'width': 350, 'stackable_axis': 'horizontal', 'max_gadgets': 1, 'pixels_between_gadgets': 80, 'height': 100}, 'left': {'width': 100, 'stackable_axis': 'vertical', 'max_gadgets': 1, 'pixels_between_gadgets': 50, 'height': 350}}</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.ConversationV1.panels_properties" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.ConversationV1.skin_id">
+<code class="descname">skin_id</code><em class="property"> = 'conversation_v1'</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.ConversationV1.skin_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.ConversationV1.skin_name">
+<code class="descname">skin_name</code><em class="property"> = 'Conversation'</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.ConversationV1.skin_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.ConversationV1.tag_name">
+<code class="descname">tag_name</code><em class="property"> = 'conversation-skin'</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.ConversationV1.tag_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.skins.skin_classes.GadgetPanelSpec">
+<em class="property">class </em><code class="descclassname">oppia.extensions.skins.skin_classes.</code><code class="descname">GadgetPanelSpec</code><span class="sig-paren">(</span><em>name</em>, <em>width</em>, <em>height</em>, <em>stackable_axis</em>, <em>pixels_between_gadgets</em>, <em>max_gadgets</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/skins/skin_classes.html#GadgetPanelSpec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.skins.skin_classes.GadgetPanelSpec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Specification for the structure of a gadget panel.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.GadgetPanelSpec.AXIS_HORIZONTAL">
+<code class="descname">AXIS_HORIZONTAL</code><em class="property"> = 'horizontal'</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.GadgetPanelSpec.AXIS_HORIZONTAL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.GadgetPanelSpec.AXIS_VERTICAL">
+<code class="descname">AXIS_VERTICAL</code><em class="property"> = 'vertical'</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.GadgetPanelSpec.AXIS_VERTICAL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.extensions.skins.skin_classes.GadgetPanelSpec.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>gadget_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/skins/skin_classes.html#GadgetPanelSpec.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.skins.skin_classes.GadgetPanelSpec.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate proper fit given space requirements specified by skin.</p>
+<p>Args:
+- gadget_list: list of GadgetInstance instances.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.skins.skin_classes.SnapshotsV1">
+<em class="property">class </em><code class="descclassname">oppia.extensions.skins.skin_classes.</code><code class="descname">SnapshotsV1</code><a class="reference internal" href="_modules/oppia/extensions/skins/skin_classes.html#SnapshotsV1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.skins.skin_classes.SnapshotsV1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.skins.skin_classes.BaseSkin" title="oppia.extensions.skins.skin_classes.BaseSkin"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.skins.skin_classes.BaseSkin</span></code></a></p>
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.SnapshotsV1.description">
+<code class="descname">description</code><em class="property"> = 'A sequence of snapshots.'</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.SnapshotsV1.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.SnapshotsV1.js_path">
+<code class="descname">js_path</code><em class="property"> = 'Snapshots.js'</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.SnapshotsV1.js_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.SnapshotsV1.options">
+<code class="descname">options</code><em class="property"> = [{'default_value': True, 'obj_type': 'Boolean', 'name': 'show_back_button', 'description': 'Whether to show the back button.'}]</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.SnapshotsV1.options" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.SnapshotsV1.panels_properties">
+<code class="descname">panels_properties</code><em class="property"> = {'main': {'width': 800, 'stackable_axis': 'vertical', 'max_gadgets': 1, 'pixels_between_gadgets': 80, 'height': 1000}}</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.SnapshotsV1.panels_properties" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.SnapshotsV1.skin_id">
+<code class="descname">skin_id</code><em class="property"> = 'snapshots_v1'</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.SnapshotsV1.skin_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.SnapshotsV1.skin_name">
+<code class="descname">skin_name</code><em class="property"> = 'Snapshots'</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.SnapshotsV1.skin_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.extensions.skins.skin_classes.SnapshotsV1.tag_name">
+<code class="descname">tag_name</code><em class="property"> = 'snapshots-skin'</em><a class="headerlink" href="#oppia.extensions.skins.skin_classes.SnapshotsV1.tag_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.extensions.skins">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.extensions.skins" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.extensions.skins package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.skins.skin_classes">oppia.extensions.skins.skin_classes module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.skins">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.extensions.skins.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.extensions.skins.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

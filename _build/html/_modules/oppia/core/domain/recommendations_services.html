@@ -1,0 +1,383 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.recommendations_services &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.recommendations_services</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2015 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;System for computing recommendations for explorations and users.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Xinyu Wu&#39;</span>
+
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">StringIO</span>
+
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_services</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">rights_manager</span>
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">exp_models</span><span class="p">,</span> <span class="n">recommendations_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">exploration</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">recommendations</span><span class="p">])</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+
+
+<span class="n">DEFAULT_TOPIC_SIMILARITIES_STRING</span> <span class="o">=</span> <span class="p">(</span>
+<span class="sd">&quot;&quot;&quot;Architecture,Art,Biology,Business,Chemistry,Computing,Economics,Education,Engineering,Environment,Geography,Government,Hobbies,Languages,Law,Life Skills,Mathematics,Medicine,Music,Philosophy,Physics,Programming,Psychology,Puzzles,Reading,Religion,Sport,Statistics,Welcome</span>
+<span class="sd">1.0,0.9,0.2,0.4,0.1,0.2,0.3,0.3,0.6,0.6,0.4,0.2,0.5,0.5,0.5,0.3,0.5,0.3,0.3,0.5,0.4,0.1,0.6,0.1,0.1,0.1,0.1,0.1,0.3</span>
+<span class="sd">0.9,1.0,0.1,0.6,0.1,0.1,0.6,0.6,0.2,0.3,0.3,0.2,0.5,0.7,0.6,0.2,0.3,0.2,0.9,0.7,0.3,0.1,0.6,0.1,0.1,0.1,0.1,0.1,0.3</span>
+<span class="sd">0.2,0.1,1.0,0.2,0.8,0.3,0.2,0.3,0.3,0.7,0.4,0.2,0.2,0.1,0.1,0.9,0.4,0.8,0.1,0.1,0.4,0.1,0.6,0.1,0.1,0.1,0.1,0.6,0.3</span>
+<span class="sd">0.4,0.6,0.2,1.0,0.1,0.5,0.9,0.6,0.4,0.6,0.2,0.7,0.2,0.5,0.7,0.1,0.3,0.1,0.1,0.6,0.1,0.2,0.3,0.1,0.1,0.1,0.1,0.5,0.3</span>
+<span class="sd">0.1,0.1,0.8,0.1,1.0,0.2,0.2,0.3,0.2,0.6,0.6,0.1,0.2,0.2,0.2,0.7,0.3,0.7,0.1,0.1,0.2,0.1,0.3,0.1,0.1,0.1,0.1,0.3,0.3</span>
+<span class="sd">0.2,0.1,0.3,0.5,0.2,1.0,0.6,0.3,0.6,0.1,0.1,0.1,0.2,0.2,0.1,0.3,0.9,0.2,0.2,0.3,0.4,0.95,0.3,0.5,0.1,0.1,0.1,0.6,0.3</span>
+<span class="sd">0.3,0.6,0.2,0.9,0.2,0.6,1.0,0.3,0.3,0.5,0.4,0.7,0.2,0.4,0.8,0.2,0.6,0.2,0.1,0.3,0.1,0.3,0.6,0.3,0.2,0.1,0.1,0.7,0.3</span>
+<span class="sd">0.3,0.6,0.3,0.6,0.3,0.3,0.3,1.0,0.3,0.5,0.3,0.5,0.2,0.2,0.6,0.1,0.2,0.1,0.1,0.5,0.1,0.1,0.6,0.1,0.3,0.2,0.2,0.2,0.3</span>
+<span class="sd">0.6,0.2,0.3,0.4,0.2,0.6,0.3,0.3,1.0,0.4,0.2,0.2,0.2,0.2,0.3,0.1,0.7,0.1,0.1,0.3,0.6,0.6,0.2,0.3,0.1,0.1,0.1,0.5,0.3</span>
+<span class="sd">0.6,0.3,0.7,0.6,0.6,0.1,0.5,0.5,0.4,1.0,0.8,0.6,0.2,0.2,0.3,0.8,0.2,0.3,0.1,0.2,0.1,0.1,0.3,0.1,0.1,0.1,0.1,0.3,0.3</span>
+<span class="sd">0.4,0.3,0.4,0.2,0.6,0.1,0.4,0.3,0.2,0.8,1.0,0.2,0.2,0.4,0.3,0.6,0.3,0.3,0.1,0.1,0.1,0.1,0.3,0.1,0.1,0.1,0.1,0.2,0.3</span>
+<span class="sd">0.2,0.2,0.2,0.7,0.1,0.1,0.7,0.5,0.2,0.6,0.2,1.0,0.2,0.3,0.8,0.1,0.1,0.1,0.1,0.4,0.1,0.1,0.4,0.1,0.5,0.5,0.2,0.4,0.3</span>
+<span class="sd">0.5,0.5,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,1.0,0.5,0.2,0.2,0.3,0.2,0.4,0.2,0.3,0.5,0.2,0.6,0.5,0.3,0.6,0.2,0.3</span>
+<span class="sd">0.5,0.7,0.1,0.5,0.2,0.2,0.4,0.2,0.2,0.2,0.4,0.3,0.5,1.0,0.3,0.1,0.1,0.1,0.3,0.4,0.1,0.1,0.3,0.1,0.8,0.4,0.1,0.1,0.3</span>
+<span class="sd">0.5,0.6,0.1,0.7,0.2,0.1,0.8,0.6,0.3,0.3,0.3,0.8,0.2,0.3,1.0,0.1,0.1,0.1,0.1,0.6,0.1,0.1,0.6,0.1,0.4,0.6,0.1,0.2,0.3</span>
+<span class="sd">0.3,0.2,0.9,0.1,0.7,0.3,0.2,0.1,0.1,0.8,0.6,0.1,0.2,0.1,0.1,1.0,0.4,0.8,0.1,0.2,0.2,0.2,0.3,0.1,0.2,0.1,0.3,0.4,0.3</span>
+<span class="sd">0.5,0.3,0.4,0.3,0.3,0.9,0.6,0.2,0.7,0.2,0.3,0.1,0.3,0.1,0.1,0.4,1.0,0.2,0.3,0.4,0.7,0.8,0.2,0.6,0.1,0.1,0.1,0.8,0.3</span>
+<span class="sd">0.3,0.2,0.8,0.1,0.7,0.2,0.2,0.1,0.1,0.3,0.3,0.1,0.2,0.1,0.1,0.8,0.2,1.0,0.2,0.3,0.1,0.2,0.3,0.1,0.1,0.1,0.1,0.1,0.3</span>
+<span class="sd">0.3,0.9,0.1,0.1,0.1,0.2,0.1,0.1,0.1,0.1,0.1,0.1,0.4,0.3,0.1,0.1,0.3,0.2,1.0,0.6,0.3,0.2,0.4,0.1,0.3,0.1,0.1,0.1,0.3</span>
+<span class="sd">0.5,0.7,0.1,0.6,0.1,0.3,0.3,0.5,0.3,0.2,0.1,0.4,0.2,0.4,0.6,0.2,0.4,0.3,0.6,1.0,0.3,0.6,0.4,0.5,0.2,0.1,0.1,0.3,0.3</span>
+<span class="sd">0.4,0.3,0.4,0.1,0.2,0.4,0.1,0.1,0.6,0.1,0.1,0.1,0.3,0.1,0.1,0.2,0.7,0.1,0.3,0.3,1.0,0.6,0.1,0.5,0.2,0.1,0.3,0.4,0.3</span>
+<span class="sd">0.1,0.1,0.1,0.2,0.1,0.95,0.3,0.1,0.6,0.1,0.1,0.1,0.5,0.1,0.1,0.2,0.8,0.2,0.2,0.6,0.6,1.0,0.3,0.6,0.1,0.1,0.1,0.6,0.3</span>
+<span class="sd">0.6,0.6,0.6,0.3,0.3,0.3,0.6,0.6,0.2,0.3,0.3,0.4,0.2,0.3,0.6,0.3,0.2,0.3,0.4,0.4,0.1,0.3,1.0,0.4,0.3,0.3,0.2,0.4,0.3</span>
+<span class="sd">0.1,0.1,0.1,0.1,0.1,0.5,0.3,0.1,0.3,0.1,0.1,0.1,0.6,0.1,0.1,0.1,0.6,0.1,0.1,0.5,0.5,0.6,0.4,1.0,0.1,0.1,0.1,0.5,0.3</span>
+<span class="sd">0.1,0.1,0.1,0.1,0.1,0.1,0.2,0.3,0.1,0.1,0.1,0.5,0.5,0.8,0.4,0.2,0.1,0.1,0.3,0.2,0.2,0.1,0.3,0.1,1.0,0.4,0.1,0.1,0.3</span>
+<span class="sd">0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.2,0.1,0.1,0.1,0.5,0.3,0.4,0.6,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.3,0.1,0.4,1.0,0.2,0.1,0.3</span>
+<span class="sd">0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.2,0.1,0.1,0.1,0.2,0.6,0.1,0.1,0.3,0.1,0.1,0.1,0.1,0.3,0.1,0.2,0.1,0.1,0.2,1.0,0.3,0.3</span>
+<span class="sd">0.1,0.1,0.6,0.5,0.3,0.6,0.7,0.2,0.5,0.3,0.2,0.4,0.2,0.1,0.2,0.4,0.8,0.1,0.1,0.3,0.4,0.6,0.4,0.5,0.1,0.1,0.3,1.0,0.3</span>
+<span class="sd">0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,1.0&quot;&quot;&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_topic_similarities_dict"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_services.get_topic_similarities_dict">[docs]</a><span class="k">def</span> <span class="nf">get_topic_similarities_dict</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns a 2d dict of topic similarities. Creates the default similarity</span>
+<span class="sd">    dict if it does not exist yet.&quot;&quot;&quot;</span>
+
+    <span class="n">topic_similarities_entity</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">recommendations_models</span><span class="o">.</span><span class="n">TopicSimilaritiesModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">recommendations_models</span><span class="o">.</span><span class="n">TOPIC_SIMILARITIES_ID</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">topic_similarities_entity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">topic_similarities_entity</span> <span class="o">=</span> <span class="n">_create_default_topic_similarities</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">topic_similarities_entity</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="save_topic_similarities"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_services.save_topic_similarities">[docs]</a><span class="k">def</span> <span class="nf">save_topic_similarities</span><span class="p">(</span><span class="n">topic_similarities</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Stores topic similarities in the datastore. Returns the newly created or</span>
+<span class="sd">    changed entity.&quot;&quot;&quot;</span>
+
+    <span class="n">topic_similarities_entity</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">recommendations_models</span><span class="o">.</span><span class="n">TopicSimilaritiesModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">recommendations_models</span><span class="o">.</span><span class="n">TOPIC_SIMILARITIES_ID</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">topic_similarities_entity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">topic_similarities_entity</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">recommendations_models</span><span class="o">.</span><span class="n">TopicSimilaritiesModel</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">recommendations_models</span><span class="o">.</span><span class="n">TOPIC_SIMILARITIES_ID</span><span class="p">,</span>
+                <span class="n">content</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">topic_similarities</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">topic_similarities_entity</span><span class="o">.</span><span class="n">content</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">topic_similarities</span><span class="p">)</span>
+    <span class="n">topic_similarities_entity</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">topic_similarities_entity</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_create_default_topic_similarities</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Creates the default topic similarities, and stores them in the datastore.</span>
+<span class="sd">    The keys are names of the default categories, and values are</span>
+<span class="sd">    DEFAULT_TOPIC_SIMILARITY if the keys are different and</span>
+<span class="sd">    SAME_TOPIC_SIMILARITY if the keys are the same.</span>
+
+<span class="sd">    Returns the newly created TopicSimilaritiesModel.&quot;&quot;&quot;</span>
+
+    <span class="n">topic_similarities_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">topic</span><span class="p">:</span> <span class="p">{}</span>
+                               <span class="k">for</span> <span class="n">topic</span> <span class="ow">in</span> <span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_CATEGORIES</span><span class="p">}</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">DEFAULT_TOPIC_SIMILARITIES_STRING</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="n">topics_list</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">topic_similarities_values</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">for</span> <span class="n">row_ind</span><span class="p">,</span> <span class="n">topic_1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">topics_list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col_ind</span><span class="p">,</span> <span class="n">topic_2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">topics_list</span><span class="p">):</span>
+            <span class="n">topic_similarities_dict</span><span class="p">[</span><span class="n">topic_1</span><span class="p">][</span><span class="n">topic_2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">topic_similarities_values</span><span class="p">[</span><span class="n">row_ind</span><span class="p">][</span><span class="n">col_ind</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">save_topic_similarities</span><span class="p">(</span><span class="n">topic_similarities_dict</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_topic_similarity"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_services.get_topic_similarity">[docs]</a><span class="k">def</span> <span class="nf">get_topic_similarity</span><span class="p">(</span><span class="n">topic_1</span><span class="p">,</span> <span class="n">topic_2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the similarity between two topics, as a float between 0 and 1.</span>
+
+<span class="sd">    It checks whether the two topics are in the list of default topics. If</span>
+<span class="sd">    not, it returns the default similarity if the topics are different or 1 if</span>
+<span class="sd">    the topics are the same.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">topic_1</span> <span class="ow">in</span> <span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_CATEGORIES</span> <span class="ow">and</span>
+            <span class="n">topic_2</span> <span class="ow">in</span> <span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_CATEGORIES</span><span class="p">):</span>
+        <span class="n">topic_similarities</span> <span class="o">=</span> <span class="n">get_topic_similarities_dict</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">topic_similarities</span><span class="p">[</span><span class="n">topic_1</span><span class="p">][</span><span class="n">topic_2</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">topic_1</span> <span class="o">==</span> <span class="n">topic_2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">feconf</span><span class="o">.</span><span class="n">SAME_TOPIC_SIMILARITY</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_TOPIC_SIMILARITY</span>
+
+</div>
+<div class="viewcode-block" id="get_topic_similarities_as_csv"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_services.get_topic_similarities_as_csv">[docs]</a><span class="k">def</span> <span class="nf">get_topic_similarities_as_csv</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Downloads all similarities corresponding to the current topics as a</span>
+<span class="sd">    string which contains the contents of a csv file.</span>
+
+<span class="sd">    The first line is a list of the current topics. The next lines are an</span>
+<span class="sd">    adjacency matrix of similarities.&quot;&quot;&quot;</span>
+
+    <span class="n">output</span> <span class="o">=</span> <span class="n">StringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_CATEGORIES</span><span class="p">)</span>
+
+    <span class="n">topic_similarities</span> <span class="o">=</span> <span class="n">get_topic_similarities_dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">topic</span> <span class="ow">in</span> <span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_CATEGORIES</span><span class="p">:</span>
+        <span class="n">topic_similarities_row</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="n">topic_similarities</span><span class="p">[</span><span class="n">topic</span><span class="p">]</span><span class="o">.</span><span class="n">iteritems</span><span class="p">())]</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">topic_similarities_row</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">output</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_validate_topic_similarities</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Validates topic similarities given by data, which should be a string</span>
+<span class="sd">    of comma-separated values.</span>
+
+<span class="sd">    The first line of data should be a list of topic names. The next lines</span>
+<span class="sd">    should be a symmetric adjacency matrix of similarities, which are floats</span>
+<span class="sd">    between 0.0 and 1.0.</span>
+
+<span class="sd">    This function checks whether topics belong in the current list of</span>
+<span class="sd">    known topics, and if the adjacency matrix is valid.&quot;&quot;&quot;</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="n">topics_list</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">topics_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">topics_list</span><span class="p">)</span>
+    <span class="n">topic_similarities_values</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">topic_similarities_values</span><span class="p">)</span> <span class="o">!=</span> <span class="n">topics_length</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s">&#39;Length of topic similarities columns does not match topic list.&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">topic</span> <span class="ow">in</span> <span class="n">topics_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">topic</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_CATEGORIES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Topic </span><span class="si">%s</span><span class="s"> not in list of known topics.&#39;</span> <span class="o">%</span> <span class="n">topic</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">topic</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">topics_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">topic_similarities_values</span><span class="p">[</span><span class="n">index</span><span class="p">])</span> <span class="o">!=</span> <span class="n">topics_length</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Length of topic similarities rows does not match topic list.&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">row_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">topics_length</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">topics_length</span><span class="p">):</span>
+            <span class="n">similarity</span> <span class="o">=</span> <span class="n">topic_similarities_values</span><span class="p">[</span><span class="n">row_ind</span><span class="p">][</span><span class="n">col_ind</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">similarity</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">similarity</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Expected similarity to be a float, received &#39;</span>
+                                 <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">similarity</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">similarity</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">similarity</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Expected similarity to be between 0.0 and &#39;</span>
+                                 <span class="s">&#39;1.0, received </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">similarity</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">row_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">topics_length</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">topics_length</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">topic_similarities_values</span><span class="p">[</span><span class="n">row_ind</span><span class="p">][</span><span class="n">col_ind</span><span class="p">]</span> <span class="o">!=</span>
+                    <span class="n">topic_similarities_values</span><span class="p">[</span><span class="n">col_ind</span><span class="p">][</span><span class="n">row_ind</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Expected topic similarities to be symmetric.&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="update_topic_similarities"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_services.update_topic_similarities">[docs]</a><span class="k">def</span> <span class="nf">update_topic_similarities</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Updates all topic similarity pairs given by data, which should be a</span>
+<span class="sd">    string of comma-separated values.</span>
+
+<span class="sd">    The first line of data should be a list of topic names. The next lines</span>
+<span class="sd">    should be a symmetric adjacency matrix of similarities, which are floats</span>
+<span class="sd">    between 0.0 and 1.0.</span>
+
+<span class="sd">    The topic names should belong to the current list of topics, but they need</span>
+<span class="sd">    not include every current topic. If a topic name is not in the data, its</span>
+<span class="sd">    similarities remain as the previous value or the default.&quot;&quot;&quot;</span>
+
+    <span class="n">_validate_topic_similarities</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="n">topics_list</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">topic_similarities_values</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="n">topic_similarities_dict</span> <span class="o">=</span> <span class="n">get_topic_similarities_dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">row_ind</span><span class="p">,</span> <span class="n">topic_1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">topics_list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col_ind</span><span class="p">,</span> <span class="n">topic_2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">topics_list</span><span class="p">):</span>
+            <span class="n">topic_similarities_dict</span><span class="p">[</span><span class="n">topic_1</span><span class="p">][</span><span class="n">topic_2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">topic_similarities_values</span><span class="p">[</span><span class="n">row_ind</span><span class="p">][</span><span class="n">col_ind</span><span class="p">])</span>
+
+    <span class="n">save_topic_similarities</span><span class="p">(</span><span class="n">topic_similarities_dict</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_item_similarity"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_services.get_item_similarity">[docs]</a><span class="k">def</span> <span class="nf">get_item_similarity</span><span class="p">(</span>
+        <span class="n">reference_exp_category</span><span class="p">,</span>
+        <span class="n">reference_exp_language_code</span><span class="p">,</span>
+        <span class="n">reference_exp_owner_ids</span><span class="p">,</span>
+        <span class="n">compared_exp_category</span><span class="p">,</span>
+        <span class="n">compared_exp_language_code</span><span class="p">,</span>
+        <span class="n">compared_exp_last_updated</span><span class="p">,</span>
+        <span class="n">compared_exp_owner_ids</span><span class="p">,</span>
+        <span class="n">compared_exp_status</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the ranking of compared_exp to reference_exp as a</span>
+<span class="sd">    recommendation. This returns a value between 0.0 to 10.0. A higher value</span>
+<span class="sd">    indicates the compared_exp is a better recommendation as an exploration to</span>
+<span class="sd">    start after completing reference_exp.</span>
+
+<span class="sd">    Comparison of similarity is based on the similarity of exploration topics,</span>
+<span class="sd">    whether the explorations have the same language or author. The ranking of</span>
+<span class="sd">    compared_exp is increased if it is publicized or is newly updated. It</span>
+<span class="sd">    returns 0.0 if compared_exp is private.&quot;&quot;&quot;</span>
+
+    <span class="n">similarity_score</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">compared_exp_status</span> <span class="o">==</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">compared_exp_status</span> <span class="o">==</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">EXPLORATION_STATUS_PUBLICIZED</span><span class="p">):</span>
+        <span class="n">similarity_score</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">similarity_score</span> <span class="o">+=</span> <span class="n">get_topic_similarity</span><span class="p">(</span>
+        <span class="n">reference_exp_category</span><span class="p">,</span> <span class="n">compared_exp_category</span><span class="p">)</span> <span class="o">*</span> <span class="mi">5</span>
+    <span class="k">if</span> <span class="n">reference_exp_owner_ids</span> <span class="o">==</span> <span class="n">compared_exp_owner_ids</span><span class="p">:</span>
+        <span class="n">similarity_score</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">reference_exp_language_code</span> <span class="o">==</span> <span class="n">compared_exp_language_code</span><span class="p">):</span>
+        <span class="n">similarity_score</span> <span class="o">+=</span> <span class="mi">2</span>
+
+    <span class="n">time_now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+    <span class="n">time_delta_days</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">time_now</span> <span class="o">-</span> <span class="n">compared_exp_last_updated</span><span class="p">)</span><span class="o">.</span><span class="n">days</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">time_delta_days</span> <span class="o">&lt;=</span> <span class="mi">7</span><span class="p">:</span>
+        <span class="n">similarity_score</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">similarity_score</span>
+
+</div>
+<div class="viewcode-block" id="set_recommendations"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_services.set_recommendations">[docs]</a><span class="k">def</span> <span class="nf">set_recommendations</span><span class="p">(</span><span class="n">exp_id</span><span class="p">,</span> <span class="n">new_recommendations</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Stores a list of exploration ids of recommended explorations to play</span>
+<span class="sd">    after completing the exploration keyed by exp_id.&quot;&quot;&quot;</span>
+
+    <span class="n">recommendations_models</span><span class="o">.</span><span class="n">ExplorationRecommendationsModel</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">exp_id</span><span class="p">,</span> <span class="n">recommended_exploration_ids</span><span class="o">=</span><span class="n">new_recommendations</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="get_exploration_recommendations"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_services.get_exploration_recommendations">[docs]</a><span class="k">def</span> <span class="nf">get_exploration_recommendations</span><span class="p">(</span><span class="n">exp_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets a list of ids of at most 10 recommended explorations to play</span>
+<span class="sd">    after completing the exploration keyed by exp_id.&quot;&quot;&quot;</span>
+
+    <span class="n">recommendations_model</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">recommendations_models</span><span class="o">.</span><span class="n">ExplorationRecommendationsModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">exp_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">recommendations_model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">recommendations_model</span><span class="o">.</span><span class="n">recommended_exploration_ids</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

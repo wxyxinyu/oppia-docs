@@ -1,0 +1,182 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.rte_component_registry &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.rte_component_registry</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Registry for custom rich-text components.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">pkgutil</span>
+
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+
+<div class="viewcode-block" id="Registry"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rte_component_registry.Registry">[docs]</a><span class="k">class</span> <span class="nc">Registry</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Registry of all custom rich-text components.&quot;&quot;&quot;</span>
+
+    <span class="n">_rte_components</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_refresh</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Repopulate the registry.&quot;&quot;&quot;</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_rte_components</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="c"># Assemble all paths to the RTE components.</span>
+        <span class="n">EXTENSION_PATHS</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">component</span><span class="p">[</span><span class="s">&#39;dir&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span>
+            <span class="n">feconf</span><span class="o">.</span><span class="n">ALLOWED_RTE_EXTENSIONS</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+
+        <span class="c"># Crawl the directories and add new RTE component instances to the</span>
+        <span class="c"># registry.</span>
+        <span class="k">for</span> <span class="n">loader</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">pkgutil</span><span class="o">.</span><span class="n">iter_modules</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">EXTENSION_PATHS</span><span class="p">):</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">find_module</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">load_module</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">clazz</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+            <span class="n">ancestor_names</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">base_class</span><span class="o">.</span><span class="n">__name__</span> <span class="k">for</span> <span class="n">base_class</span> <span class="ow">in</span> <span class="n">clazz</span><span class="o">.</span><span class="n">__bases__</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s">&#39;BaseRichTextComponent&#39;</span> <span class="ow">in</span> <span class="n">ancestor_names</span><span class="p">:</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_rte_components</span><span class="p">[</span><span class="n">clazz</span><span class="o">.</span><span class="n">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="n">clazz</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Registry.get_all_rte_components"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rte_component_registry.Registry.get_all_rte_components">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_rte_components</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of instances of all custom RTE components.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_rte_components</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">_refresh</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_rte_components</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Registry.get_tag_list_with_attrs"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rte_component_registry.Registry.get_tag_list_with_attrs">[docs]</a>    <span class="k">def</span> <span class="nf">get_tag_list_with_attrs</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a dict of HTML tag names and attributes for RTE components.</span>
+
+<span class="sd">        The keys are tag names starting with &#39;oppia-noninteractive-&#39;, followed</span>
+<span class="sd">        by the hyphenated version of the name of the RTE component. The values</span>
+<span class="sd">        are lists of allowed attributes of the form</span>
+<span class="sd">        [PARAM_NAME]-with-[CUSTOMIZATION_ARG_NAME].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># TODO(sll): Cache this computation and update it on each refresh.</span>
+        <span class="n">component_list</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_all_rte_components</span><span class="p">()</span>
+
+        <span class="n">component_tags</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">component_list</span><span class="p">:</span>
+            <span class="n">tag_name</span> <span class="o">=</span> <span class="s">&#39;oppia-noninteractive-</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">utils</span><span class="o">.</span><span class="n">camelcase_to_hyphenated</span><span class="p">(</span><span class="n">component</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+
+            <span class="n">component_tags</span><span class="p">[</span><span class="n">tag_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s">&#39;</span><span class="si">%s</span><span class="s">-with-value&#39;</span> <span class="o">%</span> <span class="n">ca_spec</span><span class="o">.</span><span class="n">name</span>
+                <span class="k">for</span> <span class="n">ca_spec</span> <span class="ow">in</span> <span class="n">component</span><span class="o">.</span><span class="n">customization_arg_specs</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">component_tags</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Registry.get_html_for_all_components"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rte_component_registry.Registry.get_html_for_all_components">[docs]</a>    <span class="k">def</span> <span class="nf">get_html_for_all_components</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the HTML bodies for all custom RTE components.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39; </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">html_body</span> <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_all_rte_components</span><span class="p">()])</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Registry.get_all_specs"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rte_component_registry.Registry.get_all_specs">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_specs</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a dict containing the full specs of each RTE component.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">component</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_all_rte_components</span><span class="p">()</span>
+        <span class="p">}</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

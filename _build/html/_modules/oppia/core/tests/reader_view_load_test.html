@@ -1,0 +1,441 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.tests.reader_view_load_test &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.tests.reader_view_load_test</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Performance test for the Oppia reader view.</span>
+
+<span class="sd">Before running this script, exploration 0 should be loaded in the target</span>
+<span class="sd">server.</span>
+
+<span class="sd">Run this script from the Oppia root directory:</span>
+
+<span class="sd">    python core/tests/reader_view_load_test.py --thread_count=5 --start_uid=1 \</span>
+<span class="sd">    https://my-oppia-instance.appspot.com</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip (sll@google.com)&#39;</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">cookielib</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">import</span> <span class="nn">urllib2</span>
+
+
+<span class="n">XSSI_PREFIX</span> <span class="o">=</span> <span class="s">&#39;)]}</span><span class="se">\&#39;\n</span><span class="s">&#39;</span>
+
+
+<span class="c"># command line arguments parser</span>
+<span class="n">PARSER</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+<span class="n">PARSER</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+    <span class="s">&#39;base_url&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;Base URL of the Oppia installation to test&#39;</span><span class="p">),</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+<span class="n">PARSER</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+    <span class="s">&#39;--start_uid&#39;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s">&#39;Initial value for unique thread identifier.&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">PARSER</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+    <span class="s">&#39;--thread_count&#39;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s">&#39;Number of concurrent threads for executing the test.&#39;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">PARSER</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+    <span class="s">&#39;--iteration_count&#39;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s">&#39;Number of iterations for executing the test. Each thread of each &#39;</span>
+    <span class="s">&#39;iteration acts as a unique user with the uid equal to:&#39;</span>
+    <span class="s">&#39;start_uid + thread_count * iteration_index.&#39;</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="assert_contains"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.assert_contains">[docs]</a><span class="k">def</span> <span class="nf">assert_contains</span><span class="p">(</span><span class="n">needle</span><span class="p">,</span> <span class="n">haystack</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">needle</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">haystack</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Expected to find term: </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">needle</span><span class="p">,</span> <span class="n">haystack</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="assert_equals"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.assert_equals">[docs]</a><span class="k">def</span> <span class="nf">assert_equals</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="n">actual</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">expected</span> <span class="o">!=</span> <span class="n">actual</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Expected equality of </span><span class="si">%s</span><span class="s"> and </span><span class="si">%s</span><span class="s">.&#39;</span><span class="p">,</span> <span class="n">expected</span><span class="p">,</span> <span class="n">actual</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="WebSession"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.WebSession">[docs]</a><span class="k">class</span> <span class="nc">WebSession</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class that allows navigation of web pages keeping cookie session.&quot;&quot;&quot;</span>
+
+    <span class="n">PROGRESS_LOCK</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+    <span class="n">MAX_RETRIES</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">RETRY_SLEEP_SEC</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="n">GET_COUNT</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">POST_COUNT</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">RETRY_COUNT</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">PROGRESS_BATCH</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">RESPONSE_TIME_HISTOGRAM</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">common_headers</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">common_headers</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">common_headers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uid</span> <span class="o">=</span> <span class="n">uid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">common_headers</span> <span class="o">=</span> <span class="n">common_headers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cj</span> <span class="o">=</span> <span class="n">cookielib</span><span class="o">.</span><span class="n">CookieJar</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opener</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">build_opener</span><span class="p">(</span>
+            <span class="n">urllib2</span><span class="o">.</span><span class="n">HTTPCookieProcessor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cj</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="WebSession.increment_duration_bucket"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.WebSession.increment_duration_bucket">[docs]</a>    <span class="k">def</span> <span class="nf">increment_duration_bucket</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">RESPONSE_TIME_HISTOGRAM</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="WebSession.update_duration"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.WebSession.update_duration">[docs]</a>    <span class="k">def</span> <span class="nf">update_duration</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">duration</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">30</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">increment_duration_bucket</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">15</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">increment_duration_bucket</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">7</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">increment_duration_bucket</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">increment_duration_bucket</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">increment_duration_bucket</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">increment_duration_bucket</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="WebSession.log_progress"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.WebSession.log_progress">[docs]</a>    <span class="k">def</span> <span class="nf">log_progress</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">update</span> <span class="o">=</span> <span class="p">((</span><span class="n">cls</span><span class="o">.</span><span class="n">GET_COUNT</span> <span class="o">+</span> <span class="n">cls</span><span class="o">.</span><span class="n">POST_COUNT</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">PROGRESS_BATCH</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">update</span> <span class="ow">or</span> <span class="n">force</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s">&#39;GET/POST:[</span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">], RETRIES:[</span><span class="si">%s</span><span class="s">], SLA:</span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">GET_COUNT</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">POST_COUNT</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">RETRY_COUNT</span><span class="p">,</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">RESPONSE_TIME_HISTOGRAM</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="WebSession.get_cookie_value"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.WebSession.get_cookie_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_cookie_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">cookie</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cj</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cookie</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cookie</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="WebSession.is_soft_error"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.WebSession.is_soft_error">[docs]</a>    <span class="k">def</span> <span class="nf">is_soft_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http_error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks if HTTPError is due to starvation of frontend instances.&quot;&quot;&quot;</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">http_error</span><span class="o">.</span><span class="n">fp</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="c"># this is the text specific to the front end instance starvation, which</span>
+        <span class="c"># is a retriable error for both GET and POST; normal HTTP error 500 has</span>
+        <span class="c"># this specific text &#39;&lt;h1&gt;500 Internal Server Error&lt;/h1&gt;&#39;</span>
+        <span class="k">if</span> <span class="n">http_error</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="mi">500</span> <span class="ow">and</span> <span class="s">&#39;&lt;h1&gt;Error: Server Error&lt;/h1&gt;&#39;</span> <span class="ow">in</span> <span class="n">body</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">&#39;Non-retriable HTTP </span><span class="si">%s</span><span class="s"> error:</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">http_error</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="WebSession.open"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.WebSession.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">hint</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Executes any HTTP request.&quot;&quot;&quot;</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">try_count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">opener</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">HTTPError</span> <span class="k">as</span> <span class="n">he</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">try_count</span> <span class="o">&lt;</span> <span class="n">WebSession</span><span class="o">.</span><span class="n">MAX_RETRIES</span> <span class="ow">and</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">is_soft_error</span><span class="p">(</span><span class="n">he</span><span class="p">)):</span>
+                        <span class="n">try_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">with</span> <span class="n">WebSession</span><span class="o">.</span><span class="n">PROGRESS_LOCK</span><span class="p">:</span>
+                            <span class="n">WebSession</span><span class="o">.</span><span class="n">RETRY_COUNT</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">WebSession</span><span class="o">.</span><span class="n">RETRY_SLEEP_SEC</span><span class="p">)</span>
+                        <span class="k">continue</span>
+                    <span class="k">raise</span> <span class="n">he</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s">&#39;Error in session </span><span class="si">%s</span><span class="s"> executing: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">,</span> <span class="n">hint</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">WebSession</span><span class="o">.</span><span class="n">PROGRESS_LOCK</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_duration</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="WebSession.get"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.WebSession.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">expected_code</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;HTTP GET.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">WebSession</span><span class="o">.</span><span class="n">PROGRESS_LOCK</span><span class="p">:</span>
+            <span class="n">WebSession</span><span class="o">.</span><span class="n">GET_COUNT</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_progress</span><span class="p">()</span>
+
+        <span class="n">request</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">common_headers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s">&#39;GET </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">url</span><span class="p">)</span>
+        <span class="n">assert_equals</span><span class="p">(</span><span class="n">expected_code</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="WebSession.post"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.WebSession.post">[docs]</a>    <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">expected_code</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;HTTP POST.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">WebSession</span><span class="o">.</span><span class="n">PROGRESS_LOCK</span><span class="p">:</span>
+            <span class="n">WebSession</span><span class="o">.</span><span class="n">POST_COUNT</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_progress</span><span class="p">()</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">urlencode</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s">&#39;POST </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">url</span><span class="p">)</span>
+        <span class="n">assert_equals</span><span class="p">(</span><span class="n">expected_code</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="TaskThread"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.TaskThread">[docs]</a><span class="k">class</span> <span class="nc">TaskThread</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Runs a task in a separate thread.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TaskThread</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exception</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="TaskThread.start_all_tasks"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.TaskThread.start_all_tasks">[docs]</a>    <span class="k">def</span> <span class="nf">start_all_tasks</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">tasks</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Starts all tasks.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="TaskThread.check_all_tasks"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.TaskThread.check_all_tasks">[docs]</a>    <span class="k">def</span> <span class="nf">check_all_tasks</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">tasks</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks results of all tasks; fails on the first exception found.&quot;&quot;&quot;</span>
+        <span class="n">failed_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="c"># Timeouts should happen after 30 seconds.</span>
+                <span class="n">task</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">isAlive</span><span class="p">():</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Still waiting for: </span><span class="si">%s</span><span class="s">.&#39;</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">exception</span><span class="p">:</span>
+                <span class="n">failed_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">failed_count</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Tasks failed: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">failed_count</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="TaskThread.execute_task_list"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.TaskThread.execute_task_list">[docs]</a>    <span class="k">def</span> <span class="nf">execute_task_list</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">tasks</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Starts all tasks and checks the results.&quot;&quot;&quot;</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">start_all_tasks</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">check_all_tasks</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="TaskThread.run"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.TaskThread.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c"># pylint: disable-msg=broad-except</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;Error in </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exc_info</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">exc_info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exc_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+</div></div>
+<div class="viewcode-block" id="ReaderViewLoadTest"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.ReaderViewLoadTest">[docs]</a><span class="k">class</span> <span class="nc">ReaderViewLoadTest</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A reader view load test.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_url</span><span class="p">,</span> <span class="n">uid</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uid</span> <span class="o">=</span> <span class="n">uid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">base_url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exp_id</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_state_name</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_params</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_history</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">WebSession</span><span class="p">(</span><span class="n">uid</span><span class="o">=</span><span class="n">uid</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ReaderViewLoadTest.run"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.ReaderViewLoadTest.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_player</span><span class="p">(</span>
+            <span class="s">&#39;0&#39;</span><span class="p">,</span> <span class="s">&#39;Welcome to Oppia!&#39;</span><span class="p">,</span> <span class="s">&#39;do you know where the name </span><span class="se">\&#39;</span><span class="s">Oppia</span><span class="se">\&#39;</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submit_and_compare</span><span class="p">(</span>
+            <span class="s">&#39;0&#39;</span><span class="p">,</span> <span class="s">&#39;In fact, the word Oppia means </span><span class="se">\&#39;</span><span class="s">learn</span><span class="se">\&#39;</span><span class="s">.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submit_and_compare</span><span class="p">(</span><span class="s">&#39;Finish&#39;</span><span class="p">,</span> <span class="s">&#39;Check your spelling!&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submit_and_compare</span><span class="p">(</span>
+            <span class="s">&#39;Finnish&#39;</span><span class="p">,</span> <span class="s">&#39;Yes! Oppia is the Finnish word for learn.&#39;</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a JSON response, transformed to a Python object.&quot;&quot;&quot;</span>
+        <span class="n">json_body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">json_body</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">XSSI_PREFIX</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Expected an XSSI prefix; found none.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_body</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">XSSI_PREFIX</span><span class="p">):])</span>
+
+    <span class="k">def</span> <span class="nf">_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_post_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Post a JSON request, returning the response as a Python object.&quot;&quot;&quot;</span>
+        <span class="n">json_body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">url</span><span class="p">),</span> <span class="p">{</span><span class="s">&#39;payload&#39;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">)})</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">json_body</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">XSSI_PREFIX</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Expected an XSSI prefix; found none.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_body</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">XSSI_PREFIX</span><span class="p">):])</span>
+
+<div class="viewcode-block" id="ReaderViewLoadTest.init_player"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.ReaderViewLoadTest.init_player">[docs]</a>    <span class="k">def</span> <span class="nf">init_player</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">expected_title</span><span class="p">,</span> <span class="n">expected_response</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exp_id</span> <span class="o">=</span> <span class="n">exploration_id</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">/explore/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_id</span><span class="p">))</span>
+        <span class="n">assert_contains</span><span class="p">(</span><span class="s">&#39;Learn&#39;</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+        <span class="n">assert_contains</span><span class="p">(</span><span class="s">&#39;Return to the gallery&#39;</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_json</span><span class="p">(</span>
+            <span class="s">&#39;</span><span class="si">%s</span><span class="s">/explorehandler/init/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_id</span><span class="p">))</span>
+        <span class="n">assert_equals</span><span class="p">(</span><span class="n">body</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">],</span> <span class="n">expected_title</span><span class="p">)</span>
+        <span class="n">assert_contains</span><span class="p">(</span><span class="n">expected_response</span><span class="p">,</span> <span class="n">body</span><span class="p">[</span><span class="s">&#39;init_html&#39;</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_state_name</span> <span class="o">=</span> <span class="n">body</span><span class="p">[</span><span class="s">&#39;state_name&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_params</span> <span class="o">=</span> <span class="n">body</span><span class="p">[</span><span class="s">&#39;params&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_history</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">last_state_name</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="ReaderViewLoadTest.submit_and_compare"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.ReaderViewLoadTest.submit_and_compare">[docs]</a>    <span class="k">def</span> <span class="nf">submit_and_compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">answer</span><span class="p">,</span> <span class="n">expected_response</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/explorehandler/transition/</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_id</span><span class="p">,</span> <span class="n">urllib</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">last_state_name</span><span class="p">))</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post_json</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s">&#39;answer&#39;</span><span class="p">:</span> <span class="n">answer</span><span class="p">,</span> <span class="s">&#39;params&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_params</span><span class="p">,</span>
+            <span class="s">&#39;state_history&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_history</span><span class="p">,</span>
+        <span class="p">})</span>
+
+        <span class="n">assert_contains</span><span class="p">(</span><span class="n">expected_response</span><span class="p">,</span> <span class="n">body</span><span class="p">[</span><span class="s">&#39;oppia_html&#39;</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_state_name</span> <span class="o">=</span> <span class="n">body</span><span class="p">[</span><span class="s">&#39;state_name&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_params</span> <span class="o">=</span> <span class="n">body</span><span class="p">[</span><span class="s">&#39;params&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_history</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">last_state_name</span><span class="p">]</span>
+
+</div></div>
+<div class="viewcode-block" id="run_all"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.reader_view_load_test.run_all">[docs]</a><span class="k">def</span> <span class="nf">run_all</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Runs test scenario in multiple threads.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">thread_count</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">args</span><span class="o">.</span><span class="n">thread_count</span> <span class="o">&gt;</span> <span class="mi">256</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Please use between 1 and 256 threads.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">base_url</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Please specify a base URL to load-test against.&#39;</span><span class="p">)</span>
+
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Started testing: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">base_url</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;base_url: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">base_url</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;start_uid: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">start_uid</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;thread_count: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">thread_count</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;iteration_count: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">iteration_count</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;SLAs are [&gt;30s, &gt;15s, &gt;7s, &gt;3s, &gt;1s, &lt;1s]&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">iteration_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">iteration_count</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Started iteration: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">iteration_index</span><span class="p">)</span>
+            <span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">WebSession</span><span class="o">.</span><span class="n">PROGRESS_BATCH</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">thread_count</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">thread_count</span><span class="p">):</span>
+                <span class="n">test</span> <span class="o">=</span> <span class="n">ReaderViewLoadTest</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="p">(</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">start_uid</span> <span class="o">+</span> <span class="n">iteration_index</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">thread_count</span> <span class="o">+</span>
+                    <span class="n">index</span><span class="p">))</span>
+                <span class="n">task</span> <span class="o">=</span> <span class="n">TaskThread</span><span class="p">(</span>
+                    <span class="n">test</span><span class="o">.</span><span class="n">run</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;ReaderViewLoadTest-</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">index</span><span class="p">)</span>
+                <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">TaskThread</span><span class="o">.</span><span class="n">execute_task_list</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Failed iteration: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">iteration_index</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">e</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">WebSession</span><span class="o">.</span><span class="n">log_progress</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Done! Duration (s): </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    <span class="n">run_all</span><span class="p">(</span><span class="n">PARSER</span><span class="o">.</span><span class="n">parse_args</span><span class="p">())</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

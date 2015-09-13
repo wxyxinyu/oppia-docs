@@ -1,0 +1,310 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.tests package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-core-tests-package">
+<h1>oppia.core.tests package<a class="headerlink" href="#oppia-core-tests-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core.tests.gae_suite">
+<span id="oppia-core-tests-gae-suite-module"></span><h2>oppia.core.tests.gae_suite module<a class="headerlink" href="#module-oppia.core.tests.gae_suite" title="Permalink to this headline">¶</a></h2>
+<p>Oppia test suite.</p>
+<p>In general, this script should not be run directly. Instead, invoke
+it from the command line by running</p>
+<blockquote>
+<div>bash scripts/test.sh</div></blockquote>
+<p>from the oppia/ root folder.</p>
+<dl class="function">
+<dt id="oppia.core.tests.gae_suite.create_test_suites">
+<code class="descclassname">oppia.core.tests.gae_suite.</code><code class="descname">create_test_suites</code><span class="sig-paren">(</span><em>test_target=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/gae_suite.html#create_test_suites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.gae_suite.create_test_suites" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates test suites. If test_dir is None, runs all tests.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.tests.gae_suite.main">
+<code class="descclassname">oppia.core.tests.gae_suite.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/gae_suite.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.gae_suite.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the tests.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.core.tests.reader_view_load_test">
+<span id="oppia-core-tests-reader-view-load-test-module"></span><h2>oppia.core.tests.reader_view_load_test module<a class="headerlink" href="#module-oppia.core.tests.reader_view_load_test" title="Permalink to this headline">¶</a></h2>
+<p>Performance test for the Oppia reader view.</p>
+<p>Before running this script, exploration 0 should be loaded in the target
+server.</p>
+<p>Run this script from the Oppia root directory:</p>
+<blockquote>
+<div>python core/tests/reader_view_load_test.py &#8211;thread_count=5 &#8211;start_uid=1     <a class="reference external" href="https://my-oppia-instance.appspot.com">https://my-oppia-instance.appspot.com</a></div></blockquote>
+<dl class="class">
+<dt id="oppia.core.tests.reader_view_load_test.ReaderViewLoadTest">
+<em class="property">class </em><code class="descclassname">oppia.core.tests.reader_view_load_test.</code><code class="descname">ReaderViewLoadTest</code><span class="sig-paren">(</span><em>base_url</em>, <em>uid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#ReaderViewLoadTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.ReaderViewLoadTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>A reader view load test.</p>
+<dl class="method">
+<dt id="oppia.core.tests.reader_view_load_test.ReaderViewLoadTest.init_player">
+<code class="descname">init_player</code><span class="sig-paren">(</span><em>exploration_id</em>, <em>expected_title</em>, <em>expected_response</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#ReaderViewLoadTest.init_player"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.ReaderViewLoadTest.init_player" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.tests.reader_view_load_test.ReaderViewLoadTest.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#ReaderViewLoadTest.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.ReaderViewLoadTest.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.tests.reader_view_load_test.ReaderViewLoadTest.submit_and_compare">
+<code class="descname">submit_and_compare</code><span class="sig-paren">(</span><em>answer</em>, <em>expected_response</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#ReaderViewLoadTest.submit_and_compare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.ReaderViewLoadTest.submit_and_compare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.tests.reader_view_load_test.TaskThread">
+<em class="property">class </em><code class="descclassname">oppia.core.tests.reader_view_load_test.</code><code class="descname">TaskThread</code><span class="sig-paren">(</span><em>func</em>, <em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#TaskThread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.TaskThread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+<p>Runs a task in a separate thread.</p>
+<dl class="classmethod">
+<dt id="oppia.core.tests.reader_view_load_test.TaskThread.check_all_tasks">
+<em class="property">classmethod </em><code class="descname">check_all_tasks</code><span class="sig-paren">(</span><em>tasks</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#TaskThread.check_all_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.TaskThread.check_all_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks results of all tasks; fails on the first exception found.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.tests.reader_view_load_test.TaskThread.execute_task_list">
+<em class="property">classmethod </em><code class="descname">execute_task_list</code><span class="sig-paren">(</span><em>tasks</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#TaskThread.execute_task_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.TaskThread.execute_task_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts all tasks and checks the results.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.tests.reader_view_load_test.TaskThread.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#TaskThread.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.TaskThread.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.tests.reader_view_load_test.TaskThread.start_all_tasks">
+<em class="property">classmethod </em><code class="descname">start_all_tasks</code><span class="sig-paren">(</span><em>tasks</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#TaskThread.start_all_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.TaskThread.start_all_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts all tasks.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession">
+<em class="property">class </em><code class="descclassname">oppia.core.tests.reader_view_load_test.</code><code class="descname">WebSession</code><span class="sig-paren">(</span><em>uid</em>, <em>common_headers=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#WebSession"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>A class that allows navigation of web pages keeping cookie session.</p>
+<dl class="attribute">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.GET_COUNT">
+<code class="descname">GET_COUNT</code><em class="property"> = 0</em><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.GET_COUNT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.MAX_RETRIES">
+<code class="descname">MAX_RETRIES</code><em class="property"> = 3</em><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.MAX_RETRIES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.POST_COUNT">
+<code class="descname">POST_COUNT</code><em class="property"> = 0</em><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.POST_COUNT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.PROGRESS_BATCH">
+<code class="descname">PROGRESS_BATCH</code><em class="property"> = 10</em><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.PROGRESS_BATCH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.PROGRESS_LOCK">
+<code class="descname">PROGRESS_LOCK</code><em class="property"> = &lt;thread.lock object&gt;</em><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.PROGRESS_LOCK" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.RESPONSE_TIME_HISTOGRAM">
+<code class="descname">RESPONSE_TIME_HISTOGRAM</code><em class="property"> = [0, 0, 0, 0, 0, 0]</em><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.RESPONSE_TIME_HISTOGRAM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.RETRY_COUNT">
+<code class="descname">RETRY_COUNT</code><em class="property"> = 0</em><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.RETRY_COUNT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.RETRY_SLEEP_SEC">
+<code class="descname">RETRY_SLEEP_SEC</code><em class="property"> = 3</em><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.RETRY_SLEEP_SEC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>url</em>, <em>expected_code=200</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#WebSession.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>HTTP GET.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.get_cookie_value">
+<code class="descname">get_cookie_value</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#WebSession.get_cookie_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.get_cookie_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.increment_duration_bucket">
+<em class="property">classmethod </em><code class="descname">increment_duration_bucket</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#WebSession.increment_duration_bucket"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.increment_duration_bucket" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.is_soft_error">
+<code class="descname">is_soft_error</code><span class="sig-paren">(</span><em>http_error</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#WebSession.is_soft_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.is_soft_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if HTTPError is due to starvation of frontend instances.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.log_progress">
+<em class="property">classmethod </em><code class="descname">log_progress</code><span class="sig-paren">(</span><em>force=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#WebSession.log_progress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.log_progress" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.open">
+<code class="descname">open</code><span class="sig-paren">(</span><em>request</em>, <em>hint</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#WebSession.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes any HTTP request.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.post">
+<code class="descname">post</code><span class="sig-paren">(</span><em>url</em>, <em>args_dict</em>, <em>expected_code=200</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#WebSession.post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.post" title="Permalink to this definition">¶</a></dt>
+<dd><p>HTTP POST.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.tests.reader_view_load_test.WebSession.update_duration">
+<em class="property">classmethod </em><code class="descname">update_duration</code><span class="sig-paren">(</span><em>duration</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#WebSession.update_duration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.WebSession.update_duration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.tests.reader_view_load_test.assert_contains">
+<code class="descclassname">oppia.core.tests.reader_view_load_test.</code><code class="descname">assert_contains</code><span class="sig-paren">(</span><em>needle</em>, <em>haystack</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#assert_contains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.assert_contains" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.tests.reader_view_load_test.assert_equals">
+<code class="descclassname">oppia.core.tests.reader_view_load_test.</code><code class="descname">assert_equals</code><span class="sig-paren">(</span><em>expected</em>, <em>actual</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#assert_equals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.assert_equals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.tests.reader_view_load_test.run_all">
+<code class="descclassname">oppia.core.tests.reader_view_load_test.</code><code class="descname">run_all</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/tests/reader_view_load_test.html#run_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.tests.reader_view_load_test.run_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs test scenario in multiple threads.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-core-tests-test-utils-module">
+<h2>oppia.core.tests.test_utils module<a class="headerlink" href="#oppia-core-tests-test-utils-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="oppia-core-tests-test-utils-test-module">
+<h2>oppia.core.tests.test_utils_test module<a class="headerlink" href="#oppia-core-tests-test-utils-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core.tests">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.core.tests" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.core.tests package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.core.tests.gae_suite">oppia.core.tests.gae_suite module</a></li>
+<li><a class="reference internal" href="#module-oppia.core.tests.reader_view_load_test">oppia.core.tests.reader_view_load_test module</a></li>
+<li><a class="reference internal" href="#oppia-core-tests-test-utils-module">oppia.core.tests.test_utils module</a></li>
+<li><a class="reference internal" href="#oppia-core-tests-test-utils-test-module">oppia.core.tests.test_utils_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.core.tests">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.core.tests.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.core.tests.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

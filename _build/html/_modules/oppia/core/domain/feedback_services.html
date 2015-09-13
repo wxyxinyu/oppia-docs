@@ -1,0 +1,261 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.feedback_services &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.feedback_services</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Commands for feedback thread and message operations.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Koji Ashida&#39;</span>
+
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">feedback_jobs</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">subscription_services</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">user_services</span>
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">feedback_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span><span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">feedback</span><span class="p">])</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+
+<div class="viewcode-block" id="get_threadlist"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.feedback_services.get_threadlist">[docs]</a><span class="k">def</span> <span class="nf">get_threadlist</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[{</span>
+        <span class="s">&#39;last_updated&#39;</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">last_updated</span><span class="p">),</span>
+        <span class="s">&#39;original_author_username&#39;</span><span class="p">:</span> <span class="n">user_services</span><span class="o">.</span><span class="n">get_username</span><span class="p">(</span>
+            <span class="n">t</span><span class="o">.</span><span class="n">original_author_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">original_author_id</span> <span class="k">else</span> <span class="bp">None</span><span class="p">,</span>
+        <span class="s">&#39;state_name&#39;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">state_name</span><span class="p">,</span>
+        <span class="s">&#39;status&#39;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">subject</span><span class="p">,</span>
+        <span class="s">&#39;summary&#39;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">summary</span><span class="p">,</span>
+        <span class="s">&#39;thread_id&#39;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+    <span class="p">}</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">feedback_models</span><span class="o">.</span><span class="n">FeedbackThreadModel</span><span class="o">.</span><span class="n">get_threads</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)]</span>
+
+</div>
+<div class="viewcode-block" id="create_thread"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.feedback_services.create_thread">[docs]</a><span class="k">def</span> <span class="nf">create_thread</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span> <span class="n">original_author_id</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a thread and the first message in it.</span>
+
+<span class="sd">    Note that `state_name` may be None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">thread_id</span> <span class="o">=</span> <span class="n">feedback_models</span><span class="o">.</span><span class="n">FeedbackThreadModel</span><span class="o">.</span><span class="n">generate_new_thread_id</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">)</span>
+    <span class="n">thread</span> <span class="o">=</span> <span class="n">feedback_models</span><span class="o">.</span><span class="n">FeedbackThreadModel</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">)</span>
+    <span class="n">thread</span><span class="o">.</span><span class="n">exploration_id</span> <span class="o">=</span> <span class="n">exploration_id</span>
+    <span class="n">thread</span><span class="o">.</span><span class="n">state_name</span> <span class="o">=</span> <span class="n">state_name</span>
+    <span class="n">thread</span><span class="o">.</span><span class="n">original_author_id</span> <span class="o">=</span> <span class="n">original_author_id</span>
+    <span class="c"># The feedback analytics jobs rely on the thread status being set to &#39;open&#39;</span>
+    <span class="c"># when a new thread is created. If this is changed, changes need to be </span>
+    <span class="c"># made there as well</span>
+    <span class="n">thread</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">feedback_models</span><span class="o">.</span><span class="n">STATUS_CHOICES_OPEN</span>
+    <span class="n">thread</span><span class="o">.</span><span class="n">subject</span> <span class="o">=</span> <span class="n">subject</span>
+    <span class="n">thread</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+    <span class="n">create_message</span><span class="p">(</span>
+        <span class="n">thread</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">original_author_id</span><span class="p">,</span>
+        <span class="n">feedback_models</span><span class="o">.</span><span class="n">STATUS_CHOICES_OPEN</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_get_message_dict</span><span class="p">(</span><span class="n">message_instance</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s">&#39;author_username&#39;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">user_services</span><span class="o">.</span><span class="n">get_username</span><span class="p">(</span><span class="n">message_instance</span><span class="o">.</span><span class="n">author_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">message_instance</span><span class="o">.</span><span class="n">author_id</span> <span class="k">else</span> <span class="bp">None</span><span class="p">),</span>
+        <span class="s">&#39;created_on&#39;</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">message_instance</span><span class="o">.</span><span class="n">created_on</span><span class="p">),</span>
+        <span class="s">&#39;exploration_id&#39;</span><span class="p">:</span> <span class="n">message_instance</span><span class="o">.</span><span class="n">exploration_id</span><span class="p">,</span>
+        <span class="s">&#39;message_id&#39;</span><span class="p">:</span> <span class="n">message_instance</span><span class="o">.</span><span class="n">message_id</span><span class="p">,</span>
+        <span class="s">&#39;text&#39;</span><span class="p">:</span> <span class="n">message_instance</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+        <span class="s">&#39;updated_status&#39;</span><span class="p">:</span> <span class="n">message_instance</span><span class="o">.</span><span class="n">updated_status</span><span class="p">,</span>
+        <span class="s">&#39;updated_subject&#39;</span><span class="p">:</span> <span class="n">message_instance</span><span class="o">.</span><span class="n">updated_subject</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<div class="viewcode-block" id="get_messages"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.feedback_services.get_messages">[docs]</a><span class="k">def</span> <span class="nf">get_messages</span><span class="p">(</span><span class="n">thread_id</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">_get_message_dict</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">feedback_models</span><span class="o">.</span><span class="n">FeedbackMessageModel</span><span class="o">.</span><span class="n">get_messages</span><span class="p">(</span><span class="n">thread_id</span><span class="p">)]</span>
+
+</div>
+<div class="viewcode-block" id="create_message"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.feedback_services.create_message">[docs]</a><span class="k">def</span> <span class="nf">create_message</span><span class="p">(</span>
+        <span class="n">thread_id</span><span class="p">,</span> <span class="n">author_id</span><span class="p">,</span> <span class="n">updated_status</span><span class="p">,</span> <span class="n">updated_subject</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a new message for the thread and subscribes the author to the</span>
+<span class="sd">    thread.</span>
+
+<span class="sd">    Returns False if the message with the ID already exists.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">event_services</span>
+    <span class="c"># Get the thread at the outset, in order to check that the thread_id passed</span>
+    <span class="c"># in is valid.</span>
+    <span class="n">thread</span> <span class="o">=</span> <span class="n">feedback_models</span><span class="o">.</span><span class="n">FeedbackThreadModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">thread_id</span><span class="p">)</span>
+
+    <span class="n">message_id</span> <span class="o">=</span> <span class="n">feedback_models</span><span class="o">.</span><span class="n">FeedbackMessageModel</span><span class="o">.</span><span class="n">get_message_count</span><span class="p">(</span>
+        <span class="n">thread_id</span><span class="p">)</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="n">feedback_models</span><span class="o">.</span><span class="n">FeedbackMessageModel</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">thread_id</span><span class="p">,</span> <span class="n">message_id</span><span class="p">)</span>
+    <span class="n">msg</span><span class="o">.</span><span class="n">thread_id</span> <span class="o">=</span> <span class="n">thread_id</span>
+    <span class="n">msg</span><span class="o">.</span><span class="n">message_id</span> <span class="o">=</span> <span class="n">message_id</span>
+    <span class="n">msg</span><span class="o">.</span><span class="n">author_id</span> <span class="o">=</span> <span class="n">author_id</span>
+    <span class="k">if</span> <span class="n">updated_status</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">message_id</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c"># New thread.</span>
+            <span class="n">event_services</span><span class="o">.</span><span class="n">FeedbackThreadCreatedEventHandler</span><span class="o">.</span><span class="n">record</span><span class="p">(</span>
+                <span class="n">thread</span><span class="o">.</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Thread status changed.</span>
+            <span class="n">event_services</span><span class="o">.</span><span class="n">FeedbackThreadStatusChangedEventHandler</span><span class="o">.</span><span class="n">record</span><span class="p">(</span>
+                <span class="n">thread</span><span class="o">.</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">thread</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">updated_status</span><span class="p">)</span>
+            
+        <span class="n">msg</span><span class="o">.</span><span class="n">updated_status</span> <span class="o">=</span> <span class="n">updated_status</span>
+    <span class="k">if</span> <span class="n">updated_subject</span><span class="p">:</span>
+        <span class="n">msg</span><span class="o">.</span><span class="n">updated_subject</span> <span class="o">=</span> <span class="n">updated_subject</span>
+    <span class="n">msg</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">text</span>
+    <span class="n">msg</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+    
+    <span class="c"># We do a put() even if the status and subject are not updated, so that the</span>
+    <span class="c"># last_updated time of the thread reflects the last time a message was</span>
+    <span class="c"># added to it.</span>
+    <span class="k">if</span> <span class="n">message_id</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">updated_status</span> <span class="ow">or</span> <span class="n">updated_subject</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">updated_status</span> <span class="ow">and</span> <span class="n">updated_status</span> <span class="o">!=</span> <span class="n">thread</span><span class="o">.</span><span class="n">status</span><span class="p">:</span>
+            <span class="n">thread</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">updated_status</span>
+        <span class="k">if</span> <span class="n">updated_subject</span> <span class="ow">and</span> <span class="n">updated_subject</span> <span class="o">!=</span> <span class="n">thread</span><span class="o">.</span><span class="n">subject</span><span class="p">:</span>
+            <span class="n">thread</span><span class="o">.</span><span class="n">subject</span> <span class="o">=</span> <span class="n">updated_subject</span>
+    <span class="n">thread</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">author_id</span><span class="p">:</span>
+        <span class="n">subscription_services</span><span class="o">.</span><span class="n">subscribe_to_thread</span><span class="p">(</span><span class="n">author_id</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="get_next_page_of_all_feedback_messages"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.feedback_services.get_next_page_of_all_feedback_messages">[docs]</a><span class="k">def</span> <span class="nf">get_next_page_of_all_feedback_messages</span><span class="p">(</span>
+        <span class="n">page_size</span><span class="o">=</span><span class="n">feconf</span><span class="o">.</span><span class="n">FEEDBACK_TAB_PAGE_SIZE</span><span class="p">,</span> <span class="n">urlsafe_start_cursor</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a page of feedback messages in reverse time order.</span>
+
+<span class="sd">    The return value is a triple (results, cursor, more) as described in</span>
+<span class="sd">    fetch_page() at:</span>
+
+<span class="sd">        https://developers.google.com/appengine/docs/python/ndb/queryclass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">results</span><span class="p">,</span> <span class="n">new_urlsafe_start_cursor</span><span class="p">,</span> <span class="n">more</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">feedback_models</span><span class="o">.</span><span class="n">FeedbackMessageModel</span><span class="o">.</span><span class="n">get_all_messages</span><span class="p">(</span>
+            <span class="n">page_size</span><span class="p">,</span> <span class="n">urlsafe_start_cursor</span><span class="p">))</span>
+
+    <span class="n">result_dicts</span> <span class="o">=</span> <span class="p">[</span><span class="n">_get_message_dict</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">result_dicts</span><span class="p">,</span> <span class="n">new_urlsafe_start_cursor</span><span class="p">,</span> <span class="n">more</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_last_updated_time"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.feedback_services.get_last_updated_time">[docs]</a><span class="k">def</span> <span class="nf">get_last_updated_time</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the most recent time a thread for this exploration was updated.</span>
+
+<span class="sd">    If this exploration has no threads, returns None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">threadlist</span> <span class="o">=</span> <span class="n">get_threadlist</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">thread</span><span class="p">[</span><span class="s">&#39;last_updated&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">threadlist</span><span class="p">]</span>
+    <span class="p">)</span> <span class="k">if</span> <span class="n">threadlist</span> <span class="k">else</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="get_thread_analytics"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.feedback_services.get_thread_analytics">[docs]</a><span class="k">def</span> <span class="nf">get_thread_analytics</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a dict with feedback thread analytics for the given exploration.</span>
+
+<span class="sd">    The returned dict has two keys:</span>
+<span class="sd">    - &#39;num_open_threads&#39;: the number of open feedback threads for this</span>
+<span class="sd">         exploration.</span>
+<span class="sd">    - &#39;num_total_threads&#39;: the total number of feedback threads for this</span>
+<span class="sd">         exploration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">feedback_jobs</span><span class="o">.</span><span class="n">FeedbackAnalyticsAggregator</span><span class="o">.</span><span class="n">get_thread_analytics</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

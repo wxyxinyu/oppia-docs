@@ -1,0 +1,300 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.exp_jobs &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.exp_jobs</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Jobs for explorations.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Frederik Creemers&#39;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">core</span> <span class="kn">import</span> <span class="n">jobs</span>
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">base_models</span><span class="p">,</span> <span class="n">exp_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">base_model</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">exploration</span><span class="p">])</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+
+<div class="viewcode-block" id="ExpSummariesCreationOneOffJob"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.ExpSummariesCreationOneOffJob">[docs]</a><span class="k">class</span> <span class="nc">ExpSummariesCreationOneOffJob</span><span class="p">(</span><span class="n">jobs</span><span class="o">.</span><span class="n">BaseMapReduceJobManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Job that calculates summaries of explorations, which can be</span>
+<span class="sd">    used to get e.g. the gallery. For every ExplorationModel entity,</span>
+<span class="sd">    create a ExpSummaryModel entity containing information described</span>
+<span class="sd">    in ExpSummariesAggregator.</span>
+
+<span class="sd">    The summaries store the following information:</span>
+<span class="sd">        title, category, objective, language_code, tags,</span>
+<span class="sd">        last_updated, created_on, status (private, public or</span>
+<span class="sd">        publicized), community_owned, owner_ids, editor_ids,</span>
+<span class="sd">        viewer_ids, version.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExpSummariesCreationOneOffJob.entity_classes_to_map_over"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.ExpSummariesCreationOneOffJob.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="p">]</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExpSummariesCreationOneOffJob.map"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.ExpSummariesCreationOneOffJob.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">exploration_model</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_services</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">exploration_model</span><span class="o">.</span><span class="n">deleted</span><span class="p">:</span>
+            <span class="n">exp_services</span><span class="o">.</span><span class="n">create_exploration_summary</span><span class="p">(</span><span class="n">exploration_model</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExpSummariesCreationOneOffJob.reduce"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.ExpSummariesCreationOneOffJob.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">exp_id</span><span class="p">,</span> <span class="n">list_of_exps</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+</div></div>
+<div class="viewcode-block" id="IndexAllExplorationsJobManager"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.IndexAllExplorationsJobManager">[docs]</a><span class="k">class</span> <span class="nc">IndexAllExplorationsJobManager</span><span class="p">(</span><span class="n">jobs</span><span class="o">.</span><span class="n">BaseMapReduceJobManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Job that indexes all explorations&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="IndexAllExplorationsJobManager.entity_classes_to_map_over"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.IndexAllExplorationsJobManager.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="p">]</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="IndexAllExplorationsJobManager.map"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.IndexAllExplorationsJobManager.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="c"># We&#39;re inline importing here to break import loops like this: (-&gt;</span>
+        <span class="c"># means imports):</span>
+        <span class="c">#   exp_services -&gt; event_services -&gt; jobs_registry -&gt;</span>
+        <span class="c">#   exp_jobs -&gt; exp_services.</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_services</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">deleted</span><span class="p">:</span>
+            <span class="n">exp_services</span><span class="o">.</span><span class="n">index_explorations_given_ids</span><span class="p">([</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">])</span>
+
+</div></div>
+<div class="viewcode-block" id="ExplorationValidityJobManager"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.ExplorationValidityJobManager">[docs]</a><span class="k">class</span> <span class="nc">ExplorationValidityJobManager</span><span class="p">(</span><span class="n">jobs</span><span class="o">.</span><span class="n">BaseMapReduceJobManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Job that checks that all explorations have appropriate validation</span>
+<span class="sd">    statuses.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExplorationValidityJobManager.entity_classes_to_map_over"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.ExplorationValidityJobManager.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="p">]</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExplorationValidityJobManager.map"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.ExplorationValidityJobManager.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_services</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">rights_manager</span>
+
+        <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">deleted</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">exploration</span> <span class="o">=</span> <span class="n">exp_services</span><span class="o">.</span><span class="n">get_exploration_from_model</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">:</span>
+                <span class="n">exploration</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">exploration</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExplorationValidityJobManager.reduce"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.ExplorationValidityJobManager.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="SearchRankerRealtimeModel"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.SearchRankerRealtimeModel">[docs]</a><span class="k">class</span> <span class="nc">SearchRankerRealtimeModel</span><span class="p">(</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">BaseRealtimeDatastoreClassForContinuousComputations</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="SearchRanker"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.SearchRanker">[docs]</a><span class="k">class</span> <span class="nc">SearchRanker</span><span class="p">(</span><span class="n">jobs</span><span class="o">.</span><span class="n">BaseContinuousComputationManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A continuous-computation job that refreshes the search ranking.</span>
+
+<span class="sd">    This job does not have a realtime component. There will be a delay in</span>
+<span class="sd">    propagating new updates to the gallery; the length of the delay will be</span>
+<span class="sd">    approximately the time it takes a batch job to run.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="SearchRanker.get_event_types_listened_to"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.SearchRanker.get_event_types_listened_to">[docs]</a>    <span class="k">def</span> <span class="nf">get_event_types_listened_to</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_realtime_datastore_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SearchRankerRealtimeModel</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_batch_job_manager_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SearchRankerMRJobManager</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_handle_incoming_event</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">active_realtime_layer</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="SearchRankerMRJobManager"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.SearchRankerMRJobManager">[docs]</a><span class="k">class</span> <span class="nc">SearchRankerMRJobManager</span><span class="p">(</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">BaseMapReduceJobManagerForContinuousComputations</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Manager for a MapReduce job that iterates through all explorations and</span>
+<span class="sd">    recomputes their search rankings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_continuous_computation_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SearchRanker</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="SearchRankerMRJobManager.entity_classes_to_map_over"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.SearchRankerMRJobManager.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="p">]</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="SearchRankerMRJobManager.map"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.SearchRankerMRJobManager.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_services</span>
+        <span class="n">exp_services</span><span class="o">.</span><span class="n">index_explorations_given_ids</span><span class="p">([</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">])</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="SearchRankerMRJobManager.reduce"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.SearchRankerMRJobManager.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">stringified_values</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+</div></div>
+<div class="viewcode-block" id="ExplorationMigrationJobManager"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.ExplorationMigrationJobManager">[docs]</a><span class="k">class</span> <span class="nc">ExplorationMigrationJobManager</span><span class="p">(</span><span class="n">jobs</span><span class="o">.</span><span class="n">BaseMapReduceJobManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A reusable one-time job that may be used to migrate exploration schema</span>
+<span class="sd">    versions. This job will load all existing explorations from NDB and</span>
+<span class="sd">    immediately store them back into NDB. The loading process of an exploration</span>
+<span class="sd">    in exp_services automatically performs schema updating. This job persists</span>
+<span class="sd">    that conversion work, keeping explorations up-to-date and enhancing the</span>
+<span class="sd">    load time of new explorations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExplorationMigrationJobManager.entity_classes_to_map_over"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.ExplorationMigrationJobManager.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="p">]</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExplorationMigrationJobManager.map"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.ExplorationMigrationJobManager.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_domain</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_services</span>
+
+        <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">deleted</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c"># Do not upgrade explorations that fail non-strict validation.</span>
+        <span class="n">old_exploration</span> <span class="o">=</span> <span class="n">exp_services</span><span class="o">.</span><span class="n">get_exploration_by_id</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">old_exploration</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">&#39;Exploration </span><span class="si">%s</span><span class="s"> failed non-strict validation: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
+            <span class="k">return</span>
+
+        <span class="c"># If the exploration model being stored in the datastore is not the</span>
+        <span class="c"># most up-to-date states schema version, then update it.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">states_schema_version</span> <span class="o">!=</span>
+                <span class="n">feconf</span><span class="o">.</span><span class="n">CURRENT_EXPLORATION_STATES_SCHEMA_VERSION</span><span class="p">):</span>
+            <span class="c"># Note: update_exploration does not need to apply a change list in</span>
+            <span class="c"># order to perform a migration. See the related comment in</span>
+            <span class="c"># exp_services.apply_change_list for more information.</span>
+            <span class="n">commit_cmds</span> <span class="o">=</span> <span class="p">[{</span>
+                <span class="s">&#39;cmd&#39;</span><span class="p">:</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">CMD_MIGRATE_STATES_SCHEMA_TO_LATEST_VERSION</span><span class="p">,</span>
+                <span class="s">&#39;from_version&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">states_schema_version</span><span class="p">),</span>
+                <span class="s">&#39;to_version&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span>
+                    <span class="n">feconf</span><span class="o">.</span><span class="n">CURRENT_EXPLORATION_STATES_SCHEMA_VERSION</span><span class="p">)</span>
+            <span class="p">}]</span>
+            <span class="n">exp_services</span><span class="o">.</span><span class="n">update_exploration</span><span class="p">(</span>
+                <span class="n">feconf</span><span class="o">.</span><span class="n">MIGRATION_BOT_USERNAME</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">,</span>
+                <span class="s">&#39;Update exploration states from schema version </span><span class="si">%d</span><span class="s"> to </span><span class="si">%d</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">item</span><span class="o">.</span><span class="n">states_schema_version</span><span class="p">,</span>
+                    <span class="n">feconf</span><span class="o">.</span><span class="n">CURRENT_EXPLORATION_STATES_SCHEMA_VERSION</span><span class="p">))</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExplorationMigrationJobManager.reduce"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs.ExplorationMigrationJobManager.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

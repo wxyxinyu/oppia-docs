@@ -1,0 +1,729 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.rights_manager &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.rights_manager</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Domain objects and functions that manage rights for various user actions.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">config_domain</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">event_services</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_domain</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">subscription_services</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">user_services</span>
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="n">current_user_services</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_current_user_services</span><span class="p">()</span>
+<span class="p">(</span><span class="n">exp_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span><span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">exploration</span><span class="p">])</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+
+<span class="c"># IMPORTANT: Ensure that all changes to how these cmds are interpreted preserve</span>
+<span class="c"># backward-compatibility with previous exploration snapshots in the datastore.</span>
+<span class="c"># Do not modify the definitions of CMD keys that already exist.</span>
+<span class="n">CMD_CREATE_NEW</span> <span class="o">=</span> <span class="s">&#39;create_new&#39;</span>
+<span class="n">CMD_CHANGE_ROLE</span> <span class="o">=</span> <span class="s">&#39;change_role&#39;</span>
+<span class="n">CMD_CHANGE_EXPLORATION_STATUS</span> <span class="o">=</span> <span class="s">&#39;change_exploration_status&#39;</span>
+<span class="n">CMD_CHANGE_PRIVATE_VIEWABILITY</span> <span class="o">=</span> <span class="s">&#39;change_private_viewability&#39;</span>
+<span class="n">CMD_RELEASE_OWNERSHIP</span> <span class="o">=</span> <span class="s">&#39;release_ownership&#39;</span>
+
+<span class="n">EXPLORATION_STATUS_PRIVATE</span> <span class="o">=</span> <span class="s">&#39;private&#39;</span>
+<span class="n">EXPLORATION_STATUS_PUBLIC</span> <span class="o">=</span> <span class="s">&#39;public&#39;</span>
+<span class="n">EXPLORATION_STATUS_PUBLICIZED</span> <span class="o">=</span> <span class="s">&#39;publicized&#39;</span>
+
+<span class="n">ROLE_OWNER</span> <span class="o">=</span> <span class="s">&#39;owner&#39;</span>
+<span class="n">ROLE_EDITOR</span> <span class="o">=</span> <span class="s">&#39;editor&#39;</span>
+<span class="n">ROLE_VIEWER</span> <span class="o">=</span> <span class="s">&#39;viewer&#39;</span>
+<span class="n">ROLE_NONE</span> <span class="o">=</span> <span class="s">&#39;none&#39;</span>
+
+<span class="n">ROLE_ADMIN</span> <span class="o">=</span> <span class="s">&#39;admin&#39;</span>
+<span class="n">ROLE_MODERATOR</span> <span class="o">=</span> <span class="s">&#39;moderator&#39;</span>
+
+
+<div class="viewcode-block" id="ExplorationRights"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.ExplorationRights">[docs]</a><span class="k">class</span> <span class="nc">ExplorationRights</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Domain object for the rights/publication status of an exploration.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">owner_ids</span><span class="p">,</span> <span class="n">editor_ids</span><span class="p">,</span> <span class="n">viewer_ids</span><span class="p">,</span>
+                 <span class="n">community_owned</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">cloned_from</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">status</span><span class="o">=</span><span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">,</span>
+                 <span class="n">viewable_if_private</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">exploration_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">owner_ids</span> <span class="o">=</span> <span class="n">owner_ids</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">editor_ids</span> <span class="o">=</span> <span class="n">editor_ids</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewer_ids</span> <span class="o">=</span> <span class="n">viewer_ids</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">community_owned</span> <span class="o">=</span> <span class="n">community_owned</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cloned_from</span> <span class="o">=</span> <span class="n">cloned_from</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">status</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewable_if_private</span> <span class="o">=</span> <span class="n">viewable_if_private</span>
+
+<div class="viewcode-block" id="ExplorationRights.validate"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.ExplorationRights.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validates an ExplorationRights object.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">          utils.ValidationError: if any of the owners, editors and viewers</span>
+<span class="sd">          lists overlap, or if a community-owned exploration has owners,</span>
+<span class="sd">          editors or viewers specified.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_owned</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">owner_ids</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">editor_ids</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">viewer_ids</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                    <span class="s">&#39;Community-owned explorations should have no owners, &#39;</span>
+                    <span class="s">&#39;editors or viewers specified.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_owned</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="s">&#39;Community-owned explorations cannot be private.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">viewer_ids</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="s">&#39;Public explorations should have no viewers specified.&#39;</span><span class="p">)</span>
+
+        <span class="n">owner_editor</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">editor_ids</span><span class="p">))</span>
+        <span class="n">owner_viewer</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">viewer_ids</span><span class="p">))</span>
+        <span class="n">editor_viewer</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">editor_ids</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">viewer_ids</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">owner_editor</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="s">&#39;A user cannot be both an owner and an editor: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="n">owner_editor</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">owner_viewer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="s">&#39;A user cannot be both an owner and a viewer: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="n">owner_viewer</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">editor_viewer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="s">&#39;A user cannot be both an owner and an editor: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="n">editor_viewer</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ExplorationRights.to_dict"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.ExplorationRights.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a dict suitable for use by the frontend.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_owned</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s">&#39;cloned_from&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cloned_from</span><span class="p">,</span>
+                <span class="s">&#39;status&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                <span class="s">&#39;community_owned&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                <span class="s">&#39;owner_names&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s">&#39;editor_names&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s">&#39;viewer_names&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s">&#39;viewable_if_private&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">viewable_if_private</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s">&#39;cloned_from&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cloned_from</span><span class="p">,</span>
+                <span class="s">&#39;status&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                <span class="s">&#39;community_owned&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+                <span class="s">&#39;owner_names&#39;</span><span class="p">:</span> <span class="n">user_services</span><span class="o">.</span><span class="n">get_human_readable_user_ids</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">),</span>
+                <span class="s">&#39;editor_names&#39;</span><span class="p">:</span> <span class="n">user_services</span><span class="o">.</span><span class="n">get_human_readable_user_ids</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">editor_ids</span><span class="p">),</span>
+                <span class="s">&#39;viewer_names&#39;</span><span class="p">:</span> <span class="n">user_services</span><span class="o">.</span><span class="n">get_human_readable_user_ids</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">viewer_ids</span><span class="p">),</span>
+                <span class="s">&#39;viewable_if_private&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">viewable_if_private</span><span class="p">,</span>
+            <span class="p">}</span>
+
+</div></div>
+<span class="k">def</span> <span class="nf">_get_exploration_rights_from_model</span><span class="p">(</span><span class="n">exploration_rights_model</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">ExplorationRights</span><span class="p">(</span>
+        <span class="n">exploration_rights_model</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">exploration_rights_model</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">,</span>
+        <span class="n">exploration_rights_model</span><span class="o">.</span><span class="n">editor_ids</span><span class="p">,</span>
+        <span class="n">exploration_rights_model</span><span class="o">.</span><span class="n">viewer_ids</span><span class="p">,</span>
+        <span class="n">community_owned</span><span class="o">=</span><span class="n">exploration_rights_model</span><span class="o">.</span><span class="n">community_owned</span><span class="p">,</span>
+        <span class="n">cloned_from</span><span class="o">=</span><span class="n">exploration_rights_model</span><span class="o">.</span><span class="n">cloned_from</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">exploration_rights_model</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="n">viewable_if_private</span><span class="o">=</span><span class="n">exploration_rights_model</span><span class="o">.</span><span class="n">viewable_if_private</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_save_exploration_rights</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_rights</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Saves an ExplorationRights domain object to the datastore.&quot;&quot;&quot;</span>
+    <span class="n">exploration_rights</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationRightsModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">exploration_rights</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">owner_ids</span> <span class="o">=</span> <span class="n">exploration_rights</span><span class="o">.</span><span class="n">owner_ids</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">editor_ids</span> <span class="o">=</span> <span class="n">exploration_rights</span><span class="o">.</span><span class="n">editor_ids</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">viewer_ids</span> <span class="o">=</span> <span class="n">exploration_rights</span><span class="o">.</span><span class="n">viewer_ids</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">community_owned</span> <span class="o">=</span> <span class="n">exploration_rights</span><span class="o">.</span><span class="n">community_owned</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">cloned_from</span> <span class="o">=</span> <span class="n">exploration_rights</span><span class="o">.</span><span class="n">cloned_from</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">exploration_rights</span><span class="o">.</span><span class="n">status</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">viewable_if_private</span> <span class="o">=</span> <span class="n">exploration_rights</span><span class="o">.</span><span class="n">viewable_if_private</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+
+    <span class="c"># update summary of changed exploration (note that exploration rights id</span>
+    <span class="c"># is the same as exploration id)</span>
+    <span class="c"># TODO(msl): get rid of inline import by refactoring code</span>
+    <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_services</span>
+    <span class="n">exp_services</span><span class="o">.</span><span class="n">update_exploration_summary</span><span class="p">(</span><span class="n">exploration_rights</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="create_new_exploration_rights"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.create_new_exploration_rights">[docs]</a><span class="k">def</span> <span class="nf">create_new_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">committer_id</span><span class="p">):</span>
+    <span class="n">exploration_rights</span> <span class="o">=</span> <span class="n">ExplorationRights</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="p">[</span><span class="n">committer_id</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[])</span>
+    <span class="n">commit_cmds</span> <span class="o">=</span> <span class="p">[{</span><span class="s">&#39;cmd&#39;</span><span class="p">:</span> <span class="n">CMD_CREATE_NEW</span><span class="p">}]</span>
+
+    <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationRightsModel</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">exploration_rights</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">owner_ids</span><span class="o">=</span><span class="n">exploration_rights</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">,</span>
+        <span class="n">editor_ids</span><span class="o">=</span><span class="n">exploration_rights</span><span class="o">.</span><span class="n">editor_ids</span><span class="p">,</span>
+        <span class="n">viewer_ids</span><span class="o">=</span><span class="n">exploration_rights</span><span class="o">.</span><span class="n">viewer_ids</span><span class="p">,</span>
+        <span class="n">community_owned</span><span class="o">=</span><span class="n">exploration_rights</span><span class="o">.</span><span class="n">community_owned</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">exploration_rights</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="n">viewable_if_private</span><span class="o">=</span><span class="n">exploration_rights</span><span class="o">.</span><span class="n">viewable_if_private</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="s">&#39;Created new exploration&#39;</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+
+    <span class="n">subscription_services</span><span class="o">.</span><span class="n">subscribe_to_activity</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_exploration_rights"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.get_exploration_rights">[docs]</a><span class="k">def</span> <span class="nf">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the rights for this exploration from the datastore.&quot;&quot;&quot;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationRightsModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;This exploration does not exist.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_get_exploration_rights_from_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="is_exploration_private"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.is_exploration_private">[docs]</a><span class="k">def</span> <span class="nf">is_exploration_private</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="n">exploration_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">exploration_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span>
+
+</div>
+<div class="viewcode-block" id="is_exploration_public"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.is_exploration_public">[docs]</a><span class="k">def</span> <span class="nf">is_exploration_public</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="n">exploration_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">exploration_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">EXPLORATION_STATUS_PUBLIC</span>
+
+</div>
+<div class="viewcode-block" id="is_exploration_cloned"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.is_exploration_cloned">[docs]</a><span class="k">def</span> <span class="nf">is_exploration_cloned</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="n">exploration_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">exploration_rights</span><span class="o">.</span><span class="n">cloned_from</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Actor"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor">[docs]</a><span class="k">class</span> <span class="nc">Actor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Domain object for a user with various rights.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+        <span class="c"># Note that this may be None.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">user_id</span>
+
+<div class="viewcode-block" id="Actor.is_admin"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.is_admin">[docs]</a>    <span class="k">def</span> <span class="nf">is_admin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="ow">in</span> <span class="n">config_domain</span><span class="o">.</span><span class="n">ADMIN_IDS</span><span class="o">.</span><span class="n">value</span>
+</div>
+<div class="viewcode-block" id="Actor.is_moderator"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.is_moderator">[docs]</a>    <span class="k">def</span> <span class="nf">is_moderator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_admin</span><span class="p">()</span> <span class="ow">or</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="ow">in</span> <span class="n">config_domain</span><span class="o">.</span><span class="n">MODERATOR_IDS</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Actor.is_owner"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.is_owner">[docs]</a>    <span class="k">def</span> <span class="nf">is_owner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">exp_rights</span><span class="o">.</span><span class="n">community_owned</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="ow">in</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Actor.has_explicit_editing_rights"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.has_explicit_editing_rights">[docs]</a>    <span class="k">def</span> <span class="nf">has_explicit_editing_rights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Whether this user has editing rights for this exploration.</span>
+
+<span class="sd">        This is true if the exploration is community-owned, or if the user is</span>
+<span class="sd">        in the owner/editor list for the exploration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">exp_rights</span><span class="o">.</span><span class="n">community_owned</span> <span class="ow">or</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="ow">in</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">editor_ids</span> <span class="ow">or</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="ow">in</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Actor.has_explicit_viewing_rights"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.has_explicit_viewing_rights">[docs]</a>    <span class="k">def</span> <span class="nf">has_explicit_viewing_rights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span> <span class="ow">or</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="ow">in</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">viewer_ids</span> <span class="ow">or</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="ow">in</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">editor_ids</span> <span class="ow">or</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="ow">in</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Actor.can_play"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_play">[docs]</a>    <span class="k">def</span> <span class="nf">can_play</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Whether the user can play the reader view of this exploration.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">has_explicit_viewing_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">viewable_if_private</span>
+                    <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_moderator</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="Actor.can_view"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_view">[docs]</a>    <span class="k">def</span> <span class="nf">can_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Whether the user can view the editor page for this exploration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_play</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Actor.can_edit"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_edit">[docs]</a>    <span class="k">def</span> <span class="nf">can_edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="c"># TODO(sll): Add a check here for whether a user is banned or not,</span>
+        <span class="c"># rather than having this check in the controller.</span>
+        <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">has_explicit_editing_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">is_moderator</span><span class="p">()</span> <span class="ow">and</span>
+                <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Actor.can_accept_submitted_change"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_accept_submitted_change">[docs]</a>    <span class="k">def</span> <span class="nf">can_accept_submitted_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_edit</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Actor.can_delete"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_delete">[docs]</a>    <span class="k">def</span> <span class="nf">can_delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">is_deleting_own_private_exploration</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span> <span class="ow">and</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_owner</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">is_moderator_deleting_public_exploration</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">EXPLORATION_STATUS_PUBLIC</span> <span class="ow">and</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_moderator</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">is_deleting_own_private_exploration</span> <span class="ow">or</span>
+            <span class="n">is_moderator_deleting_public_exploration</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Actor.can_change_private_viewability"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_change_private_viewability">[docs]</a>    <span class="k">def</span> <span class="nf">can_change_private_viewability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Note that this requires the exploration in question</span>
+<span class="sd">        to be private.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_publish</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Actor.can_publish"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_publish">[docs]</a>    <span class="k">def</span> <span class="nf">can_publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">Exploration</span><span class="o">.</span><span class="n">is_demo_exploration_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+            <span class="c"># Demo explorations are public by default.</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">cloned_from</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_owner</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_admin</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Actor.can_unpublish"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_unpublish">[docs]</a>    <span class="k">def</span> <span class="nf">can_unpublish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">EXPLORATION_STATUS_PUBLIC</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">community_owned</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_moderator</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Actor.can_modify_roles"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_modify_roles">[docs]</a>    <span class="k">def</span> <span class="nf">can_modify_roles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">community_owned</span> <span class="ow">or</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">cloned_from</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_admin</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_owner</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Actor.can_release_ownership"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_release_ownership">[docs]</a>    <span class="k">def</span> <span class="nf">can_release_ownership</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_modify_roles</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Actor.can_submit_change_for_review"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_submit_change_for_review">[docs]</a>    <span class="k">def</span> <span class="nf">can_submit_change_for_review</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_edit</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="Actor.can_make_minor_edit"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_make_minor_edit">[docs]</a>    <span class="k">def</span> <span class="nf">can_make_minor_edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_submit_change_for_review</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Actor.can_send_feedback"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_send_feedback">[docs]</a>    <span class="k">def</span> <span class="nf">can_send_feedback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="Actor.can_publicize"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_publicize">[docs]</a>    <span class="k">def</span> <span class="nf">can_publicize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">EXPLORATION_STATUS_PUBLIC</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_moderator</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Actor.can_unpublicize"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.Actor.can_unpublicize">[docs]</a>    <span class="k">def</span> <span class="nf">can_unpublicize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">EXPLORATION_STATUS_PUBLICIZED</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_moderator</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="assign_role"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.assign_role">[docs]</a><span class="k">def</span> <span class="nf">assign_role</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">assignee_id</span><span class="p">,</span> <span class="n">new_role</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assign `assignee_id` to the given role and subscribes the assignee</span>
+<span class="sd">    to future exploration updates.</span>
+
+<span class="sd">    The caller should ensure that assignee_id corresponds to a valid user in</span>
+<span class="sd">    the system.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">    - committer_id: str. The user_id of the user who is performing the action.</span>
+<span class="sd">    - exploration_id: str. The exploration id.</span>
+<span class="sd">    - assignee_id: str. The user_id of the user whose role is being changed.</span>
+<span class="sd">    - new_role: str. The name of the new role: either &#39;owner&#39;, &#39;editor&#39; or</span>
+<span class="sd">        &#39;viewer&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Actor</span><span class="p">(</span><span class="n">committer_id</span><span class="p">)</span><span class="o">.</span><span class="n">can_modify_roles</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">&#39;User </span><span class="si">%s</span><span class="s"> tried to allow user </span><span class="si">%s</span><span class="s"> to be a(n) </span><span class="si">%s</span><span class="s"> of exploration </span><span class="si">%s</span><span class="s"> &#39;</span>
+            <span class="s">&#39;but was refused permission.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">committer_id</span><span class="p">,</span> <span class="n">assignee_id</span><span class="p">,</span> <span class="n">new_role</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s">&#39;UnauthorizedUserException: Could not assign new role.&#39;</span><span class="p">)</span>
+
+    <span class="n">assignee_username</span> <span class="o">=</span> <span class="n">user_services</span><span class="o">.</span><span class="n">get_username</span><span class="p">(</span><span class="n">assignee_id</span><span class="p">)</span>
+    <span class="n">old_role</span> <span class="o">=</span> <span class="n">ROLE_NONE</span>
+
+    <span class="k">if</span> <span class="n">new_role</span> <span class="o">==</span> <span class="n">ROLE_OWNER</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">Actor</span><span class="p">(</span><span class="n">assignee_id</span><span class="p">)</span><span class="o">.</span><span class="n">is_owner</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;This user already owns this exploration.&#39;</span><span class="p">)</span>
+
+        <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="n">exp_rights</span><span class="o">.</span><span class="n">owner_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">assignee_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">assignee_id</span> <span class="ow">in</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">viewer_ids</span><span class="p">:</span>
+            <span class="n">exp_rights</span><span class="o">.</span><span class="n">viewer_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">assignee_id</span><span class="p">)</span>
+            <span class="n">old_role</span> <span class="o">=</span> <span class="n">ROLE_VIEWER</span>
+        <span class="k">if</span> <span class="n">assignee_id</span> <span class="ow">in</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">editor_ids</span><span class="p">:</span>
+            <span class="n">exp_rights</span><span class="o">.</span><span class="n">editor_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">assignee_id</span><span class="p">)</span>
+            <span class="n">old_role</span> <span class="o">=</span> <span class="n">ROLE_EDITOR</span>
+
+    <span class="k">elif</span> <span class="n">new_role</span> <span class="o">==</span> <span class="n">ROLE_EDITOR</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">Actor</span><span class="p">(</span><span class="n">assignee_id</span><span class="p">)</span><span class="o">.</span><span class="n">has_explicit_editing_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;This user already can edit this exploration.&#39;</span><span class="p">)</span>
+
+        <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">community_owned</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Community-owned explorations can be edited by anyone.&#39;</span><span class="p">)</span>
+
+        <span class="n">exp_rights</span><span class="o">.</span><span class="n">editor_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">assignee_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">assignee_id</span> <span class="ow">in</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">viewer_ids</span><span class="p">:</span>
+            <span class="n">exp_rights</span><span class="o">.</span><span class="n">viewer_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">assignee_id</span><span class="p">)</span>
+            <span class="n">old_role</span> <span class="o">=</span> <span class="n">ROLE_VIEWER</span>
+
+    <span class="k">elif</span> <span class="n">new_role</span> <span class="o">==</span> <span class="n">ROLE_VIEWER</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">Actor</span><span class="p">(</span><span class="n">assignee_id</span><span class="p">)</span><span class="o">.</span><span class="n">has_explicit_viewing_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;This user already can view this exploration.&#39;</span><span class="p">)</span>
+
+        <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Public explorations can be viewed by anyone.&#39;</span><span class="p">)</span>
+
+        <span class="n">exp_rights</span><span class="o">.</span><span class="n">viewer_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">assignee_id</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Invalid role: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">new_role</span><span class="p">)</span>
+
+    <span class="n">commit_message</span> <span class="o">=</span> <span class="s">&#39;Changed role of </span><span class="si">%s</span><span class="s"> from </span><span class="si">%s</span><span class="s"> to </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="n">assignee_username</span><span class="p">,</span> <span class="n">old_role</span><span class="p">,</span> <span class="n">new_role</span><span class="p">)</span>
+    <span class="n">commit_cmds</span> <span class="o">=</span> <span class="p">[{</span>
+        <span class="s">&#39;cmd&#39;</span><span class="p">:</span> <span class="n">CMD_CHANGE_ROLE</span><span class="p">,</span>
+        <span class="s">&#39;assignee_id&#39;</span><span class="p">:</span> <span class="n">assignee_id</span><span class="p">,</span>
+        <span class="s">&#39;old_role&#39;</span><span class="p">:</span> <span class="n">old_role</span><span class="p">,</span>
+        <span class="s">&#39;new_role&#39;</span><span class="p">:</span> <span class="n">new_role</span>
+    <span class="p">}]</span>
+
+    <span class="n">_save_exploration_rights</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exp_rights</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">new_role</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ROLE_OWNER</span><span class="p">,</span> <span class="n">ROLE_EDITOR</span><span class="p">]:</span>
+        <span class="n">subscription_services</span><span class="o">.</span><span class="n">subscribe_to_activity</span><span class="p">(</span>
+            <span class="n">assignee_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="release_ownership"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.release_ownership">[docs]</a><span class="k">def</span> <span class="nf">release_ownership</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Releases ownership of an exploration to the community.</span>
+
+<span class="sd">    Commits changes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Actor</span><span class="p">(</span><span class="n">committer_id</span><span class="p">)</span><span class="o">.</span><span class="n">can_release_ownership</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">&#39;User </span><span class="si">%s</span><span class="s"> tried to release ownership ofexploration </span><span class="si">%s</span><span class="s"> but was &#39;</span>
+            <span class="s">&#39;refused permission.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s">&#39;The ownership of this exploration cannot be released.&#39;</span><span class="p">)</span>
+
+    <span class="n">exploration_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="n">exploration_rights</span><span class="o">.</span><span class="n">community_owned</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">exploration_rights</span><span class="o">.</span><span class="n">owner_ids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">exploration_rights</span><span class="o">.</span><span class="n">editor_ids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">exploration_rights</span><span class="o">.</span><span class="n">viewer_ids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">commit_cmds</span> <span class="o">=</span> <span class="p">[{</span>
+        <span class="s">&#39;cmd&#39;</span><span class="p">:</span> <span class="n">CMD_RELEASE_OWNERSHIP</span><span class="p">,</span>
+    <span class="p">}]</span>
+
+    <span class="n">_save_exploration_rights</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_rights</span><span class="p">,</span>
+        <span class="s">&#39;Exploration ownership released to the community.&#39;</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_change_exploration_status</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">new_status</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Change the status of an exploration. Commits changes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">    - committer_id: str. The id of the user who is performing the update</span>
+<span class="sd">        action.</span>
+<span class="sd">    - exploration_id: str. The exploration id.</span>
+<span class="sd">    - new_status: str. The new status of the exploration.</span>
+<span class="sd">    - commit_message: str. The human-written commit message for this change.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exploration_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="n">old_status</span> <span class="o">=</span> <span class="n">exploration_rights</span><span class="o">.</span><span class="n">status</span>
+    <span class="n">exploration_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">new_status</span>
+    <span class="n">commit_cmds</span> <span class="o">=</span> <span class="p">[{</span>
+        <span class="s">&#39;cmd&#39;</span><span class="p">:</span> <span class="n">CMD_CHANGE_EXPLORATION_STATUS</span><span class="p">,</span>
+        <span class="s">&#39;old_status&#39;</span><span class="p">:</span> <span class="n">old_status</span><span class="p">,</span>
+        <span class="s">&#39;new_status&#39;</span><span class="p">:</span> <span class="n">new_status</span>
+    <span class="p">}]</span>
+
+    <span class="k">if</span> <span class="n">new_status</span> <span class="o">!=</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">:</span>
+        <span class="n">exploration_rights</span><span class="o">.</span><span class="n">viewer_ids</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">_save_exploration_rights</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_rights</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+    <span class="n">event_services</span><span class="o">.</span><span class="n">ExplorationStatusChangeEventHandler</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="set_private_viewability"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.set_private_viewability">[docs]</a><span class="k">def</span> <span class="nf">set_private_viewability</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">viewable_if_private</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the viewable_if_private attribute for an exploration&#39;s rights</span>
+<span class="sd">    object. If viewable_if_private is True, this allows an private exploration</span>
+<span class="sd">    to be viewed by anyone with the link.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Actor</span><span class="p">(</span><span class="n">committer_id</span><span class="p">)</span><span class="o">.</span><span class="n">can_change_private_viewability</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">&#39;User </span><span class="si">%s</span><span class="s"> tried to change private viewability of exploration </span><span class="si">%s</span><span class="s"> &#39;</span>
+            <span class="s">&#39;but was refused permission.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s">&#39;The viewability status of this exploration cannot be changed.&#39;</span><span class="p">)</span>
+
+    <span class="n">exploration_rights</span> <span class="o">=</span> <span class="n">get_exploration_rights</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="n">old_viewable_if_private</span> <span class="o">=</span> <span class="n">exploration_rights</span><span class="o">.</span><span class="n">viewable_if_private</span>
+    <span class="k">if</span> <span class="n">old_viewable_if_private</span> <span class="o">==</span> <span class="n">viewable_if_private</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s">&#39;Trying to change viewability status of this exploration to </span><span class="si">%s</span><span class="s">, &#39;</span>
+            <span class="s">&#39;but that is already the current value.&#39;</span> <span class="o">%</span> <span class="n">viewable_if_private</span><span class="p">)</span>
+
+    <span class="n">exploration_rights</span><span class="o">.</span><span class="n">viewable_if_private</span> <span class="o">=</span> <span class="n">viewable_if_private</span>
+    <span class="n">commit_cmds</span> <span class="o">=</span> <span class="p">[{</span>
+        <span class="s">&#39;cmd&#39;</span><span class="p">:</span> <span class="n">CMD_CHANGE_PRIVATE_VIEWABILITY</span><span class="p">,</span>
+        <span class="s">&#39;old_viewable_if_private&#39;</span><span class="p">:</span> <span class="n">old_viewable_if_private</span><span class="p">,</span>
+        <span class="s">&#39;new_viewable_if_private&#39;</span><span class="p">:</span> <span class="n">viewable_if_private</span><span class="p">,</span>
+    <span class="p">}]</span>
+    <span class="n">commit_message</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s">&#39;Made exploration viewable to anyone with the link.&#39;</span>
+        <span class="k">if</span> <span class="n">viewable_if_private</span> <span class="k">else</span>
+        <span class="s">&#39;Made exploration viewable only to invited playtesters.&#39;</span><span class="p">)</span>
+
+    <span class="n">_save_exploration_rights</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_rights</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="publish_exploration"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.publish_exploration">[docs]</a><span class="k">def</span> <span class="nf">publish_exploration</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Publish an exploration. Commits changes.</span>
+
+<span class="sd">    It is the responsibility of the caller to check that the exploration is</span>
+<span class="sd">    valid prior to publication.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Actor</span><span class="p">(</span><span class="n">committer_id</span><span class="p">)</span><span class="o">.</span><span class="n">can_publish</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">&#39;User </span><span class="si">%s</span><span class="s"> tried to publish exploration </span><span class="si">%s</span><span class="s"> but was refused &#39;</span>
+            <span class="s">&#39;permission.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;This exploration cannot be published.&#39;</span><span class="p">)</span>
+
+    <span class="n">_change_exploration_status</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">EXPLORATION_STATUS_PUBLIC</span><span class="p">,</span>
+        <span class="s">&#39;Exploration published.&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="unpublish_exploration"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.unpublish_exploration">[docs]</a><span class="k">def</span> <span class="nf">unpublish_exploration</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Unpublishes an exploration. Commits changes.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Actor</span><span class="p">(</span><span class="n">committer_id</span><span class="p">)</span><span class="o">.</span><span class="n">can_unpublish</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">&#39;User </span><span class="si">%s</span><span class="s"> tried to unpublish exploration </span><span class="si">%s</span><span class="s"> but was refused &#39;</span>
+            <span class="s">&#39;permission.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;This exploration cannot be unpublished.&#39;</span><span class="p">)</span>
+
+    <span class="n">_change_exploration_status</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">,</span>
+        <span class="s">&#39;Exploration unpublished.&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="publicize_exploration"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.publicize_exploration">[docs]</a><span class="k">def</span> <span class="nf">publicize_exploration</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Publicizes an exploration. Commits changes.</span>
+
+<span class="sd">    It is the responsibility of the caller to check that the exploration is</span>
+<span class="sd">    valid prior to publicizing it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Actor</span><span class="p">(</span><span class="n">committer_id</span><span class="p">)</span><span class="o">.</span><span class="n">can_publicize</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">&#39;User </span><span class="si">%s</span><span class="s"> tried to publicize exploration </span><span class="si">%s</span><span class="s"> but was refused &#39;</span>
+            <span class="s">&#39;permission.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;This exploration cannot be marked as &quot;featured&quot;.&#39;</span><span class="p">)</span>
+
+    <span class="n">_change_exploration_status</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">EXPLORATION_STATUS_PUBLICIZED</span><span class="p">,</span>
+        <span class="s">&#39;Exploration publicized.&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="unpublicize_exploration"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.rights_manager.unpublicize_exploration">[docs]</a><span class="k">def</span> <span class="nf">unpublicize_exploration</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Unpublicizes an exploration. Commits changes.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Actor</span><span class="p">(</span><span class="n">committer_id</span><span class="p">)</span><span class="o">.</span><span class="n">can_unpublicize</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">&#39;User </span><span class="si">%s</span><span class="s"> tried to unpublicize exploration </span><span class="si">%s</span><span class="s"> but was refused &#39;</span>
+            <span class="s">&#39;permission.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;This exploration cannot be unmarked as &quot;featured&quot;.&#39;</span><span class="p">)</span>
+
+    <span class="n">_change_exploration_status</span><span class="p">(</span>
+        <span class="n">committer_id</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">EXPLORATION_STATUS_PUBLIC</span><span class="p">,</span>
+        <span class="s">&#39;Exploration unpublicized.&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

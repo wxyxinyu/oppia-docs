@@ -1,0 +1,903 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-core-package">
+<h1>oppia.core package<a class="headerlink" href="#oppia-core-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.controllers.html">oppia.core.controllers package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-admin-module">oppia.core.controllers.admin module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-admin-test-module">oppia.core.controllers.admin_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-base-module">oppia.core.controllers.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-base-test-module">oppia.core.controllers.base_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-cron-module">oppia.core.controllers.cron module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-editor-module">oppia.core.controllers.editor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-editor-test-module">oppia.core.controllers.editor_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-feedback-module">oppia.core.controllers.feedback module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-feedback-test-module">oppia.core.controllers.feedback_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-galleries-module">oppia.core.controllers.galleries module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-galleries-test-module">oppia.core.controllers.galleries_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-home-module">oppia.core.controllers.home module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-home-test-module">oppia.core.controllers.home_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-moderator-module">oppia.core.controllers.moderator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-moderator-test-module">oppia.core.controllers.moderator_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-pages-module">oppia.core.controllers.pages module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-pages-test-module">oppia.core.controllers.pages_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-profile-module">oppia.core.controllers.profile module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-profile-test-module">oppia.core.controllers.profile_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-reader-module">oppia.core.controllers.reader module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-reader-test-module">oppia.core.controllers.reader_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-recent-commits-module">oppia.core.controllers.recent_commits module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-resources-module">oppia.core.controllers.resources module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-resources-test-module">oppia.core.controllers.resources_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#oppia-core-controllers-services-module">oppia.core.controllers.services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.controllers.html#module-oppia.core.controllers">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.domain.html">oppia.core.domain package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.config_domain">oppia.core.domain.config_domain module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-config-domain-test-module">oppia.core.domain.config_domain_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.config_services">oppia.core.domain.config_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.dependency_registry">oppia.core.domain.dependency_registry module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-dependency-registry-test-module">oppia.core.domain.dependency_registry_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.email_manager">oppia.core.domain.email_manager module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-email-manager-test-module">oppia.core.domain.email_manager_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.event_services">oppia.core.domain.event_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-event-services-test-module">oppia.core.domain.event_services_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.exp_domain">oppia.core.domain.exp_domain module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-exp-domain-test-module">oppia.core.domain.exp_domain_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.exp_jobs">oppia.core.domain.exp_jobs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.exp_jobs_for_production_tests">oppia.core.domain.exp_jobs_for_production_tests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-exp-jobs-test-module">oppia.core.domain.exp_jobs_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.exp_services">oppia.core.domain.exp_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-exp-services-test-module">oppia.core.domain.exp_services_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.feedback_jobs">oppia.core.domain.feedback_jobs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-feedback-jobs-test-module">oppia.core.domain.feedback_jobs_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.feedback_services">oppia.core.domain.feedback_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-feedback-services-test-module">oppia.core.domain.feedback_services_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.fs_domain">oppia.core.domain.fs_domain module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-fs-domain-test-module">oppia.core.domain.fs_domain_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.gadget_registry">oppia.core.domain.gadget_registry module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-gadget-registry-test-module">oppia.core.domain.gadget_registry_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.html_cleaner">oppia.core.domain.html_cleaner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-html-cleaner-test-module">oppia.core.domain.html_cleaner_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.interaction_registry">oppia.core.domain.interaction_registry module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-interaction-registry-test-module">oppia.core.domain.interaction_registry_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.obj_services">oppia.core.domain.obj_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-obj-services-test-module">oppia.core.domain.obj_services_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.param_domain">oppia.core.domain.param_domain module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-param-domain-test-module">oppia.core.domain.param_domain_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.rating_services">oppia.core.domain.rating_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-rating-services-test-module">oppia.core.domain.rating_services_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.recommendations_jobs">oppia.core.domain.recommendations_jobs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-recommendations-jobs-test-module">oppia.core.domain.recommendations_jobs_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.recommendations_services">oppia.core.domain.recommendations_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-recommendations-services-test-module">oppia.core.domain.recommendations_services_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.rights_manager">oppia.core.domain.rights_manager module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-rights-manager-test-module">oppia.core.domain.rights_manager_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.rte_component_registry">oppia.core.domain.rte_component_registry module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-rte-component-registry-test-module">oppia.core.domain.rte_component_registry_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.rule_domain">oppia.core.domain.rule_domain module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-rule-domain-test-module">oppia.core.domain.rule_domain_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.skins_services">oppia.core.domain.skins_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-skins-services-test-module">oppia.core.domain.skins_services_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.stats_domain">oppia.core.domain.stats_domain module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-stats-domain-test-module">oppia.core.domain.stats_domain_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.stats_jobs">oppia.core.domain.stats_jobs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-stats-jobs-test-module">oppia.core.domain.stats_jobs_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.stats_services">oppia.core.domain.stats_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-stats-services-test-module">oppia.core.domain.stats_services_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.subscription_services">oppia.core.domain.subscription_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-subscription-services-test-module">oppia.core.domain.subscription_services_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.trigger_registry">oppia.core.domain.trigger_registry module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.user_jobs">oppia.core.domain.user_jobs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-user-jobs-test-module">oppia.core.domain.user_jobs_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.user_services">oppia.core.domain.user_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-user-services-test-module">oppia.core.domain.user_services_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain.value_generators_domain">oppia.core.domain.value_generators_domain module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#oppia-core-domain-value-generators-domain-test-module">oppia.core.domain.value_generators_domain_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.domain.html#module-oppia.core.domain">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.platform.html">oppia.core.platform package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.platform.email.html">oppia.core.platform.email package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.email.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.email.html#module-oppia.core.platform.email.gae_email_services">oppia.core.platform.email.gae_email_services module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.email.html#oppia-core-platform-email-gae-email-services-test-module">oppia.core.platform.email.gae_email_services_test module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.email.html#module-oppia.core.platform.email">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.platform.memcache.html">oppia.core.platform.memcache package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.memcache.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.memcache.html#module-oppia.core.platform.memcache.gae_memcache_services">oppia.core.platform.memcache.gae_memcache_services module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.memcache.html#module-oppia.core.platform.memcache">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.platform.search.html">oppia.core.platform.search package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.search.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.search.html#module-oppia.core.platform.search.gae_search_services">oppia.core.platform.search.gae_search_services module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.search.html#oppia-core-platform-search-gae-search-services-test-module">oppia.core.platform.search.gae_search_services_test module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.search.html#module-oppia.core.platform.search">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.platform.taskqueue.html">oppia.core.platform.taskqueue package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.taskqueue.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.taskqueue.html#module-oppia.core.platform.taskqueue.gae_taskqueue_services">oppia.core.platform.taskqueue.gae_taskqueue_services module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.taskqueue.html#module-oppia.core.platform.taskqueue">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.platform.transactions.html">oppia.core.platform.transactions package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.transactions.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.transactions.html#module-oppia.core.platform.transactions.gae_transaction_services">oppia.core.platform.transactions.gae_transaction_services module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.transactions.html#module-oppia.core.platform.transactions">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.platform.users.html">oppia.core.platform.users package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.users.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.users.html#module-oppia.core.platform.users.gae_current_user_services">oppia.core.platform.users.gae_current_user_services module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.platform.users.html#module-oppia.core.platform.users">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.html#module-oppia.core.platform.models">oppia.core.platform.models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.html#module-oppia.core.platform">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.storage.html">oppia.core.storage package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.storage.base_model.html">oppia.core.storage.base_model package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.base_model.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.base_model.html#module-oppia.core.storage.base_model.gae_models">oppia.core.storage.base_model.gae_models module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.base_model.html#oppia-core-storage-base-model-gae-models-test-module">oppia.core.storage.base_model.gae_models_test module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.base_model.html#module-oppia.core.storage.base_model">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.storage.config.html">oppia.core.storage.config package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.config.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.config.html#module-oppia.core.storage.config.gae_models">oppia.core.storage.config.gae_models module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.config.html#module-oppia.core.storage.config">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.storage.email.html">oppia.core.storage.email package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.email.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.email.html#module-oppia.core.storage.email.gae_models">oppia.core.storage.email.gae_models module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.email.html#oppia-core-storage-email-gae-models-test-module">oppia.core.storage.email.gae_models_test module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.email.html#module-oppia.core.storage.email">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.storage.exploration.html">oppia.core.storage.exploration package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.exploration.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.exploration.html#module-oppia.core.storage.exploration.gae_models">oppia.core.storage.exploration.gae_models module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.exploration.html#module-oppia.core.storage.exploration">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.storage.feedback.html">oppia.core.storage.feedback package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.feedback.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.feedback.html#module-oppia.core.storage.feedback.gae_models">oppia.core.storage.feedback.gae_models module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.feedback.html#module-oppia.core.storage.feedback">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.storage.file.html">oppia.core.storage.file package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.file.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.file.html#module-oppia.core.storage.file.gae_models">oppia.core.storage.file.gae_models module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.file.html#module-oppia.core.storage.file">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.storage.job.html">oppia.core.storage.job package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.job.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.job.html#module-oppia.core.storage.job.gae_models">oppia.core.storage.job.gae_models module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.job.html#module-oppia.core.storage.job">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.storage.recommendations.html">oppia.core.storage.recommendations package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.recommendations.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.recommendations.html#module-oppia.core.storage.recommendations.gae_models">oppia.core.storage.recommendations.gae_models module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.recommendations.html#module-oppia.core.storage.recommendations">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.storage.statistics.html">oppia.core.storage.statistics package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.statistics.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.statistics.html#module-oppia.core.storage.statistics.gae_models">oppia.core.storage.statistics.gae_models module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.statistics.html#module-oppia.core.storage.statistics">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="oppia.core.storage.user.html">oppia.core.storage.user package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.user.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.user.html#module-oppia.core.storage.user.gae_models">oppia.core.storage.user.gae_models module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="oppia.core.storage.user.html#module-oppia.core.storage.user">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.html#module-oppia.core.storage">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.tests.html">oppia.core.tests package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.tests.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.tests.html#module-oppia.core.tests.gae_suite">oppia.core.tests.gae_suite module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.tests.html#module-oppia.core.tests.reader_view_load_test">oppia.core.tests.reader_view_load_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.tests.html#oppia-core-tests-test-utils-module">oppia.core.tests.test_utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.tests.html#oppia-core-tests-test-utils-test-module">oppia.core.tests.test_utils_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.tests.html#module-oppia.core.tests">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core.counters">
+<span id="oppia-core-counters-module"></span><h2>oppia.core.counters module<a class="headerlink" href="#module-oppia.core.counters" title="Permalink to this headline">¶</a></h2>
+<p>Services for performance counters.</p>
+<dl class="class">
+<dt id="oppia.core.counters.PerfCounter">
+<em class="property">class </em><code class="descclassname">oppia.core.counters.</code><code class="descname">PerfCounter</code><span class="sig-paren">(</span><em>name</em>, <em>description</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/counters.html#PerfCounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.counters.PerfCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Generic in-process numeric counter; not aggregated across instances.</p>
+<dl class="attribute">
+<dt id="oppia.core.counters.PerfCounter.description">
+<code class="descname">description</code><a class="headerlink" href="#oppia.core.counters.PerfCounter.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.counters.PerfCounter.inc">
+<code class="descname">inc</code><span class="sig-paren">(</span><em>increment=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/counters.html#PerfCounter.inc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.counters.PerfCounter.inc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increments the counter value by a given increment.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.counters.PerfCounter.name">
+<code class="descname">name</code><a class="headerlink" href="#oppia.core.counters.PerfCounter.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.counters.PerfCounter.value">
+<code class="descname">value</code><a class="headerlink" href="#oppia.core.counters.PerfCounter.value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.counters.Registry">
+<em class="property">class </em><code class="descclassname">oppia.core.counters.</code><code class="descname">Registry</code><a class="reference internal" href="_modules/oppia/core/counters.html#Registry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.counters.Registry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Registry of all counters.</p>
+<dl class="classmethod">
+<dt id="oppia.core.counters.Registry.get_all_counters">
+<em class="property">classmethod </em><code class="descname">get_all_counters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/counters.html#Registry.get_all_counters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.counters.Registry.get_all_counters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.core.jobs">
+<span id="oppia-core-jobs-module"></span><h2>oppia.core.jobs module<a class="headerlink" href="#module-oppia.core.jobs" title="Permalink to this headline">¶</a></h2>
+<p>Common classes and methods for managing long running jobs.</p>
+<dl class="class">
+<dt id="oppia.core.jobs.BaseContinuousComputationManager">
+<em class="property">class </em><code class="descclassname">oppia.core.jobs.</code><code class="descname">BaseContinuousComputationManager</code><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseContinuousComputationManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseContinuousComputationManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>This class represents a manager for a continuously-running computation.
+Such computations consist of two parts: a batch job to compute summary
+views, and a realtime layer to augment these batch views with additional
+data that has come in since the last batch job results were computed. The
+realtime layer may provide only approximate results, but the discrepancy
+should be small because the realtime layer is expected to handle a much
+smaller amount of data than the batch layer.</p>
+<p>The batch jobs are run continuously, with each batch job starting
+immediately after the previous run has finished. There are two realtime
+layers that are cleared alternatively after successive batch runs, just
+before a new batch job is enqueued. Events are recorded to all three
+layers.</p>
+<p>Here is a schematic showing how this works. The x-axis represents the
+progression of time. The arrowed intervals in the batch layer indicate how
+long the corresponding batch job takes to run, and the intervals in each
+realtime layer indicate spans between when the data in the realtime layer
+is cleared. Note that a realtime layer is cleared as part of the post-
+processing that happens when a batch job completes, which explains why the
+termination of each batch interval and one of the realtime intervals
+always coincides. Having two realtime layers allows the inactive layer to
+be cleared whilst not affecting incoming queries to the active layer.</p>
+<p>Batch layer         &lt;&#8212;&#8211;&gt;  &lt;&#8212;&#8212;-&gt;  &lt;&#8212;&#8212;-&gt; &lt;&#8212;&#8212;-&gt; &lt;&#8212;&#8212;&#8211;&gt;
+Realtime layer R0   &lt;&#8212;&#8211;&gt;  &lt;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&gt; &lt;&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;&gt;
+Realtime layer R1   &lt;&#8212;&#8212;&#8212;&#8212;&#8212;-&gt;  &lt;&#8212;&#8212;&#8212;&#8212;&#8212;&#8211;&gt; &lt;&#8212;&#8212; ...</p>
+<blockquote>
+<div>&lt;&#8211; A &#8211;&gt;  &lt;&#8211; B &#8211;&gt;</div></blockquote>
+<p>For example, queries arising during the time interval A will use the
+results of the first batch run, plus data from the realtime layer R1.
+Queries arising during the time interval B will use the results of the
+second batch run, plus data from the realtime layer R0.</p>
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseContinuousComputationManager.get_active_realtime_layer_id">
+<em class="property">classmethod </em><code class="descname">get_active_realtime_layer_id</code><span class="sig-paren">(</span><em>entity_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseContinuousComputationManager.get_active_realtime_layer_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseContinuousComputationManager.get_active_realtime_layer_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an ID used to identify the element with the given entity id
+in the currently active realtime datastore layer.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseContinuousComputationManager.get_event_types_listened_to">
+<em class="property">classmethod </em><code class="descname">get_event_types_listened_to</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseContinuousComputationManager.get_event_types_listened_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseContinuousComputationManager.get_event_types_listened_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of event types that this class subscribes to.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseContinuousComputationManager.get_status_code">
+<em class="property">classmethod </em><code class="descname">get_status_code</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseContinuousComputationManager.get_status_code"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseContinuousComputationManager.get_status_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the status code of the job.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseContinuousComputationManager.on_batch_job_canceled">
+<em class="property">classmethod </em><code class="descname">on_batch_job_canceled</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseContinuousComputationManager.on_batch_job_canceled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseContinuousComputationManager.on_batch_job_canceled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseContinuousComputationManager.on_batch_job_completion">
+<em class="property">classmethod </em><code class="descname">on_batch_job_completion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseContinuousComputationManager.on_batch_job_completion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseContinuousComputationManager.on_batch_job_completion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when a batch job completes.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseContinuousComputationManager.on_batch_job_failure">
+<em class="property">classmethod </em><code class="descname">on_batch_job_failure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseContinuousComputationManager.on_batch_job_failure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseContinuousComputationManager.on_batch_job_failure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseContinuousComputationManager.on_incoming_event">
+<em class="property">classmethod </em><code class="descname">on_incoming_event</code><span class="sig-paren">(</span><em>event_type</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseContinuousComputationManager.on_incoming_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseContinuousComputationManager.on_incoming_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle an incoming event by recording it in both realtime datastore
+layers.</p>
+<p>The <a href="#id1"><span class="problematic" id="id2">*</span></a>args and <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs match those passed to the _handle_event() method
+of the corresponding EventHandler subclass.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseContinuousComputationManager.start_computation">
+<em class="property">classmethod </em><code class="descname">start_computation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseContinuousComputationManager.start_computation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseContinuousComputationManager.start_computation" title="Permalink to this definition">¶</a></dt>
+<dd><p>(Re)starts the continuous computation corresponding to this class.</p>
+<p>Raises an Exception if the computation is already running.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseContinuousComputationManager.stop_computation">
+<em class="property">classmethod </em><code class="descname">stop_computation</code><span class="sig-paren">(</span><em>user_id</em>, <em>test_mode=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseContinuousComputationManager.stop_computation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseContinuousComputationManager.stop_computation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cancels the currently-running batch job.</p>
+<p>No further batch runs will be kicked off.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.jobs.BaseDeferredJobManager">
+<em class="property">class </em><code class="descclassname">oppia.core.jobs.</code><code class="descname">BaseDeferredJobManager</code><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseDeferredJobManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseDeferredJobManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.core.jobs.BaseJobManager" title="oppia.core.jobs.BaseJobManager"><code class="xref py py-class docutils literal"><span class="pre">oppia.core.jobs.BaseJobManager</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.jobs.BaseJobManager">
+<em class="property">class </em><code class="descclassname">oppia.core.jobs.</code><code class="descname">BaseJobManager</code><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Base class for managing long-running jobs.</p>
+<p>These jobs are not transaction-safe, and multiple jobs of the same kind
+may run at once and overlap. Individual jobs should account for this. In
+particular, if a job writes to some location, no other enqueued or running
+job should be writing to, or reading from, that location.</p>
+<p>This is expected to be the case for one-off migration jobs, as well as
+batch reporting jobs. One-off migration jobs are expected to be transient
+and will not be a permanent part of the codebase. Batch reporting jobs are
+expected to write to a particular datastore model that is optimized for
+fast querying; each batch reporting job should correspond to exactly one of
+these models. The reporting jobs are expected to be run as MapReduces; to
+find existing ones, search for subclasses of BaseMapReduceJobManager.</p>
+<p>Note that the enqueue(), register_start(), register_completion(),
+register_failure() and cancel() methods in this class batch the following
+operations: (a) pre- and post-hooks, (b) updating the status of the job in
+the datastore, and (c) actually performing the operation. Each entire batch
+is not run in a transaction, but subclasses can still perform (a) or (c)
+transactionally if they wish to.</p>
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.cancel">
+<em class="property">classmethod </em><code class="descname">cancel</code><span class="sig-paren">(</span><em>job_id</em>, <em>user_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.cancel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.cancel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.cancel_all_unfinished_jobs">
+<em class="property">classmethod </em><code class="descname">cancel_all_unfinished_jobs</code><span class="sig-paren">(</span><em>user_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.cancel_all_unfinished_jobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.cancel_all_unfinished_jobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cancel all queued or started jobs of this job type.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.create_new">
+<em class="property">classmethod </em><code class="descname">create_new</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.create_new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.create_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new job of this class type. Returns the id of this job.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.enqueue">
+<em class="property">classmethod </em><code class="descname">enqueue</code><span class="sig-paren">(</span><em>job_id</em>, <em>additional_job_params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.enqueue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.enqueue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Marks a job as queued and adds it to a queue for processing.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.get_error">
+<em class="property">classmethod </em><code class="descname">get_error</code><span class="sig-paren">(</span><em>job_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.get_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.get_error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.get_metadata">
+<em class="property">classmethod </em><code class="descname">get_metadata</code><span class="sig-paren">(</span><em>job_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.get_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.get_metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.get_output">
+<em class="property">classmethod </em><code class="descname">get_output</code><span class="sig-paren">(</span><em>job_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.get_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.get_output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.get_status_code">
+<em class="property">classmethod </em><code class="descname">get_status_code</code><span class="sig-paren">(</span><em>job_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.get_status_code"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.get_status_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.get_time_finished_msec">
+<em class="property">classmethod </em><code class="descname">get_time_finished_msec</code><span class="sig-paren">(</span><em>job_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.get_time_finished_msec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.get_time_finished_msec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.get_time_queued_msec">
+<em class="property">classmethod </em><code class="descname">get_time_queued_msec</code><span class="sig-paren">(</span><em>job_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.get_time_queued_msec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.get_time_queued_msec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.get_time_started_msec">
+<em class="property">classmethod </em><code class="descname">get_time_started_msec</code><span class="sig-paren">(</span><em>job_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.get_time_started_msec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.get_time_started_msec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.has_finished">
+<em class="property">classmethod </em><code class="descname">has_finished</code><span class="sig-paren">(</span><em>job_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.has_finished"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.has_finished" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.is_active">
+<em class="property">classmethod </em><code class="descname">is_active</code><span class="sig-paren">(</span><em>job_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.is_active"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.is_active" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.register_completion">
+<em class="property">classmethod </em><code class="descname">register_completion</code><span class="sig-paren">(</span><em>job_id</em>, <em>output</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.register_completion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.register_completion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Marks a job as completed.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.register_failure">
+<em class="property">classmethod </em><code class="descname">register_failure</code><span class="sig-paren">(</span><em>job_id</em>, <em>error</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.register_failure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.register_failure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Marks a job as failed.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseJobManager.register_start">
+<em class="property">classmethod </em><code class="descname">register_start</code><span class="sig-paren">(</span><em>job_id</em>, <em>metadata=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseJobManager.register_start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseJobManager.register_start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.jobs.BaseMapReduceJobManager">
+<em class="property">class </em><code class="descclassname">oppia.core.jobs.</code><code class="descname">BaseMapReduceJobManager</code><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseMapReduceJobManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseMapReduceJobManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.core.jobs.BaseJobManager" title="oppia.core.jobs.BaseJobManager"><code class="xref py py-class docutils literal"><span class="pre">oppia.core.jobs.BaseJobManager</span></code></a></p>
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseMapReduceJobManager.entity_classes_to_map_over">
+<em class="property">classmethod </em><code class="descname">entity_classes_to_map_over</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseMapReduceJobManager.entity_classes_to_map_over"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseMapReduceJobManager.entity_classes_to_map_over" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of reference to the datastore classes to map over.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="oppia.core.jobs.BaseMapReduceJobManager.get_mapper_param">
+<em class="property">static </em><code class="descname">get_mapper_param</code><span class="sig-paren">(</span><em>param_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseMapReduceJobManager.get_mapper_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseMapReduceJobManager.get_mapper_param" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="oppia.core.jobs.BaseMapReduceJobManager.map">
+<em class="property">static </em><code class="descname">map</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseMapReduceJobManager.map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseMapReduceJobManager.map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements the map function.  Must be declared &#64;staticmethod.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>item</strong> &#8211; The parameter passed to this function is a single element of</li>
+<li><strong>type given by entity_class(). This function may yield as many</strong> (<em>the</em>) &#8211; </li>
+<li><strong>as appropriate (including zero) to return key/value 2-tuples.</strong> (<em>times</em>) &#8211; </li>
+<li><strong>example, to get a count of all explorations, one might yield</strong> (<em>For</em>) &#8211; </li>
+<li><strong>1).</strong> (<em>(exploration.id,</em>) &#8211; </li>
+<li><strong>WARNING</strong> &#8211; The OutputWriter converts mapper output keys to type str.</li>
+<li><strong>if you have keys that are of type unicode, you must yield</strong> (<em>So,</em>) &#8211; </li>
+<li><strong>rather than &quot;key&quot;.</strong> (<em>&#8220;key.encode(&#8216;utf-8&#8217;)&#8221;,</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="oppia.core.jobs.BaseMapReduceJobManager.reduce">
+<em class="property">static </em><code class="descname">reduce</code><span class="sig-paren">(</span><em>key</em>, <em>values</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseMapReduceJobManager.reduce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseMapReduceJobManager.reduce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements the reduce function.  Must be declared &#64;staticmethod.</p>
+<p>This function should yield a JSON string. All emitted outputs from all
+reducers will be collected in an array and set into the output value
+for the job, so don&#8217;t pick anything huge. If you need something huge,
+persist it out into the datastore instead and return a reference (and
+dereference it later to load content as needed).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> &#8211; A key value as emitted from the map() function, above.</li>
+<li><strong>values</strong> &#8211; A list of all values from all mappers that were tagged with</li>
+<li><strong>given key. This code can assume that it is the only process</strong> (<em>the</em>) &#8211; </li>
+<li><strong>values for this key. (It can probably also assume that</strong> (<em>handling</em>) &#8211; </li>
+<li><strong>will be called exactly once for each key with all of the output,</strong> (<em>it</em>) &#8211; </li>
+<li><strong>this needs to be verified.)</strong> (<em>but</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.jobs.BaseMapReduceJobManagerForContinuousComputations">
+<em class="property">class </em><code class="descclassname">oppia.core.jobs.</code><code class="descname">BaseMapReduceJobManagerForContinuousComputations</code><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseMapReduceJobManagerForContinuousComputations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseMapReduceJobManagerForContinuousComputations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.core.jobs.BaseMapReduceJobManager" title="oppia.core.jobs.BaseMapReduceJobManager"><code class="xref py py-class docutils literal"><span class="pre">oppia.core.jobs.BaseMapReduceJobManager</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations">
+<em class="property">class </em><code class="descclassname">oppia.core.jobs.</code><code class="descname">BaseRealtimeDatastoreClassForContinuousComputations</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseRealtimeDatastoreClassForContinuousComputations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>Storage class for entities in the realtime layer.</p>
+<p>Instances of this class represent individual entities that are stored in
+the realtime datastore. Note that the realtime datastore may be formatted
+differently from the datastores that are iterated over by the MapReduce
+job.</p>
+<p>The IDs for instances of this class are of the form 0:... or 1:..., where
+the 0 or 1 indicates the realtime layer that the entity is in.</p>
+<p>NOTE TO DEVELOPERS: Ensure that you wrap the id with get_realtime_id()
+when doing creations, gets, puts and queries, in order to ensure that the
+relevant layer prefix gets appended.</p>
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.delete_layer">
+<em class="property">classmethod </em><code class="descname">delete_layer</code><span class="sig-paren">(</span><em>layer_index</em>, <em>latest_created_on_datetime</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseRealtimeDatastoreClassForContinuousComputations.delete_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.delete_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes all entities in the given layer which were created before
+the given datetime.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.get">
+<em class="property">classmethod </em><code class="descname">get</code><span class="sig-paren">(</span><em>entity_id</em>, <em>strict=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseRealtimeDatastoreClassForContinuousComputations.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.get_realtime_id">
+<em class="property">classmethod </em><code class="descname">get_realtime_id</code><span class="sig-paren">(</span><em>layer_index</em>, <em>raw_entity_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseRealtimeDatastoreClassForContinuousComputations.get_realtime_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.get_realtime_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an ID used to identify the element with the given entity id
+in the currently active realtime datastore layer.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.put">
+<code class="descname">put</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#BaseRealtimeDatastoreClassForContinuousComputations.put"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.put" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.realtime_layer">
+<code class="descname">realtime_layer</code><a class="headerlink" href="#oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.realtime_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.jobs.GoogleCloudStorageConsistentJsonOutputWriter">
+<em class="property">class </em><code class="descclassname">oppia.core.jobs.</code><code class="descname">GoogleCloudStorageConsistentJsonOutputWriter</code><span class="sig-paren">(</span><em>status</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#GoogleCloudStorageConsistentJsonOutputWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.GoogleCloudStorageConsistentJsonOutputWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">mapreduce.output_writers.GoogleCloudStorageConsistentOutputWriter</span></code></p>
+<dl class="method">
+<dt id="oppia.core.jobs.GoogleCloudStorageConsistentJsonOutputWriter.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#GoogleCloudStorageConsistentJsonOutputWriter.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.GoogleCloudStorageConsistentJsonOutputWriter.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.jobs.JobCleanupManager">
+<em class="property">class </em><code class="descclassname">oppia.core.jobs.</code><code class="descname">JobCleanupManager</code><a class="reference internal" href="_modules/oppia/core/jobs.html#JobCleanupManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.JobCleanupManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.core.jobs.BaseMapReduceJobManager" title="oppia.core.jobs.BaseMapReduceJobManager"><code class="xref py py-class docutils literal"><span class="pre">oppia.core.jobs.BaseMapReduceJobManager</span></code></a></p>
+<p>One-off job for cleaning up old auxiliary entities for MR jobs.</p>
+<dl class="classmethod">
+<dt id="oppia.core.jobs.JobCleanupManager.entity_classes_to_map_over">
+<em class="property">classmethod </em><code class="descname">entity_classes_to_map_over</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#JobCleanupManager.entity_classes_to_map_over"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.JobCleanupManager.entity_classes_to_map_over" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="oppia.core.jobs.JobCleanupManager.map">
+<em class="property">static </em><code class="descname">map</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#JobCleanupManager.map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.JobCleanupManager.map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="oppia.core.jobs.JobCleanupManager.reduce">
+<em class="property">static </em><code class="descname">reduce</code><span class="sig-paren">(</span><em>key</em>, <em>stringified_values</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#JobCleanupManager.reduce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.JobCleanupManager.reduce" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.jobs.MapReduceJobPipeline">
+<em class="property">class </em><code class="descclassname">oppia.core.jobs.</code><code class="descname">MapReduceJobPipeline</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#MapReduceJobPipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.MapReduceJobPipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">mapreduce.pipeline_base.PipelineBase</span></code></p>
+<dl class="method">
+<dt id="oppia.core.jobs.MapReduceJobPipeline.finalized">
+<code class="descname">finalized</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#MapReduceJobPipeline.finalized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.MapReduceJobPipeline.finalized" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.jobs.MapReduceJobPipeline.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>job_id</em>, <em>job_class_str</em>, <em>kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#MapReduceJobPipeline.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.MapReduceJobPipeline.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.jobs.MultipleDatastoreEntitiesInputReader">
+<em class="property">class </em><code class="descclassname">oppia.core.jobs.</code><code class="descname">MultipleDatastoreEntitiesInputReader</code><span class="sig-paren">(</span><em>reader_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#MultipleDatastoreEntitiesInputReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.MultipleDatastoreEntitiesInputReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">mapreduce.input_readers.InputReader</span></code></p>
+<dl class="classmethod">
+<dt id="oppia.core.jobs.MultipleDatastoreEntitiesInputReader.from_json">
+<em class="property">classmethod </em><code class="descname">from_json</code><span class="sig-paren">(</span><em>input_shard_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#MultipleDatastoreEntitiesInputReader.from_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.MultipleDatastoreEntitiesInputReader.from_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.MultipleDatastoreEntitiesInputReader.split_input">
+<em class="property">classmethod </em><code class="descname">split_input</code><span class="sig-paren">(</span><em>mapper_spec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#MultipleDatastoreEntitiesInputReader.split_input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.MultipleDatastoreEntitiesInputReader.split_input" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.jobs.MultipleDatastoreEntitiesInputReader.to_json">
+<code class="descname">to_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#MultipleDatastoreEntitiesInputReader.to_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.MultipleDatastoreEntitiesInputReader.to_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.jobs.MultipleDatastoreEntitiesInputReader.validate">
+<em class="property">classmethod </em><code class="descname">validate</code><span class="sig-paren">(</span><em>mapper_spec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#MultipleDatastoreEntitiesInputReader.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.MultipleDatastoreEntitiesInputReader.validate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.jobs.StoreMapReduceResults">
+<em class="property">class </em><code class="descclassname">oppia.core.jobs.</code><code class="descname">StoreMapReduceResults</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#StoreMapReduceResults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.StoreMapReduceResults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">mapreduce.pipeline_base.PipelineBase</span></code></p>
+<dl class="method">
+<dt id="oppia.core.jobs.StoreMapReduceResults.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>job_id</em>, <em>job_class_str</em>, <em>output</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#StoreMapReduceResults.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.StoreMapReduceResults.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.jobs.get_continuous_computations_info">
+<code class="descclassname">oppia.core.jobs.</code><code class="descname">get_continuous_computations_info</code><span class="sig-paren">(</span><em>cc_classes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#get_continuous_computations_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.get_continuous_computations_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns data about the given computations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cc_classes</strong> &#8211; a list of subclasses of BaseContinuousComputationManager.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of dicts, each representing a continuous computation. Each dict
+has the following keys:
+- &#8216;computation_type&#8217;: the type of the computation
+- &#8216;status_code&#8217;: the current status of the computation
+- &#8216;last_started_msec&#8217;: when a batch job for the computation was last<blockquote>
+<div>started, in milliseconds since the epoch</div></blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt>&#8216;last_finished_msec&#8217;: when a batch job for the computation last</dt>
+<dd>finished, in milliseconds since the epoch</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>&#8216;last_stopped_msec&#8217;: when a batch job for the computation was last</dt>
+<dd>stopped, in milliseconds since the epoch</dd>
+</dl>
+</li>
+<li>&#8216;active_realtime_layer_index&#8217;: the index of the active realtime layer</li>
+<li><dl class="first docutils">
+<dt>&#8216;is_startable&#8217;: whether an admin should be allowed to start this</dt>
+<dd>computation</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>&#8216;is_stoppable&#8217;: whether an admin should be allowed to stop this</dt>
+<dd>computation</dd>
+</dl>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.jobs.get_data_for_recent_jobs">
+<code class="descclassname">oppia.core.jobs.</code><code class="descname">get_data_for_recent_jobs</code><span class="sig-paren">(</span><em>recency_msec=1209600000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#get_data_for_recent_jobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.get_data_for_recent_jobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list containing data about recent jobs.</p>
+<p>This list is arranged in descending order based on the time the job
+was enqueued. At most NUM_JOBS_IN_DASHBOARD_LIMIT job descriptions are
+returned.</p>
+<p>Args:
+- recency_secs: the threshold for a recent job, in seconds.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.jobs.get_data_for_unfinished_jobs">
+<code class="descclassname">oppia.core.jobs.</code><code class="descname">get_data_for_unfinished_jobs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#get_data_for_unfinished_jobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.get_data_for_unfinished_jobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list containing data about all unfinished jobs.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.jobs.get_job_output">
+<code class="descclassname">oppia.core.jobs.</code><code class="descname">get_job_output</code><span class="sig-paren">(</span><em>job_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#get_job_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.get_job_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the output of a job.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.jobs.get_stuck_jobs">
+<code class="descclassname">oppia.core.jobs.</code><code class="descname">get_stuck_jobs</code><span class="sig-paren">(</span><em>recency_msecs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs.html#get_stuck_jobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs.get_stuck_jobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of jobs which were last updated at most recency_msecs
+milliseconds ago and have experienced more than one retry.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.core.jobs_registry">
+<span id="oppia-core-jobs-registry-module"></span><h2>oppia.core.jobs_registry module<a class="headerlink" href="#module-oppia.core.jobs_registry" title="Permalink to this headline">¶</a></h2>
+<p>Job registries.</p>
+<dl class="class">
+<dt id="oppia.core.jobs_registry.ContinuousComputationEventDispatcher">
+<em class="property">class </em><code class="descclassname">oppia.core.jobs_registry.</code><code class="descname">ContinuousComputationEventDispatcher</code><a class="reference internal" href="_modules/oppia/core/jobs_registry.html#ContinuousComputationEventDispatcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs_registry.ContinuousComputationEventDispatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Dispatches events to the relevant ContinuousComputation classes.</p>
+<dl class="classmethod">
+<dt id="oppia.core.jobs_registry.ContinuousComputationEventDispatcher.dispatch_event">
+<em class="property">classmethod </em><code class="descname">dispatch_event</code><span class="sig-paren">(</span><em>event_type</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/jobs_registry.html#ContinuousComputationEventDispatcher.dispatch_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.jobs_registry.ContinuousComputationEventDispatcher.dispatch_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dispatches an incoming event to the ContinuousComputation
+classes which listen to events of that type.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-core-jobs-test-module">
+<h2>oppia.core.jobs_test module<a class="headerlink" href="#oppia-core-jobs-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.core" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.core package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.core.counters">oppia.core.counters module</a></li>
+<li><a class="reference internal" href="#module-oppia.core.jobs">oppia.core.jobs module</a></li>
+<li><a class="reference internal" href="#module-oppia.core.jobs_registry">oppia.core.jobs_registry module</a></li>
+<li><a class="reference internal" href="#oppia-core-jobs-test-module">oppia.core.jobs_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.core">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.core.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.core.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

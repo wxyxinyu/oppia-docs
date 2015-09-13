@@ -1,0 +1,454 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.utils &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.utils</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Common utility functions.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;sll@google.com (Sean Lip)&#39;</span>
+
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">StringIO</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">unicodedata</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">import</span> <span class="nn">urlparse</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span> <span class="nn">zipfile</span>
+
+
+<div class="viewcode-block" id="InvalidInputException"><a class="viewcode-back" href="../../oppia.html#oppia.utils.InvalidInputException">[docs]</a><span class="k">class</span> <span class="nc">InvalidInputException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Error class for invalid input.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ValidationError"><a class="viewcode-back" href="../../oppia.html#oppia.utils.ValidationError">[docs]</a><span class="k">class</span> <span class="nc">ValidationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Error class for when a domain object fails validation.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ExplorationConversionError"><a class="viewcode-back" href="../../oppia.html#oppia.utils.ExplorationConversionError">[docs]</a><span class="k">class</span> <span class="nc">ExplorationConversionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Error class for when an exploration fails to convert from a certain</span>
+<span class="sd">    version to a certain version.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="create_enum"><a class="viewcode-back" href="../../oppia.html#oppia.utils.create_enum">[docs]</a><span class="k">def</span> <span class="nf">create_enum</span><span class="p">(</span><span class="o">*</span><span class="n">sequential</span><span class="p">,</span> <span class="o">**</span><span class="n">names</span><span class="p">):</span>
+    <span class="n">enums</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">sequential</span><span class="p">,</span> <span class="n">sequential</span><span class="p">),</span> <span class="o">**</span><span class="n">names</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="s">&#39;Enum&#39;</span><span class="p">,</span> <span class="p">(),</span> <span class="n">enums</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_file_contents"><a class="viewcode-back" href="../../oppia.html#oppia.utils.get_file_contents">[docs]</a><span class="k">def</span> <span class="nf">get_file_contents</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the contents of a file, given a relative filepath from oppia/.&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span> <span class="k">if</span> <span class="n">raw_bytes</span> <span class="k">else</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_exploration_components_from_dir"><a class="viewcode-back" href="../../oppia.html#oppia.utils.get_exploration_components_from_dir">[docs]</a><span class="k">def</span> <span class="nf">get_exploration_components_from_dir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the (yaml, assets) from the contents of an exploration data dir.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      dir_path: a full path to the exploration root directory.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      a 2-tuple, the first element of which is a yaml string, and the second</span>
+<span class="sd">      element of which is a list of (filepath, content) 2-tuples. The filepath</span>
+<span class="sd">      does not include the assets/ prefix.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      Exception: if the following condition doesn&#39;t hold: &quot;There is exactly one</span>
+<span class="sd">        file not in assets/, and this file has a .yaml suffix&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">yaml_content</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">assets_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">dir_path_array</span> <span class="o">=</span> <span class="n">dir_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">dir_path_array</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+        <span class="n">dir_path_array</span> <span class="o">=</span> <span class="n">dir_path_array</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">dir_path_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dir_path_array</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">dir_path</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">directory</span> <span class="ow">in</span> <span class="n">dirs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">root</span> <span class="o">==</span> <span class="n">dir_path</span> <span class="ow">and</span> <span class="n">directory</span> <span class="o">!=</span> <span class="s">&#39;assets&#39;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="s">&#39;The only directory in </span><span class="si">%s</span><span class="s"> should be assets/&#39;</span> <span class="o">%</span> <span class="n">dir_path</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">root</span> <span class="o">==</span> <span class="n">dir_path</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">filepath</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.DS_Store&#39;</span><span class="p">):</span>
+                    <span class="c"># These files are added automatically by Mac OS Xsystems.</span>
+                    <span class="c"># We ignore them.</span>
+                    <span class="k">continue</span>
+
+                <span class="k">if</span> <span class="n">yaml_content</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;More than one non-asset file specified &#39;</span>
+                                    <span class="s">&#39;for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">dir_path</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">filepath</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.yaml&#39;</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Found invalid non-asset file </span><span class="si">%s</span><span class="s">. There &#39;</span>
+                                    <span class="s">&#39;should only be a single non-asset file, &#39;</span>
+                                    <span class="s">&#39;and it should have a .yaml suffix.&#39;</span> <span class="o">%</span>
+                                    <span class="n">filepath</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">yaml_content</span> <span class="o">=</span> <span class="n">get_file_contents</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">filepath_array</span> <span class="o">=</span> <span class="n">filepath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+                <span class="c"># The additional offset is to remove the &#39;assets/&#39; prefix.</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="s">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filepath_array</span><span class="p">[</span><span class="n">dir_path_length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:])</span>
+                <span class="n">assets_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">filename</span><span class="p">,</span> <span class="n">get_file_contents</span><span class="p">(</span>
+                    <span class="n">filepath</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="o">=</span><span class="bp">True</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">yaml_content</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;No yaml file specifed for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">dir_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">yaml_content</span><span class="p">,</span> <span class="n">assets_list</span>
+
+</div>
+<div class="viewcode-block" id="get_exploration_components_from_zip"><a class="viewcode-back" href="../../oppia.html#oppia.utils.get_exploration_components_from_zip">[docs]</a><span class="k">def</span> <span class="nf">get_exploration_components_from_zip</span><span class="p">(</span><span class="n">zip_file_contents</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the (yaml, assets) from the contents of an exploration zip file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      zip_file_contents: a string of raw bytes representing the contents of</span>
+<span class="sd">        a zip file that comprises the exploration.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      a 2-tuple, the first element of which is a yaml string, and the second</span>
+<span class="sd">      element of which is a list of (filepath, content) 2-tuples. The filepath</span>
+<span class="sd">      does not include the assets/ prefix.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      Exception: if the following condition doesn&#39;t hold: &quot;There is exactly one</span>
+<span class="sd">        file not in assets/, and this file has a .yaml suffix&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">o</span> <span class="o">=</span> <span class="n">StringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+    <span class="n">o</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">zip_file_contents</span><span class="p">)</span>
+
+    <span class="n">zf</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">yaml_content</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">assets_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="n">zf</span><span class="o">.</span><span class="n">namelist</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">filepath</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;assets/&#39;</span><span class="p">):</span>
+            <span class="n">assets_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filepath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]),</span>
+                               <span class="n">zf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">filepath</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">yaml_content</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="s">&#39;More than one non-asset file specified for zip file&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">filepath</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.yaml&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Found invalid non-asset file </span><span class="si">%s</span><span class="s">. There &#39;</span>
+                                <span class="s">&#39;should only be a single file not in assets/, &#39;</span>
+                                <span class="s">&#39;and it should have a .yaml suffix.&#39;</span> <span class="o">%</span>
+                                <span class="n">filepath</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">yaml_content</span> <span class="o">=</span> <span class="n">zf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">yaml_content</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;No yaml file specified in zip file contents&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">yaml_content</span><span class="p">,</span> <span class="n">assets_list</span>
+
+</div>
+<div class="viewcode-block" id="get_comma_sep_string_from_list"><a class="viewcode-back" href="../../oppia.html#oppia.utils.get_comma_sep_string_from_list">[docs]</a><span class="k">def</span> <span class="nf">get_comma_sep_string_from_list</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Turns a list of items into a comma-separated string.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">items</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> and </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">items</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="to_ascii"><a class="viewcode-back" href="../../oppia.html#oppia.utils.to_ascii">[docs]</a><span class="k">def</span> <span class="nf">to_ascii</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Change unicode characters in a string to ascii if possible.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span>
+        <span class="s">&#39;NFKD&#39;</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">string</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;ascii&#39;</span><span class="p">,</span> <span class="s">&#39;ignore&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="yaml_from_dict"><a class="viewcode-back" href="../../oppia.html#oppia.utils.yaml_from_dict">[docs]</a><span class="k">def</span> <span class="nf">yaml_from_dict</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">80</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the YAML representation of a dict.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">default_flow_style</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dict_from_yaml"><a class="viewcode-back" href="../../oppia.html#oppia.utils.dict_from_yaml">[docs]</a><span class="k">def</span> <span class="nf">dict_from_yaml</span><span class="p">(</span><span class="n">yaml_str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the dict representation of a YAML string.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">retrieved_dict</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">yaml_str</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">retrieved_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">retrieved_dict</span>
+    <span class="k">except</span> <span class="n">yaml</span><span class="o">.</span><span class="n">YAMLError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidInputException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="recursively_remove_key"><a class="viewcode-back" href="../../oppia.html#oppia.utils.recursively_remove_key">[docs]</a><span class="k">def</span> <span class="nf">recursively_remove_key</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">key_to_remove</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursively removes keys from a list or dict.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+            <span class="n">recursively_remove_key</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">key_to_remove</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key_to_remove</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">obj</span><span class="p">[</span><span class="n">key_to_remove</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">unused_value</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">recursively_remove_key</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">key_to_remove</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_random_int"><a class="viewcode-back" href="../../oppia.html#oppia.utils.get_random_int">[docs]</a><span class="k">def</span> <span class="nf">get_random_int</span><span class="p">(</span><span class="n">upper_bound</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a random integer in [0, upper_bound).&quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">upper_bound</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">upper_bound</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">generator</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">SystemRandom</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">generator</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_random_choice"><a class="viewcode-back" href="../../oppia.html#oppia.utils.get_random_choice">[docs]</a><span class="k">def</span> <span class="nf">get_random_choice</span><span class="p">(</span><span class="n">alist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets a random element from a list.&quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">alist</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">alist</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">get_random_int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">alist</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">alist</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="convert_png_to_data_url"><a class="viewcode-back" href="../../oppia.html#oppia.utils.convert_png_to_data_url">[docs]</a><span class="k">def</span> <span class="nf">convert_png_to_data_url</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts the png file at filepath to a data URL.</span>
+
+<span class="sd">    This method is currently used only in tests for RTE extensions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_contents</span> <span class="o">=</span> <span class="n">get_file_contents</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;rb&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s">&#39;data:image/png;base64,</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">urllib</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span>
+        <span class="n">file_contents</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;base64&#39;</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="camelcase_to_hyphenated"><a class="viewcode-back" href="../../oppia.html#oppia.utils.camelcase_to_hyphenated">[docs]</a><span class="k">def</span> <span class="nf">camelcase_to_hyphenated</span><span class="p">(</span><span class="n">camelcase_str</span><span class="p">):</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;(.)([A-Z][a-z]+)&#39;</span><span class="p">,</span> <span class="s">r&#39;\1-\2&#39;</span><span class="p">,</span> <span class="n">camelcase_str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;([a-z0-9])([A-Z])&#39;</span><span class="p">,</span> <span class="s">r&#39;\1-\2&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="set_url_query_parameter"><a class="viewcode-back" href="../../oppia.html#oppia.utils.set_url_query_parameter">[docs]</a><span class="k">def</span> <span class="nf">set_url_query_parameter</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Set or replace a query parameter, and return the modified URL.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s">&#39;URL query parameter name must be a string, received </span><span class="si">%s</span><span class="s">&#39;</span>
+            <span class="o">%</span> <span class="n">param_name</span><span class="p">)</span>
+
+    <span class="n">scheme</span><span class="p">,</span> <span class="n">netloc</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">query_string</span><span class="p">,</span> <span class="n">fragment</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">urlsplit</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="n">query_params</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">parse_qs</span><span class="p">(</span><span class="n">query_string</span><span class="p">)</span>
+
+    <span class="n">query_params</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">param_value</span><span class="p">]</span>
+    <span class="n">new_query_string</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">urlencode</span><span class="p">(</span><span class="n">query_params</span><span class="p">,</span> <span class="n">doseq</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">urlunsplit</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">netloc</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">new_query_string</span><span class="p">,</span> <span class="n">fragment</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="JSONEncoderForHTML"><a class="viewcode-back" href="../../oppia.html#oppia.utils.JSONEncoderForHTML">[docs]</a><span class="k">class</span> <span class="nc">JSONEncoderForHTML</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Encodes JSON that is safe to embed in HTML.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="JSONEncoderForHTML.encode"><a class="viewcode-back" href="../../oppia.html#oppia.utils.JSONEncoderForHTML.encode">[docs]</a>    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="n">chunks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterencode</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensure_ascii</span> <span class="k">else</span> <span class="s">u&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="JSONEncoderForHTML.iterencode"><a class="viewcode-back" href="../../oppia.html#oppia.utils.JSONEncoderForHTML.iterencode">[docs]</a>    <span class="k">def</span> <span class="nf">iterencode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">_one_shot</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">chunks</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">JSONEncoderForHTML</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">iterencode</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">_one_shot</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">chunk</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&amp;&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">u0026&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                <span class="s">&#39;&lt;&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">u003c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">u003e&#39;</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="convert_to_hash"><a class="viewcode-back" href="../../oppia.html#oppia.utils.convert_to_hash">[docs]</a><span class="k">def</span> <span class="nf">convert_to_hash</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">max_length</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a string to a SHA1 hash.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s">&#39;Expected string, received </span><span class="si">%s</span><span class="s"> of type </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+            <span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">string</span><span class="p">)))</span>
+
+    <span class="n">encoded_string</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">urlsafe_b64encode</span><span class="p">(</span>
+        <span class="n">hashlib</span><span class="o">.</span><span class="n">sha1</span><span class="p">(</span><span class="n">string</span><span class="p">)</span><span class="o">.</span><span class="n">digest</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">encoded_string</span><span class="p">[:</span><span class="n">max_length</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="base64_from_int"><a class="viewcode-back" href="../../oppia.html#oppia.utils.base64_from_int">[docs]</a><span class="k">def</span> <span class="nf">base64_from_int</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="nb">bytes</span><span class="p">([</span><span class="n">value</span><span class="p">]))</span>
+
+</div>
+<div class="viewcode-block" id="get_time_in_millisecs"><a class="viewcode-back" href="../../oppia.html#oppia.utils.get_time_in_millisecs">[docs]</a><span class="k">def</span> <span class="nf">get_time_in_millisecs</span><span class="p">(</span><span class="n">datetime_obj</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns time in milliseconds since the Epoch.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      datetime_obj: An object of type datetime.datetime.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">mktime</span><span class="p">(</span><span class="n">datetime_obj</span><span class="o">.</span><span class="n">timetuple</span><span class="p">())</span> <span class="o">*</span> <span class="mi">1000</span>
+    <span class="k">return</span> <span class="n">seconds</span> <span class="o">+</span> <span class="n">datetime_obj</span><span class="o">.</span><span class="n">microsecond</span> <span class="o">/</span> <span class="mf">1000.0</span>
+
+</div>
+<div class="viewcode-block" id="get_current_time_in_millisecs"><a class="viewcode-back" href="../../oppia.html#oppia.utils.get_current_time_in_millisecs">[docs]</a><span class="k">def</span> <span class="nf">get_current_time_in_millisecs</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns time in milliseconds since the Epoch.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">())</span>
+
+</div>
+<div class="viewcode-block" id="get_human_readable_time_string"><a class="viewcode-back" href="../../oppia.html#oppia.utils.get_human_readable_time_string">[docs]</a><span class="k">def</span> <span class="nf">get_human_readable_time_string</span><span class="p">(</span><span class="n">time_msec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given a time in milliseconds since the epoch, get a human-readable</span>
+<span class="sd">    time string for the admin dashboard.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%B </span><span class="si">%d</span><span class="s"> %H:%M:%S&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">gmtime</span><span class="p">(</span><span class="n">time_msec</span> <span class="o">/</span> <span class="mf">1000.0</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="generate_random_string"><a class="viewcode-back" href="../../oppia.html#oppia.utils.generate_random_string">[docs]</a><span class="k">def</span> <span class="nf">generate_random_string</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">urlsafe_b64encode</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">urandom</span><span class="p">(</span><span class="n">length</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="vfs_construct_path"><a class="viewcode-back" href="../../oppia.html#oppia.utils.vfs_construct_path">[docs]</a><span class="k">def</span> <span class="nf">vfs_construct_path</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mimics behavior of os.path.join on Posix machines.&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">a</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">p</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">b</span>
+        <span class="k">elif</span> <span class="n">path</span> <span class="o">==</span> <span class="s">&#39;&#39;</span> <span class="ow">or</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">+=</span> <span class="n">b</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">+=</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="n">b</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+</div>
+<div class="viewcode-block" id="vfs_normpath"><a class="viewcode-back" href="../../oppia.html#oppia.utils.vfs_normpath">[docs]</a><span class="k">def</span> <span class="nf">vfs_normpath</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Normalize path from posixpath.py, eliminating double slashes, etc.&quot;&quot;&quot;</span>
+    <span class="c"># Preserve unicode (if path is unicode)</span>
+    <span class="n">slash</span><span class="p">,</span> <span class="n">dot</span> <span class="o">=</span> <span class="p">(</span><span class="s">u&#39;/&#39;</span><span class="p">,</span> <span class="s">u&#39;.&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="s">&#39;.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">path</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dot</span>
+    <span class="n">initial_slashes</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+    <span class="c"># POSIX allows one or two initial slashes, but treats three or more</span>
+    <span class="c"># as single slash.</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">initial_slashes</span> <span class="ow">and</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;//&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;///&#39;</span><span class="p">)):</span>
+        <span class="n">initial_slashes</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">comps</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+    <span class="n">new_comps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">comps</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">comp</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;.&#39;</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">comp</span> <span class="o">!=</span> <span class="s">&#39;..&#39;</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">initial_slashes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">new_comps</span><span class="p">)</span> <span class="ow">or</span>
+             <span class="p">(</span><span class="n">new_comps</span> <span class="ow">and</span> <span class="n">new_comps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;..&#39;</span><span class="p">)):</span>
+            <span class="n">new_comps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">new_comps</span><span class="p">:</span>
+            <span class="n">new_comps</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+    <span class="n">comps</span> <span class="o">=</span> <span class="n">new_comps</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">slash</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">comps</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">initial_slashes</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">slash</span> <span class="o">*</span> <span class="n">initial_slashes</span> <span class="o">+</span> <span class="n">path</span>
+    <span class="k">return</span> <span class="n">path</span> <span class="ow">or</span> <span class="n">dot</span>
+
+</div>
+<div class="viewcode-block" id="get_short_language_description"><a class="viewcode-back" href="../../oppia.html#oppia.utils.get_short_language_description">[docs]</a><span class="k">def</span> <span class="nf">get_short_language_description</span><span class="p">(</span><span class="n">full_language_description</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given one of the descriptions in feconf.ALL_LANGUAGE_CODES, generates</span>
+<span class="sd">    the corresponding short description.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s">&#39; (&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">full_language_description</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">full_language_description</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">full_language_description</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39; (&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">full_language_description</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

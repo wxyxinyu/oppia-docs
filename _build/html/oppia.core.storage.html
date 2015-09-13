@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.storage package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-core-storage-package">
+<h1>oppia.core.storage package<a class="headerlink" href="#oppia-core-storage-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.storage.base_model.html">oppia.core.storage.base_model package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.base_model.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.base_model.html#module-oppia.core.storage.base_model.gae_models">oppia.core.storage.base_model.gae_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.base_model.html#oppia-core-storage-base-model-gae-models-test-module">oppia.core.storage.base_model.gae_models_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.base_model.html#module-oppia.core.storage.base_model">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.storage.config.html">oppia.core.storage.config package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.config.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.config.html#module-oppia.core.storage.config.gae_models">oppia.core.storage.config.gae_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.config.html#module-oppia.core.storage.config">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.storage.email.html">oppia.core.storage.email package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.email.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.email.html#module-oppia.core.storage.email.gae_models">oppia.core.storage.email.gae_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.email.html#oppia-core-storage-email-gae-models-test-module">oppia.core.storage.email.gae_models_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.email.html#module-oppia.core.storage.email">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.storage.exploration.html">oppia.core.storage.exploration package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.exploration.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.exploration.html#module-oppia.core.storage.exploration.gae_models">oppia.core.storage.exploration.gae_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.exploration.html#module-oppia.core.storage.exploration">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.storage.feedback.html">oppia.core.storage.feedback package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.feedback.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.feedback.html#module-oppia.core.storage.feedback.gae_models">oppia.core.storage.feedback.gae_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.feedback.html#module-oppia.core.storage.feedback">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.storage.file.html">oppia.core.storage.file package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.file.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.file.html#module-oppia.core.storage.file.gae_models">oppia.core.storage.file.gae_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.file.html#module-oppia.core.storage.file">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.storage.job.html">oppia.core.storage.job package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.job.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.job.html#module-oppia.core.storage.job.gae_models">oppia.core.storage.job.gae_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.job.html#module-oppia.core.storage.job">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.storage.recommendations.html">oppia.core.storage.recommendations package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.recommendations.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.recommendations.html#module-oppia.core.storage.recommendations.gae_models">oppia.core.storage.recommendations.gae_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.recommendations.html#module-oppia.core.storage.recommendations">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.storage.statistics.html">oppia.core.storage.statistics package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.statistics.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.statistics.html#module-oppia.core.storage.statistics.gae_models">oppia.core.storage.statistics.gae_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.statistics.html#module-oppia.core.storage.statistics">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.storage.user.html">oppia.core.storage.user package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.user.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.user.html#module-oppia.core.storage.user.gae_models">oppia.core.storage.user.gae_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.storage.user.html#module-oppia.core.storage.user">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="module-oppia.core.storage">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.core.storage" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.core.storage package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#module-oppia.core.storage">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.core.storage.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.core.storage.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

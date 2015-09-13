@@ -1,0 +1,218 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.recommendations_jobs &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.recommendations_jobs</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2015 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Jobs for recommendations.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Xinyu Wu&#39;</span>
+
+<span class="kn">import</span> <span class="nn">ast</span>
+
+<span class="kn">from</span> <span class="nn">core</span> <span class="kn">import</span> <span class="n">jobs</span>
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">exp_models</span><span class="p">,</span> <span class="n">recommendations_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">exploration</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">recommendations</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="ExplorationRecommendationsRealtimeModel"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_jobs.ExplorationRecommendationsRealtimeModel">[docs]</a><span class="k">class</span> <span class="nc">ExplorationRecommendationsRealtimeModel</span><span class="p">(</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">BaseRealtimeDatastoreClassForContinuousComputations</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ExplorationRecommendationsAggregator"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_jobs.ExplorationRecommendationsAggregator">[docs]</a><span class="k">class</span> <span class="nc">ExplorationRecommendationsAggregator</span><span class="p">(</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">BaseContinuousComputationManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A continuous-computation job that computes recommendations for each</span>
+<span class="sd">    exploration.</span>
+
+<span class="sd">    This job does not have a realtime component. There will be a delay in</span>
+<span class="sd">    propagating new updates to recommendations; the length of the delay</span>
+<span class="sd">    will be approximately the time it takes a batch job to run.&quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExplorationRecommendationsAggregator.get_event_types_listened_to"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_jobs.ExplorationRecommendationsAggregator.get_event_types_listened_to">[docs]</a>    <span class="k">def</span> <span class="nf">get_event_types_listened_to</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_realtime_datastore_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ExplorationRecommendationsRealtimeModel</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_batch_job_manager_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ExplorationRecommendationsMRJobManager</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_handle_incoming_event</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">active_realtime_layer</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ExplorationRecommendationsMRJobManager"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_jobs.ExplorationRecommendationsMRJobManager">[docs]</a><span class="k">class</span> <span class="nc">ExplorationRecommendationsMRJobManager</span><span class="p">(</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">BaseMapReduceJobManagerForContinuousComputations</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Manager for a MapReduce job that computes a list of recommended</span>
+<span class="sd">    explorations to play after completing some exploration.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_continuous_computation_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ExplorationRecommendationsAggregator</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExplorationRecommendationsMRJobManager.entity_classes_to_map_over"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_jobs.ExplorationRecommendationsMRJobManager.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">exp_models</span><span class="o">.</span><span class="n">ExpSummaryModel</span><span class="p">]</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExplorationRecommendationsMRJobManager.map"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_jobs.ExplorationRecommendationsMRJobManager.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_services</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">recommendations_services</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">rights_manager</span>
+
+        <span class="c"># Only process the exploration if it is not private</span>
+        <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c"># Note: There is a threshold so that bad recommendations will be</span>
+        <span class="c"># discarded even if an exploration has few similar explorations.</span>
+        <span class="n">SIMILARITY_SCORE_THRESHOLD</span> <span class="o">=</span> <span class="mf">3.0</span>
+
+        <span class="n">exp_summary_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">exp_summaries_dict</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">exp_services</span><span class="o">.</span><span class="n">get_non_private_exploration_summaries</span><span class="p">())</span>
+
+        <span class="c"># Note: This is needed because the exp_summaries_dict is sometimes</span>
+        <span class="c"># different from the summaries in the datastore, especially when</span>
+        <span class="c"># new explorations are added.</span>
+        <span class="k">if</span> <span class="n">exp_summary_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exp_summaries_dict</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">reference_exp_summary</span> <span class="o">=</span> <span class="n">exp_summaries_dict</span><span class="p">[</span><span class="n">exp_summary_id</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">compared_exp_id</span><span class="p">,</span> <span class="n">compared_exp_summary</span> <span class="ow">in</span> <span class="n">exp_summaries_dict</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">compared_exp_id</span> <span class="o">!=</span> <span class="n">exp_summary_id</span><span class="p">:</span>
+                <span class="n">similarity_score</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">recommendations_services</span><span class="o">.</span><span class="n">get_item_similarity</span><span class="p">(</span>
+                        <span class="n">reference_exp_summary</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                        <span class="n">reference_exp_summary</span><span class="o">.</span><span class="n">language_code</span><span class="p">,</span>
+                        <span class="n">reference_exp_summary</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">,</span>
+                        <span class="n">compared_exp_summary</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                        <span class="n">compared_exp_summary</span><span class="o">.</span><span class="n">language_code</span><span class="p">,</span>
+                        <span class="n">compared_exp_summary</span><span class="o">.</span><span class="n">exploration_model_last_updated</span><span class="p">,</span>
+                        <span class="n">compared_exp_summary</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">,</span>
+                        <span class="n">compared_exp_summary</span><span class="o">.</span><span class="n">status</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">similarity_score</span> <span class="o">&gt;=</span> <span class="n">SIMILARITY_SCORE_THRESHOLD</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">exp_summary_id</span><span class="p">,</span> <span class="p">{</span>
+                        <span class="s">&#39;similarity_score&#39;</span><span class="p">:</span> <span class="n">similarity_score</span><span class="p">,</span>
+                        <span class="s">&#39;exp_id&#39;</span><span class="p">:</span> <span class="n">compared_exp_id</span>
+                    <span class="p">})</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExplorationRecommendationsMRJobManager.reduce"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.recommendations_jobs.ExplorationRecommendationsMRJobManager.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">stringified_values</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">recommendations_services</span>
+
+        <span class="n">MAX_RECOMMENDATIONS</span> <span class="o">=</span> <span class="mi">10</span>
+
+        <span class="n">other_exploration_similarities</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">stringified_values</span><span class="p">],</span>
+            <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s">&#39;similarity_score&#39;</span><span class="p">])</span>
+
+        <span class="n">recommended_exploration_ids</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">item</span><span class="p">[</span><span class="s">&#39;exp_id&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">other_exploration_similarities</span><span class="p">[:</span><span class="n">MAX_RECOMMENDATIONS</span><span class="p">]]</span>
+
+        <span class="n">recommendations_services</span><span class="o">.</span><span class="n">set_recommendations</span><span class="p">(</span>
+            <span class="n">key</span><span class="p">,</span> <span class="n">recommended_exploration_ids</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

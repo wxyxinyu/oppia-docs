@@ -1,0 +1,457 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.user_services &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.user_services</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Services for user data.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Stephanie Federwisch&#39;</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="n">current_user_services</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_current_user_services</span><span class="p">()</span>
+<span class="p">(</span><span class="n">user_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span><span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">user</span><span class="p">])</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="n">MAX_USERNAME_LENGTH</span> <span class="o">=</span> <span class="mi">50</span>
+
+
+<div class="viewcode-block" id="UserSettings"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.UserSettings">[docs]</a><span class="k">class</span> <span class="nc">UserSettings</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Value object representing a user&#39;s settings.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">last_agreed_to_terms</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">last_started_state_editor_tutorial</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">profile_picture_data_url</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">user_bio</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span>
+            <span class="n">preferred_language_codes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">user_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="n">email</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">username</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_agreed_to_terms</span> <span class="o">=</span> <span class="n">last_agreed_to_terms</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_started_state_editor_tutorial</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">last_started_state_editor_tutorial</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">profile_picture_data_url</span> <span class="o">=</span> <span class="n">profile_picture_data_url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_bio</span> <span class="o">=</span> <span class="n">user_bio</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preferred_language_codes</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">preferred_language_codes</span> <span class="k">if</span> <span class="n">preferred_language_codes</span> <span class="k">else</span> <span class="p">[])</span>
+
+<div class="viewcode-block" id="UserSettings.validate"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.UserSettings.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="s">&#39;Expected user_id to be a string, received </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s">&#39;No user id specified.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="s">&#39;Expected email to be a string, received </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s">&#39;No user email specified.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="s">&#39;@&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;@&#39;</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;@&#39;</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="s">&#39;Invalid email address: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">truncated_email</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">first_part</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;@&#39;</span><span class="p">)]</span>
+        <span class="n">last_part</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;@&#39;</span><span class="p">):]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">first_part</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">first_part</span> <span class="o">=</span> <span class="s">&#39;..&#39;</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">first_part</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">first_part</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">..&#39;</span> <span class="o">%</span> <span class="n">first_part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">first_part</span> <span class="o">=</span> <span class="n">first_part</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;..&#39;</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">first_part</span><span class="p">,</span> <span class="n">last_part</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_known_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># If this does not always return True, something has gone wrong.</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">normalized_username</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_username</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="UserSettings.normalize_username"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.UserSettings.normalize_username">[docs]</a>    <span class="k">def</span> <span class="nf">normalize_username</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">username</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">username</span> <span class="k">else</span> <span class="bp">None</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="UserSettings.require_valid_username"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.UserSettings.require_valid_username">[docs]</a>    <span class="k">def</span> <span class="nf">require_valid_username</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">username</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s">&#39;Empty username supplied.&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">username</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_USERNAME_LENGTH</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="s">&#39;A username can have at most </span><span class="si">%s</span><span class="s"> characters.&#39;</span>
+                <span class="o">%</span> <span class="n">MAX_USERNAME_LENGTH</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">feconf</span><span class="o">.</span><span class="n">ALPHANUMERIC_REGEX</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+                <span class="s">&#39;Usernames can only have alphanumeric characters.&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="s">&#39;admin&#39;</span> <span class="ow">in</span> <span class="n">username</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span>
+              <span class="s">&#39;oppia&#39;</span> <span class="ow">in</span> <span class="n">username</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span>
+              <span class="n">feconf</span><span class="o">.</span><span class="n">MIGRATION_BOT_USERNAME</span> <span class="ow">in</span> <span class="n">username</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()):</span>
+            <span class="c"># Admin usernames are reserved for admins. Note that &#39;admin&#39;</span>
+            <span class="c"># itself is already in use for the demo exploration.</span>
+            <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s">&#39;This username is not available.&#39;</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="is_username_taken"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.is_username_taken">[docs]</a><span class="k">def</span> <span class="nf">is_username_taken</span><span class="p">(</span><span class="n">username</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks if the given username is taken.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserSettingsModel</span><span class="o">.</span><span class="n">is_normalized_username_taken</span><span class="p">(</span>
+        <span class="n">UserSettings</span><span class="o">.</span><span class="n">normalize_username</span><span class="p">(</span><span class="n">username</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="get_email_from_user_id"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.get_email_from_user_id">[docs]</a><span class="k">def</span> <span class="nf">get_email_from_user_id</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the email from a given user_id.</span>
+
+<span class="sd">    Raises an Exception if the user is not found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user_settings</span> <span class="o">=</span> <span class="n">get_user_settings</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">user_settings</span><span class="o">.</span><span class="n">email</span>
+
+</div>
+<div class="viewcode-block" id="get_email_from_username"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.get_email_from_username">[docs]</a><span class="k">def</span> <span class="nf">get_email_from_username</span><span class="p">(</span><span class="n">username</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the email for a given username.</span>
+
+<span class="sd">    Returns None if the user is not found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserSettingsModel</span><span class="o">.</span><span class="n">get_by_normalized_username</span><span class="p">(</span>
+        <span class="n">UserSettings</span><span class="o">.</span><span class="n">normalize_username</span><span class="p">(</span><span class="n">username</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">user_model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">user_model</span><span class="o">.</span><span class="n">email</span>
+
+</div>
+<div class="viewcode-block" id="get_user_id_from_username"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.get_user_id_from_username">[docs]</a><span class="k">def</span> <span class="nf">get_user_id_from_username</span><span class="p">(</span><span class="n">username</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the user_id for a given username.</span>
+
+<span class="sd">    Returns None if the user is not found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserSettingsModel</span><span class="o">.</span><span class="n">get_by_normalized_username</span><span class="p">(</span>
+        <span class="n">UserSettings</span><span class="o">.</span><span class="n">normalize_username</span><span class="p">(</span><span class="n">username</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">user_model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">user_model</span><span class="o">.</span><span class="n">id</span>
+
+</div>
+<div class="viewcode-block" id="get_user_settings_from_username"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.get_user_settings_from_username">[docs]</a><span class="k">def</span> <span class="nf">get_user_settings_from_username</span><span class="p">(</span><span class="n">username</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the user settings for a given username.</span>
+
+<span class="sd">    Returns None if the user is not found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserSettingsModel</span><span class="o">.</span><span class="n">get_by_normalized_username</span><span class="p">(</span>
+        <span class="n">UserSettings</span><span class="o">.</span><span class="n">normalize_username</span><span class="p">(</span><span class="n">username</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">user_model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">get_user_settings</span><span class="p">(</span><span class="n">user_model</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_users_settings"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.get_users_settings">[docs]</a><span class="k">def</span> <span class="nf">get_users_settings</span><span class="p">(</span><span class="n">user_ids</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets domain objects representing the settings for the given user_ids.</span>
+
+<span class="sd">    If the given user_id does not exist, the corresponding entry in the</span>
+<span class="sd">    returned list is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user_settings_models</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserSettingsModel</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span><span class="n">user_ids</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">user_settings_models</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">user_ids</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">==</span> <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_COMMITTER_ID</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">UserSettings</span><span class="p">(</span>
+                <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_COMMITTER_ID</span><span class="p">,</span>
+                <span class="n">email</span><span class="o">=</span><span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_EMAIL_ADDRESS</span><span class="p">,</span>
+                <span class="n">username</span><span class="o">=</span><span class="s">&#39;admin&#39;</span><span class="p">,</span>
+                <span class="n">last_agreed_to_terms</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+                <span class="n">last_started_state_editor_tutorial</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="p">))</span>
+        <span class="k">elif</span> <span class="n">model</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">UserSettings</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+                <span class="n">last_agreed_to_terms</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">last_agreed_to_terms</span><span class="p">,</span>
+                <span class="n">last_started_state_editor_tutorial</span><span class="o">=</span><span class="p">(</span>
+                    <span class="n">model</span><span class="o">.</span><span class="n">last_started_state_editor_tutorial</span><span class="p">),</span>
+                <span class="n">profile_picture_data_url</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">profile_picture_data_url</span><span class="p">,</span>
+                <span class="n">user_bio</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">user_bio</span><span class="p">,</span>
+                <span class="n">preferred_language_codes</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">preferred_language_codes</span>
+            <span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="get_user_settings"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.get_user_settings">[docs]</a><span class="k">def</span> <span class="nf">get_user_settings</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the user settings for a single user.&quot;&quot;&quot;</span>
+    <span class="n">user_settings</span> <span class="o">=</span> <span class="n">get_users_settings</span><span class="p">([</span><span class="n">user_id</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">strict</span> <span class="ow">and</span> <span class="n">user_settings</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;Could not find user with id </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">user_id</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;User not found.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">user_settings</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_save_user_settings</span><span class="p">(</span><span class="n">user_settings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Commits a user settings object to the datastore.&quot;&quot;&quot;</span>
+    <span class="n">user_settings</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+    <span class="n">user_models</span><span class="o">.</span><span class="n">UserSettingsModel</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">user_settings</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+        <span class="n">email</span><span class="o">=</span><span class="n">user_settings</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+        <span class="n">username</span><span class="o">=</span><span class="n">user_settings</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+        <span class="n">normalized_username</span><span class="o">=</span><span class="n">user_settings</span><span class="o">.</span><span class="n">normalized_username</span><span class="p">,</span>
+        <span class="n">last_agreed_to_terms</span><span class="o">=</span><span class="n">user_settings</span><span class="o">.</span><span class="n">last_agreed_to_terms</span><span class="p">,</span>
+        <span class="n">last_started_state_editor_tutorial</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">user_settings</span><span class="o">.</span><span class="n">last_started_state_editor_tutorial</span><span class="p">),</span>
+        <span class="n">profile_picture_data_url</span><span class="o">=</span><span class="n">user_settings</span><span class="o">.</span><span class="n">profile_picture_data_url</span><span class="p">,</span>
+        <span class="n">user_bio</span><span class="o">=</span><span class="n">user_settings</span><span class="o">.</span><span class="n">user_bio</span><span class="p">,</span>
+        <span class="n">preferred_language_codes</span><span class="o">=</span><span class="n">user_settings</span><span class="o">.</span><span class="n">preferred_language_codes</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="has_user_registered_as_editor"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.has_user_registered_as_editor">[docs]</a><span class="k">def</span> <span class="nf">has_user_registered_as_editor</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+    <span class="n">user_settings</span> <span class="o">=</span> <span class="n">get_user_settings</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">user_settings</span><span class="o">.</span><span class="n">username</span> <span class="ow">and</span> <span class="n">user_settings</span><span class="o">.</span><span class="n">last_agreed_to_terms</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_create_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">email</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a new user. Returns the user_settings object.&quot;&quot;&quot;</span>
+    <span class="n">user_settings</span> <span class="o">=</span> <span class="n">get_user_settings</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">user_settings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;User </span><span class="si">%s</span><span class="s"> already exists.&#39;</span> <span class="o">%</span> <span class="n">user_id</span><span class="p">)</span>
+
+    <span class="n">user_settings</span> <span class="o">=</span> <span class="n">UserSettings</span><span class="p">(</span>
+        <span class="n">user_id</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span>
+        <span class="n">preferred_language_codes</span><span class="o">=</span><span class="p">[</span><span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_LANGUAGE_CODE</span><span class="p">])</span>
+    <span class="n">_save_user_settings</span><span class="p">(</span><span class="n">user_settings</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">user_settings</span>
+
+
+<div class="viewcode-block" id="get_or_create_user"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.get_or_create_user">[docs]</a><span class="k">def</span> <span class="nf">get_or_create_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">email</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;If the given User model does not exist, creates it.</span>
+
+<span class="sd">    Returns the resulting UserSettings domain object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user_settings</span> <span class="o">=</span> <span class="n">get_user_settings</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">user_settings</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">user_settings</span> <span class="o">=</span> <span class="n">_create_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">email</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">user_settings</span>
+
+</div>
+<div class="viewcode-block" id="get_username"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.get_username">[docs]</a><span class="k">def</span> <span class="nf">get_username</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">user_id</span> <span class="o">==</span> <span class="n">feconf</span><span class="o">.</span><span class="n">MIGRATION_BOT_USER_ID</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">feconf</span><span class="o">.</span><span class="n">MIGRATION_BOT_USERNAME</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">get_user_settings</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">username</span>
+
+</div>
+<div class="viewcode-block" id="get_usernames"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.get_usernames">[docs]</a><span class="k">def</span> <span class="nf">get_usernames</span><span class="p">(</span><span class="n">user_ids</span><span class="p">):</span>
+    <span class="n">users_settings</span> <span class="o">=</span> <span class="n">get_users_settings</span><span class="p">(</span><span class="n">user_ids</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">us</span><span class="o">.</span><span class="n">username</span> <span class="k">if</span> <span class="n">us</span> <span class="k">else</span> <span class="bp">None</span> <span class="k">for</span> <span class="n">us</span> <span class="ow">in</span> <span class="n">users_settings</span><span class="p">]</span>
+
+
+<span class="c"># NB: If we ever allow usernames to change, update the</span>
+<span class="c"># config_domain.BANNED_USERNAMES property.</span></div>
+<div class="viewcode-block" id="set_username"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.set_username">[docs]</a><span class="k">def</span> <span class="nf">set_username</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">new_username</span><span class="p">):</span>
+    <span class="n">user_settings</span> <span class="o">=</span> <span class="n">get_user_settings</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">UserSettings</span><span class="o">.</span><span class="n">require_valid_username</span><span class="p">(</span><span class="n">new_username</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_username_taken</span><span class="p">(</span><span class="n">new_username</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">utils</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span>
+            <span class="s">&#39;Sorry, the username </span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s"> is already taken! Please pick &#39;</span>
+            <span class="s">&#39;a different one.&#39;</span> <span class="o">%</span> <span class="n">new_username</span><span class="p">)</span>
+    <span class="n">user_settings</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">new_username</span>
+    <span class="n">_save_user_settings</span><span class="p">(</span><span class="n">user_settings</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="record_agreement_to_terms"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.record_agreement_to_terms">[docs]</a><span class="k">def</span> <span class="nf">record_agreement_to_terms</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Records that the user has agreed to the license terms.&quot;&quot;&quot;</span>
+    <span class="n">user_settings</span> <span class="o">=</span> <span class="n">get_user_settings</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">user_settings</span><span class="o">.</span><span class="n">last_agreed_to_terms</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+    <span class="n">_save_user_settings</span><span class="p">(</span><span class="n">user_settings</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="update_profile_picture_data_url"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.update_profile_picture_data_url">[docs]</a><span class="k">def</span> <span class="nf">update_profile_picture_data_url</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">profile_picture_data_url</span><span class="p">):</span>
+    <span class="n">user_settings</span> <span class="o">=</span> <span class="n">get_user_settings</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">user_settings</span><span class="o">.</span><span class="n">profile_picture_data_url</span> <span class="o">=</span> <span class="n">profile_picture_data_url</span>
+    <span class="n">_save_user_settings</span><span class="p">(</span><span class="n">user_settings</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="update_user_bio"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.update_user_bio">[docs]</a><span class="k">def</span> <span class="nf">update_user_bio</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">user_bio</span><span class="p">):</span>
+    <span class="n">user_settings</span> <span class="o">=</span> <span class="n">get_user_settings</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">user_settings</span><span class="o">.</span><span class="n">user_bio</span> <span class="o">=</span> <span class="n">user_bio</span>
+    <span class="n">_save_user_settings</span><span class="p">(</span><span class="n">user_settings</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="update_preferred_language_codes"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.update_preferred_language_codes">[docs]</a><span class="k">def</span> <span class="nf">update_preferred_language_codes</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">preferred_language_codes</span><span class="p">):</span>
+    <span class="n">user_settings</span> <span class="o">=</span> <span class="n">get_user_settings</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">user_settings</span><span class="o">.</span><span class="n">preferred_language_codes</span> <span class="o">=</span> <span class="n">preferred_language_codes</span>
+    <span class="n">_save_user_settings</span><span class="p">(</span><span class="n">user_settings</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_human_readable_user_ids"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.get_human_readable_user_ids">[docs]</a><span class="k">def</span> <span class="nf">get_human_readable_user_ids</span><span class="p">(</span><span class="n">user_ids</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts the given ids to usernames, or truncated email addresses.</span>
+
+<span class="sd">    Requires all users to be known.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">users_settings</span> <span class="o">=</span> <span class="n">get_users_settings</span><span class="p">(</span><span class="n">user_ids</span><span class="p">)</span>
+    <span class="n">usernames</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">user_settings</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">users_settings</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">user_settings</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;User id </span><span class="si">%s</span><span class="s"> not known in list of user_ids </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">user_ids</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">user_ids</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;User not found.&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">user_settings</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_COMMITTER_ID</span><span class="p">:</span>
+            <span class="n">usernames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;admin&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">user_settings</span><span class="o">.</span><span class="n">username</span><span class="p">:</span>
+            <span class="n">usernames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user_settings</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">usernames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s">&#39;[Awaiting user registration: </span><span class="si">%s</span><span class="s">]&#39;</span> <span class="o">%</span>
+                <span class="n">user_settings</span><span class="o">.</span><span class="n">truncated_email</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">usernames</span>
+
+</div>
+<div class="viewcode-block" id="get_user_id_from_email"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.get_user_id_from_email">[docs]</a><span class="k">def</span> <span class="nf">get_user_id_from_email</span><span class="p">(</span><span class="n">email</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">current_user_services</span><span class="o">.</span><span class="n">get_user_id_from_email</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="is_super_admin"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.is_super_admin">[docs]</a><span class="k">def</span> <span class="nf">is_super_admin</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">current_user_services</span><span class="o">.</span><span class="n">is_super_admin</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="record_user_started_state_editor_tutorial"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.record_user_started_state_editor_tutorial">[docs]</a><span class="k">def</span> <span class="nf">record_user_started_state_editor_tutorial</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+    <span class="n">user_settings</span> <span class="o">=</span> <span class="n">get_user_settings</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">user_settings</span><span class="o">.</span><span class="n">last_started_state_editor_tutorial</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">())</span>
+    <span class="n">_save_user_settings</span><span class="p">(</span><span class="n">user_settings</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="update_email_preferences"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.update_email_preferences">[docs]</a><span class="k">def</span> <span class="nf">update_email_preferences</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">can_receive_email_updates</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Updates whether the user has chosen to receive email updates.</span>
+
+<span class="sd">    If no UserEmailPreferencesModel exists for this user, a new one will</span>
+<span class="sd">    be created.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">email_preferences_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserEmailPreferencesModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">email_preferences_model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">email_preferences_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserEmailPreferencesModel</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">user_id</span><span class="p">)</span>
+
+    <span class="n">email_preferences_model</span><span class="o">.</span><span class="n">site_updates</span> <span class="o">=</span> <span class="n">can_receive_email_updates</span>
+    <span class="n">email_preferences_model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="get_email_preferences"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_services.get_email_preferences">[docs]</a><span class="k">def</span> <span class="nf">get_email_preferences</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a boolean representing whether the user has chosen to receive</span>
+<span class="sd">    email updates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">email_preferences_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserEmailPreferencesModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s">&#39;can_receive_email_updates&#39;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_EMAIL_UPDATES_PREFERENCE</span>
+            <span class="k">if</span> <span class="n">email_preferences_model</span> <span class="ow">is</span> <span class="bp">None</span>
+            <span class="k">else</span> <span class="n">email_preferences_model</span><span class="o">.</span><span class="n">site_updates</span><span class="p">)</span>
+    <span class="p">}</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

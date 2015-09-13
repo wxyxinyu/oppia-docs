@@ -1,0 +1,615 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.storage.statistics.gae_models &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.storage.statistics.gae_models</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Models for Oppia statistics.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">base_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span><span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">base_model</span><span class="p">])</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="kn">from</span> <span class="nn">google.appengine.ext</span> <span class="kn">import</span> <span class="n">ndb</span>
+
+<span class="c"># TODO(bhenning): Everything is handler name submit; therefore, it is</span>
+<span class="c"># pointless and should be removed.</span>
+<span class="n">_OLD_SUBMIT_HANDLER_NAME</span> <span class="o">=</span> <span class="s">&#39;submit&#39;</span>
+
+
+<div class="viewcode-block" id="StateCounterModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.StateCounterModel">[docs]</a><span class="k">class</span> <span class="nc">StateCounterModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A set of counts that correspond to a state.</span>
+
+<span class="sd">    The id/key of instances of this class has the form</span>
+<span class="sd">        [EXPLORATION_ID].[STATE_NAME].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Number of times the state was entered for the first time in a reader</span>
+    <span class="c"># session.</span>
+    <span class="n">first_entry_count</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Number of times the state was entered for the second time or later in a</span>
+    <span class="c"># reader session.</span>
+    <span class="n">subsequent_entries_count</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Number of times an answer submitted for this state was subsequently</span>
+    <span class="c"># resolved by an exploration admin and removed from the answer logs.</span>
+    <span class="n">resolved_answer_count</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Number of times an answer was entered for this state and was not</span>
+    <span class="c"># subsequently resolved by an exploration admin.</span>
+    <span class="n">active_answer_count</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StateCounterModel.get_or_create"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.StateCounterModel.get_or_create">[docs]</a>    <span class="k">def</span> <span class="nf">get_or_create</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">state_name</span><span class="p">):</span>
+        <span class="n">instance_id</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">state_name</span><span class="p">])</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">instance_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">counter</span><span class="p">:</span>
+            <span class="n">counter</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">instance_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">counter</span>
+
+</div></div>
+<div class="viewcode-block" id="StateRuleAnswerLogModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.StateRuleAnswerLogModel">[docs]</a><span class="k">class</span> <span class="nc">StateRuleAnswerLogModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The log of all answers hitting a given state rule.</span>
+
+<span class="sd">    The id/key of instances of this class has the form</span>
+<span class="sd">        [EXPLORATION_ID].[STATE_NAME].[HANDLER_NAME].[RULE_NAME]</span>
+
+<span class="sd">    WARNING: If a change is made to existing rules in data/objects (e.g.</span>
+<span class="sd">    renaming them or changing their signature), this class will contain</span>
+<span class="sd">    invalid values.</span>
+
+<span class="sd">    WARNING: Rule names and args that are used to construct the key here must</span>
+<span class="sd">    be &lt; 400 characters in length, since these are used as part of the key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Log of answers that hit this rule and that have not been resolved. The</span>
+    <span class="c"># JSON blob represents a dict. The keys of this dict are the answers</span>
+    <span class="c"># encoded as HTML strings, and the values are integer counts representing</span>
+    <span class="c"># how many times the answer has been entered.</span>
+    <span class="c"># WARNING: do not use default={} in JsonProperty, it does not work as you</span>
+    <span class="c"># expect.</span>
+    <span class="n">answers</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StateRuleAnswerLogModel.get_or_create"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.StateRuleAnswerLogModel.get_or_create">[docs]</a>    <span class="k">def</span> <span class="nf">get_or_create</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span> <span class="n">rule_str</span><span class="p">):</span>
+        <span class="c"># TODO(sll): Deprecate this method.</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_or_create_multi</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="p">[{</span>
+            <span class="s">&#39;state_name&#39;</span><span class="p">:</span> <span class="n">state_name</span><span class="p">,</span>
+            <span class="s">&#39;rule_str&#39;</span><span class="p">:</span> <span class="n">rule_str</span>
+        <span class="p">}])[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_entity_key</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ndb</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_get_kind</span><span class="p">(),</span> <span class="n">entity_id</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StateRuleAnswerLogModel.get_or_create_multi"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.StateRuleAnswerLogModel.get_or_create_multi">[docs]</a>    <span class="k">def</span> <span class="nf">get_or_create_multi</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">rule_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets or creates entities for the given rules.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            exploration_id: the exploration id</span>
+<span class="sd">            rule_data: a list of dicts, each with the following keys:</span>
+<span class="sd">                (state_name, rule_str).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># TODO(sll): Use a hash instead to disambiguate.</span>
+        <span class="n">entity_ids</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+            <span class="n">exploration_id</span><span class="p">,</span> <span class="n">datum</span><span class="p">[</span><span class="s">&#39;state_name&#39;</span><span class="p">],</span>
+            <span class="n">_OLD_SUBMIT_HANDLER_NAME</span><span class="p">,</span> <span class="n">datum</span><span class="p">[</span><span class="s">&#39;rule_str&#39;</span><span class="p">]</span>
+        <span class="p">])[:</span><span class="mi">490</span><span class="p">]</span> <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">rule_data</span><span class="p">]</span>
+
+        <span class="n">entity_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">cls</span><span class="o">.</span><span class="n">_get_entity_key</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">)</span>
+                       <span class="k">for</span> <span class="n">entity_id</span> <span class="ow">in</span> <span class="n">entity_ids</span><span class="p">]</span>
+
+        <span class="n">entities</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span><span class="n">entity_keys</span><span class="p">)</span>
+        <span class="n">entities_to_put</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">entity</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">entities</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">entity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">new_entity</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">entity_ids</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">answers</span><span class="o">=</span><span class="p">{})</span>
+                <span class="n">entities_to_put</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_entity</span><span class="p">)</span>
+                <span class="n">entities</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_entity</span>
+
+        <span class="n">ndb</span><span class="o">.</span><span class="n">put_multi</span><span class="p">(</span><span class="n">entities_to_put</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">entities</span>
+
+</div></div>
+<div class="viewcode-block" id="StartExplorationEventLogEntryModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel">[docs]</a><span class="k">class</span> <span class="nc">StartExplorationEventLogEntryModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An event triggered by a student starting the exploration.</span>
+
+<span class="sd">    Event schema documentation</span>
+<span class="sd">    --------------------------</span>
+<span class="sd">    V1:</span>
+<span class="sd">        event_type: &#39;start&#39;</span>
+<span class="sd">        exploration_id: id of exploration currently being played</span>
+<span class="sd">        exploration_version: version of exploration</span>
+<span class="sd">        state_name: Name of current state</span>
+<span class="sd">        client_time_spent_in_secs: 0</span>
+<span class="sd">        play_type: &#39;normal&#39;</span>
+<span class="sd">        created_on date</span>
+<span class="sd">        event_schema_version: 1</span>
+<span class="sd">        session_id: ID of current student&#39;s session</span>
+<span class="sd">        params: current parameter values, in the form of a map of parameter</span>
+<span class="sd">            name to value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># This value should be updated in the event of any event schema change.</span>
+    <span class="n">CURRENT_EVENT_SCHEMA_VERSION</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c"># Which specific type of event this is</span>
+    <span class="n">event_type</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Id of exploration currently being played.</span>
+    <span class="n">exploration_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Current version of exploration.</span>
+    <span class="n">exploration_version</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Name of current state.</span>
+    <span class="n">state_name</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># ID of current student&#39;s session</span>
+    <span class="n">session_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Time since start of this state before this event occurred (in sec).</span>
+    <span class="n">client_time_spent_in_secs</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">FloatProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Current parameter values, map of parameter name to value</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Which type of play-through this is (preview, from gallery)</span>
+    <span class="n">play_type</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                   <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="n">feconf</span><span class="o">.</span><span class="n">PLAY_TYPE_PLAYTEST</span><span class="p">,</span>
+                                            <span class="n">feconf</span><span class="o">.</span><span class="n">PLAY_TYPE_NORMAL</span><span class="p">])</span>
+    <span class="c"># The version of the event schema used to describe an event of this type.</span>
+    <span class="c"># Details on the schema are given in the docstring for this class.</span>
+    <span class="n">event_schema_version</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span>
+        <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">CURRENT_EVENT_SCHEMA_VERSION</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StartExplorationEventLogEntryModel.get_new_event_entity_id"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.get_new_event_entity_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_event_entity_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exp_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">):</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_new_id</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                              <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">timestamp</span><span class="p">),</span>
+                              <span class="n">exp_id</span><span class="p">,</span>
+                              <span class="n">session_id</span><span class="p">))</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StartExplorationEventLogEntryModel.create"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exp_id</span><span class="p">,</span> <span class="n">exp_version</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span>
+               <span class="n">params</span><span class="p">,</span> <span class="n">play_type</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new start exploration event.&quot;&quot;&quot;</span>
+        <span class="c"># TODO(sll): Some events currently do not have an entity id that was</span>
+        <span class="c"># set using this method; it was randomly set instead due tg an error.</span>
+        <span class="c"># Might need to migrate them.</span>
+        <span class="n">entity_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_new_event_entity_id</span><span class="p">(</span>
+            <span class="n">exp_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">)</span>
+        <span class="n">start_event_entity</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">entity_id</span><span class="p">,</span>
+            <span class="n">event_type</span><span class="o">=</span><span class="n">feconf</span><span class="o">.</span><span class="n">EVENT_TYPE_START_EXPLORATION</span><span class="p">,</span>
+            <span class="n">exploration_id</span><span class="o">=</span><span class="n">exp_id</span><span class="p">,</span>
+            <span class="n">exploration_version</span><span class="o">=</span><span class="n">exp_version</span><span class="p">,</span>
+            <span class="n">state_name</span><span class="o">=</span><span class="n">state_name</span><span class="p">,</span>
+            <span class="n">session_id</span><span class="o">=</span><span class="n">session_id</span><span class="p">,</span>
+            <span class="n">client_time_spent_in_secs</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+            <span class="n">play_type</span><span class="o">=</span><span class="n">play_type</span><span class="p">)</span>
+        <span class="n">start_event_entity</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="MaybeLeaveExplorationEventLogEntryModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel">[docs]</a><span class="k">class</span> <span class="nc">MaybeLeaveExplorationEventLogEntryModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An event triggered by a reader attempting to leave the</span>
+<span class="sd">    exploration without completing.</span>
+
+<span class="sd">    Due to complexity on browser end, this event may be logged when user clicks</span>
+<span class="sd">    close and then cancel. Thus, the real event is the last event of this type</span>
+<span class="sd">    logged for the session id.</span>
+
+<span class="sd">    Note: shortly after the release of v2.0.0.rc.2, some of these events</span>
+<span class="sd">    were migrated from StateHitEventLogEntryModel. These events have their</span>
+<span class="sd">    client_time_spent_in_secs field set to 0.0 (since this field was not</span>
+<span class="sd">    recorded in StateHitEventLogEntryModel), and they also have the wrong</span>
+<span class="sd">    &#39;last updated&#39; timestamp. However, the &#39;created_on&#39; timestamp is the</span>
+<span class="sd">    same as that of the original model.</span>
+
+<span class="sd">    Event schema documentation</span>
+<span class="sd">    --------------------------</span>
+<span class="sd">    V1:</span>
+<span class="sd">        event_type: &#39;leave&#39; (there are no &#39;maybe leave&#39; events in V0)</span>
+<span class="sd">        exploration_id: id of exploration currently being played</span>
+<span class="sd">        exploration_version: version of exploration</span>
+<span class="sd">        state_name: Name of current state</span>
+<span class="sd">        play_type: &#39;normal&#39;</span>
+<span class="sd">        created_on date</span>
+<span class="sd">        event_schema_version: 1</span>
+<span class="sd">        session_id: ID of current student&#39;s session</span>
+<span class="sd">        params: current parameter values, in the form of a map of parameter</span>
+<span class="sd">            name to value</span>
+<span class="sd">        client_time_spent_in_secs: time spent in this state before the event</span>
+<span class="sd">            was triggered</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># This value should be updated in the event of any event schema change.</span>
+    <span class="n">CURRENT_EVENT_SCHEMA_VERSION</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c"># Which specific type of event this is</span>
+    <span class="n">event_type</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Id of exploration currently being played.</span>
+    <span class="n">exploration_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Current version of exploration.</span>
+    <span class="n">exploration_version</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Name of current state.</span>
+    <span class="n">state_name</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># ID of current student&#39;s session</span>
+    <span class="n">session_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Time since start of this state before this event occurred (in sec).</span>
+    <span class="c"># Note: Some of these events were migrated from StateHit event instances</span>
+    <span class="c"># which did not record timestamp data. For this, we use a placeholder</span>
+    <span class="c"># value of 0.0 for client_time_spent_in_secs.</span>
+    <span class="n">client_time_spent_in_secs</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">FloatProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Current parameter values, map of parameter name to value</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Which type of play-through this is (preview, from gallery)</span>
+    <span class="n">play_type</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                   <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="n">feconf</span><span class="o">.</span><span class="n">PLAY_TYPE_PLAYTEST</span><span class="p">,</span>
+                                            <span class="n">feconf</span><span class="o">.</span><span class="n">PLAY_TYPE_NORMAL</span><span class="p">])</span>
+    <span class="c"># The version of the event schema used to describe an event of this type.</span>
+    <span class="c"># Details on the schema are given in the docstring for this class.</span>
+    <span class="n">event_schema_version</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span>
+        <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">CURRENT_EVENT_SCHEMA_VERSION</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="MaybeLeaveExplorationEventLogEntryModel.get_new_event_entity_id"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.get_new_event_entity_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_event_entity_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exp_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">):</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_new_id</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                              <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">timestamp</span><span class="p">),</span>
+                              <span class="n">exp_id</span><span class="p">,</span>
+                              <span class="n">session_id</span><span class="p">))</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="MaybeLeaveExplorationEventLogEntryModel.create"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exp_id</span><span class="p">,</span> <span class="n">exp_version</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span>
+               <span class="n">client_time_spent_in_secs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">play_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new leave exploration event.&quot;&quot;&quot;</span>
+        <span class="c"># TODO(sll): Some events currently do not have an entity id that was</span>
+        <span class="c"># set using this method; it was randomly set instead due to an error.</span>
+        <span class="c"># Might need to migrate them.</span>
+        <span class="n">entity_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_new_event_entity_id</span><span class="p">(</span>
+            <span class="n">exp_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">)</span>
+        <span class="n">leave_event_entity</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">entity_id</span><span class="p">,</span>
+            <span class="n">event_type</span><span class="o">=</span><span class="n">feconf</span><span class="o">.</span><span class="n">EVENT_TYPE_MAYBE_LEAVE_EXPLORATION</span><span class="p">,</span>
+            <span class="n">exploration_id</span><span class="o">=</span><span class="n">exp_id</span><span class="p">,</span>
+            <span class="n">exploration_version</span><span class="o">=</span><span class="n">exp_version</span><span class="p">,</span>
+            <span class="n">state_name</span><span class="o">=</span><span class="n">state_name</span><span class="p">,</span>
+            <span class="n">session_id</span><span class="o">=</span><span class="n">session_id</span><span class="p">,</span>
+            <span class="n">client_time_spent_in_secs</span><span class="o">=</span><span class="n">client_time_spent_in_secs</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+            <span class="n">play_type</span><span class="o">=</span><span class="n">play_type</span><span class="p">)</span>
+        <span class="n">leave_event_entity</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="CompleteExplorationEventLogEntryModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel">[docs]</a><span class="k">class</span> <span class="nc">CompleteExplorationEventLogEntryModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An event triggered by a learner reaching a terminal state of an</span>
+<span class="sd">    exploration.</span>
+
+<span class="sd">    Event schema documentation</span>
+<span class="sd">    --------------------------</span>
+<span class="sd">    V1:</span>
+<span class="sd">        event_type: &#39;complete&#39;</span>
+<span class="sd">        exploration_id: id of exploration currently being played</span>
+<span class="sd">        exploration_version: version of exploration</span>
+<span class="sd">        state_name: Name of the terminal state</span>
+<span class="sd">        play_type: &#39;normal&#39;</span>
+<span class="sd">        created_on date</span>
+<span class="sd">        event_schema_version: 1</span>
+<span class="sd">        session_id: ID of current student&#39;s session</span>
+<span class="sd">        params: current parameter values, in the form of a map of parameter</span>
+<span class="sd">            name to value</span>
+<span class="sd">        client_time_spent_in_secs: time spent in this state before the event</span>
+<span class="sd">            was triggered</span>
+
+<span class="sd">    Note: shortly after the release of v2.0.0.rc.3, some of these events</span>
+<span class="sd">    were migrated from MaybeLeaveExplorationEventLogEntryModel. These events</span>
+<span class="sd">    have the wrong &#39;last updated&#39; timestamp. However, the &#39;created_on&#39;</span>
+<span class="sd">    timestamp is the same as that of the original model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># This value should be updated in the event of any event schema change.</span>
+    <span class="n">CURRENT_EVENT_SCHEMA_VERSION</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c"># Which specific type of event this is</span>
+    <span class="n">event_type</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Id of exploration currently being played.</span>
+    <span class="n">exploration_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Current version of exploration.</span>
+    <span class="n">exploration_version</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Name of current state.</span>
+    <span class="n">state_name</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># ID of current student&#39;s session</span>
+    <span class="n">session_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Time since start of this state before this event occurred (in sec).</span>
+    <span class="c"># Note: Some of these events were migrated from StateHit event instances</span>
+    <span class="c"># which did not record timestamp data. For this, we use a placeholder</span>
+    <span class="c"># value of 0.0 for client_time_spent_in_secs.</span>
+    <span class="n">client_time_spent_in_secs</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">FloatProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Current parameter values, map of parameter name to value</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Which type of play-through this is (preview, from gallery)</span>
+    <span class="n">play_type</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                   <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="n">feconf</span><span class="o">.</span><span class="n">PLAY_TYPE_PLAYTEST</span><span class="p">,</span>
+                                            <span class="n">feconf</span><span class="o">.</span><span class="n">PLAY_TYPE_NORMAL</span><span class="p">])</span>
+    <span class="c"># The version of the event schema used to describe an event of this type.</span>
+    <span class="c"># Details on the schema are given in the docstring for this class.</span>
+    <span class="n">event_schema_version</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span>
+        <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">CURRENT_EVENT_SCHEMA_VERSION</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="CompleteExplorationEventLogEntryModel.get_new_event_entity_id"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.get_new_event_entity_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_event_entity_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exp_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">):</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_new_id</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                              <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">timestamp</span><span class="p">),</span>
+                              <span class="n">exp_id</span><span class="p">,</span>
+                              <span class="n">session_id</span><span class="p">))</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="CompleteExplorationEventLogEntryModel.create"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exp_id</span><span class="p">,</span> <span class="n">exp_version</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span>
+               <span class="n">client_time_spent_in_secs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">play_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new exploration completion event.&quot;&quot;&quot;</span>
+        <span class="n">entity_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_new_event_entity_id</span><span class="p">(</span><span class="n">exp_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">)</span>
+        <span class="n">complete_event_entity</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">entity_id</span><span class="p">,</span>
+            <span class="n">event_type</span><span class="o">=</span><span class="n">feconf</span><span class="o">.</span><span class="n">EVENT_TYPE_COMPLETE_EXPLORATION</span><span class="p">,</span>
+            <span class="n">exploration_id</span><span class="o">=</span><span class="n">exp_id</span><span class="p">,</span>
+            <span class="n">exploration_version</span><span class="o">=</span><span class="n">exp_version</span><span class="p">,</span>
+            <span class="n">state_name</span><span class="o">=</span><span class="n">state_name</span><span class="p">,</span>
+            <span class="n">session_id</span><span class="o">=</span><span class="n">session_id</span><span class="p">,</span>
+            <span class="n">client_time_spent_in_secs</span><span class="o">=</span><span class="n">client_time_spent_in_secs</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+            <span class="n">play_type</span><span class="o">=</span><span class="n">play_type</span><span class="p">)</span>
+        <span class="n">complete_event_entity</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="StateHitEventLogEntryModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel">[docs]</a><span class="k">class</span> <span class="nc">StateHitEventLogEntryModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An event triggered by a student getting to a particular state. The</span>
+<span class="sd">    definitions of the fields are as follows:</span>
+<span class="sd">    - event_type: &#39;state_hit&#39;</span>
+<span class="sd">    - exploration_id: id of exploration currently being played</span>
+<span class="sd">    - exploration_version: version of exploration</span>
+<span class="sd">    - state_name: Name of current state</span>
+<span class="sd">    - play_type: &#39;normal&#39;</span>
+<span class="sd">    - created_on date</span>
+<span class="sd">    - event_schema_version: 1</span>
+<span class="sd">    - session_id: ID of current student&#39;s session</span>
+<span class="sd">    - params: current parameter values, in the form of a map of parameter name</span>
+<span class="sd">              to its value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># This value should be updated in the event of any event schema change.</span>
+    <span class="n">CURRENT_EVENT_SCHEMA_VERSION</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c"># Which specific type of event this is</span>
+    <span class="n">event_type</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Id of exploration currently being played.</span>
+    <span class="n">exploration_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Current version of exploration.</span>
+    <span class="n">exploration_version</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Name of current state.</span>
+    <span class="n">state_name</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># ID of current student&#39;s session</span>
+    <span class="n">session_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Current parameter values, map of parameter name to value</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Which type of play-through this is (preview, from gallery)</span>
+    <span class="n">play_type</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                   <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="n">feconf</span><span class="o">.</span><span class="n">PLAY_TYPE_PLAYTEST</span><span class="p">,</span>
+                                            <span class="n">feconf</span><span class="o">.</span><span class="n">PLAY_TYPE_NORMAL</span><span class="p">])</span>
+    <span class="c"># The version of the event schema used to describe an event of this type.</span>
+    <span class="c"># Details on the schema are given in the docstring for this class.</span>
+    <span class="n">event_schema_version</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span>
+        <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">CURRENT_EVENT_SCHEMA_VERSION</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StateHitEventLogEntryModel.get_new_event_entity_id"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.get_new_event_entity_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_event_entity_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exp_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">):</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_new_id</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                              <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">timestamp</span><span class="p">),</span>
+                              <span class="n">exp_id</span><span class="p">,</span>
+                              <span class="n">session_id</span><span class="p">))</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StateHitEventLogEntryModel.create"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span>
+            <span class="n">cls</span><span class="p">,</span> <span class="n">exp_id</span><span class="p">,</span> <span class="n">exp_version</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span>
+            <span class="n">play_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new leave exploration event.&quot;&quot;&quot;</span>
+        <span class="c"># TODO(sll): Some events currently do not have an entity id that was</span>
+        <span class="c"># set using this method; it was randomly set instead due to an error.</span>
+        <span class="c"># Might need to migrate them.</span>
+        <span class="n">entity_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_new_event_entity_id</span><span class="p">(</span><span class="n">exp_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">)</span>
+        <span class="n">state_event_entity</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">entity_id</span><span class="p">,</span>
+            <span class="n">event_type</span><span class="o">=</span><span class="n">feconf</span><span class="o">.</span><span class="n">EVENT_TYPE_STATE_HIT</span><span class="p">,</span>
+            <span class="n">exploration_id</span><span class="o">=</span><span class="n">exp_id</span><span class="p">,</span>
+            <span class="n">exploration_version</span><span class="o">=</span><span class="n">exp_version</span><span class="p">,</span>
+            <span class="n">state_name</span><span class="o">=</span><span class="n">state_name</span><span class="p">,</span>
+            <span class="n">session_id</span><span class="o">=</span><span class="n">session_id</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+            <span class="n">play_type</span><span class="o">=</span><span class="n">play_type</span><span class="p">)</span>
+        <span class="n">state_event_entity</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="ExplorationAnnotationsModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel">[docs]</a><span class="k">class</span> <span class="nc">ExplorationAnnotationsModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseMapReduceBatchResultsModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Batch model for storing MapReduce calculation output for</span>
+<span class="sd">    exploration-level statistics.&quot;&quot;&quot;</span>
+    <span class="c"># Id of exploration.</span>
+    <span class="n">exploration_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Version of exploration.</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Number of students who started the exploration</span>
+    <span class="n">num_starts</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Number of students who have completed the exploration</span>
+    <span class="n">num_completions</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Keyed by state name that describes the numbers of hits for each state</span>
+    <span class="c"># {state_name: {&#39;first_entry_count&#39;: ...,</span>
+    <span class="c">#               &#39;total_entry_count&#39;: ...,</span>
+    <span class="c">#               &#39;no_answer_count&#39;: ...}}</span>
+    <span class="n">state_hit_counts</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExplorationAnnotationsModel.get_entity_id"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.get_entity_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_entity_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">exploration_version</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">exploration_version</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExplorationAnnotationsModel.create"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span>
+        <span class="n">cls</span><span class="p">,</span> <span class="n">exp_id</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">num_starts</span><span class="p">,</span> <span class="n">num_completions</span><span class="p">,</span> <span class="n">state_hit_counts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new ExplorationAnnotationsModel.&quot;&quot;&quot;</span>
+        <span class="n">entity_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_entity_id</span><span class="p">(</span><span class="n">exp_id</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+        <span class="n">cls</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">entity_id</span><span class="p">,</span>
+            <span class="n">exploration_id</span><span class="o">=</span><span class="n">exp_id</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+            <span class="n">num_starts</span><span class="o">=</span><span class="n">num_starts</span><span class="p">,</span>
+            <span class="n">num_completions</span><span class="o">=</span><span class="n">num_completions</span><span class="p">,</span>
+            <span class="n">state_hit_counts</span><span class="o">=</span><span class="n">state_hit_counts</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExplorationAnnotationsModel.get_versions"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.get_versions">[docs]</a>    <span class="k">def</span> <span class="nf">get_versions</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">annotations</span><span class="o">.</span><span class="n">version</span> <span class="k">for</span> <span class="n">annotations</span> <span class="ow">in</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">get_all</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">exploration_id</span> <span class="o">==</span> <span class="n">exploration_id</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span>
+                    <span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_QUERY_LIMIT</span><span class="p">)]</span>
+
+</div></div>
+<div class="viewcode-block" id="process_submitted_answer"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.process_submitted_answer">[docs]</a><span class="k">def</span> <span class="nf">process_submitted_answer</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">exploration_version</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span>
+        <span class="n">rule_spec_string</span><span class="p">,</span> <span class="n">answer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an answer to the answer log for the rule it hits.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        exploration_id: the exploration id</span>
+<span class="sd">        state_name: the state name</span>
+<span class="sd">        answer: an HTML string representation of the answer</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">answer_log</span> <span class="o">=</span> <span class="n">StateRuleAnswerLogModel</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span> <span class="n">rule_spec_string</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">answer</span> <span class="ow">in</span> <span class="n">answer_log</span><span class="o">.</span><span class="n">answers</span><span class="p">:</span>
+        <span class="n">answer_log</span><span class="o">.</span><span class="n">answers</span><span class="p">[</span><span class="n">answer</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">answer_log</span><span class="o">.</span><span class="n">answers</span><span class="p">[</span><span class="n">answer</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c"># This may fail due to answer_log.answers being larger than 1 MB in size.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">answer_log</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="resolve_answers"><a class="viewcode-back" href="../../../../../oppia.core.storage.statistics.html#oppia.core.storage.statistics.gae_models.resolve_answers">[docs]</a><span class="k">def</span> <span class="nf">resolve_answers</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span> <span class="n">rule_str</span><span class="p">,</span> <span class="n">answers</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Resolves selected answers for the given rule.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        exploration_id: the exploration id</span>
+<span class="sd">        state_name: the state name</span>
+<span class="sd">        rule_str: a string representation of the rule</span>
+<span class="sd">        answers: a list of HTML string representations of the resolved answers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">answers</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+    <span class="n">answer_log</span> <span class="o">=</span> <span class="n">StateRuleAnswerLogModel</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span> <span class="n">rule_str</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">answer</span> <span class="ow">in</span> <span class="n">answers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">answer</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">answer_log</span><span class="o">.</span><span class="n">answers</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">&#39;Answer </span><span class="si">%s</span><span class="s"> not found in answer log for rule </span><span class="si">%s</span><span class="s"> of exploration &#39;</span>
+                <span class="s">&#39;</span><span class="si">%s</span><span class="s">, state </span><span class="si">%s</span><span class="s">, handler </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">answer</span><span class="p">,</span> <span class="n">rule_str</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span>
+                    <span class="n">_OLD_SUBMIT_HANDLER_NAME</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">answer_log</span><span class="o">.</span><span class="n">answers</span><span class="p">[</span><span class="n">answer</span><span class="p">]</span>
+    <span class="n">answer_log</span><span class="o">.</span><span class="n">put</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

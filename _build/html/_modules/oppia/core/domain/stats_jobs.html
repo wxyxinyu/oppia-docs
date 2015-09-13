@@ -1,0 +1,533 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.stats_jobs &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.stats_jobs</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Jobs for statistics views.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">core</span> <span class="kn">import</span> <span class="n">jobs</span>
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">base_models</span><span class="p">,</span> <span class="n">stats_models</span><span class="p">,</span> <span class="n">exp_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">base_model</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">statistics</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">exploration</span>
+<span class="p">])</span>
+<span class="n">transaction_services</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_transaction_services</span><span class="p">()</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="kn">from</span> <span class="nn">google.appengine.ext</span> <span class="kn">import</span> <span class="n">ndb</span>
+
+<span class="n">_NO_SPECIFIED_VERSION_STRING</span> <span class="o">=</span> <span class="s">&#39;none&#39;</span>
+<span class="n">_ALL_VERSIONS_STRING</span> <span class="o">=</span> <span class="s">&#39;all&#39;</span>
+
+<span class="c"># States with this name used to be treated as a pseudoend state, but are not</span>
+<span class="c"># anymore. This is kept here until the stats job may be updated to work with</span>
+<span class="c"># proper terminal states, rather than a hardcoded END pseudostate.</span>
+<span class="c"># TODO(bhenning): fix this</span>
+<span class="n">OLD_END_DEST</span> <span class="o">=</span> <span class="s">&#39;END&#39;</span>
+
+<div class="viewcode-block" id="StatisticsRealtimeModel"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_jobs.StatisticsRealtimeModel">[docs]</a><span class="k">class</span> <span class="nc">StatisticsRealtimeModel</span><span class="p">(</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">BaseRealtimeDatastoreClassForContinuousComputations</span><span class="p">):</span>
+    <span class="n">num_starts</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">num_completions</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="StatisticsAggregator"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_jobs.StatisticsAggregator">[docs]</a><span class="k">class</span> <span class="nc">StatisticsAggregator</span><span class="p">(</span><span class="n">jobs</span><span class="o">.</span><span class="n">BaseContinuousComputationManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A continuous-computation job that counts &#39;start exploration&#39; and</span>
+<span class="sd">    &#39;complete exploration&#39; events.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StatisticsAggregator.get_event_types_listened_to"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_jobs.StatisticsAggregator.get_event_types_listened_to">[docs]</a>    <span class="k">def</span> <span class="nf">get_event_types_listened_to</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">feconf</span><span class="o">.</span><span class="n">EVENT_TYPE_START_EXPLORATION</span><span class="p">,</span>
+            <span class="n">feconf</span><span class="o">.</span><span class="n">EVENT_TYPE_COMPLETE_EXPLORATION</span><span class="p">]</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_realtime_datastore_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">StatisticsRealtimeModel</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_batch_job_manager_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">StatisticsMRJobManager</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_handle_incoming_event</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">active_realtime_layer</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">exp_id</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="nf">_increment_visit_counter</span><span class="p">():</span>
+            <span class="n">realtime_class</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get_realtime_datastore_class</span><span class="p">()</span>
+            <span class="n">realtime_model_id</span> <span class="o">=</span> <span class="n">realtime_class</span><span class="o">.</span><span class="n">get_realtime_id</span><span class="p">(</span>
+                <span class="n">active_realtime_layer</span><span class="p">,</span> <span class="n">exp_id</span><span class="p">)</span>
+
+            <span class="n">model</span> <span class="o">=</span> <span class="n">realtime_class</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">realtime_model_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">realtime_class</span><span class="p">(</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="n">realtime_model_id</span><span class="p">,</span> <span class="n">num_starts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">realtime_layer</span><span class="o">=</span><span class="n">active_realtime_layer</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">num_starts</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">_increment_completion_counter</span><span class="p">():</span>
+            <span class="n">realtime_class</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get_realtime_datastore_class</span><span class="p">()</span>
+            <span class="n">realtime_model_id</span> <span class="o">=</span> <span class="n">realtime_class</span><span class="o">.</span><span class="n">get_realtime_id</span><span class="p">(</span>
+                <span class="n">active_realtime_layer</span><span class="p">,</span> <span class="n">exp_id</span><span class="p">)</span>
+
+            <span class="n">model</span> <span class="o">=</span> <span class="n">realtime_class</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">realtime_model_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">realtime_class</span><span class="p">(</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="n">realtime_model_id</span><span class="p">,</span> <span class="n">num_completions</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">realtime_layer</span><span class="o">=</span><span class="n">active_realtime_layer</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">num_completions</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">event_type</span> <span class="o">==</span> <span class="n">feconf</span><span class="o">.</span><span class="n">EVENT_TYPE_START_EXPLORATION</span><span class="p">:</span>
+            <span class="n">transaction_services</span><span class="o">.</span><span class="n">run_in_transaction</span><span class="p">(</span>
+                <span class="n">_increment_visit_counter</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">transaction_services</span><span class="o">.</span><span class="n">run_in_transaction</span><span class="p">(</span>
+                <span class="n">_increment_completion_counter</span><span class="p">)</span>
+
+    <span class="c"># Public query method.</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StatisticsAggregator.get_statistics"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_jobs.StatisticsAggregator.get_statistics">[docs]</a>    <span class="k">def</span> <span class="nf">get_statistics</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">exploration_version</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">          - exploration_id: id of the exploration to get statistics for</span>
+<span class="sd">          - exploration_version: str. Which version of the exploration to get</span>
+<span class="sd">              statistics for; this can be a version number, the string &#39;all&#39;,</span>
+<span class="sd">              or the string &#39;none&#39;.</span>
+
+<span class="sd">        Returns a dict with the following keys:</span>
+<span class="sd">        - &#39;start_exploration_count&#39;: # of times exploration was started</span>
+<span class="sd">        - &#39;complete_exploration_count&#39;: # of times exploration was completed</span>
+<span class="sd">        - &#39;state_hit_counts&#39;: a dict containing the hit counts for the states</span>
+<span class="sd">           in the exploration. It is formatted as follows:</span>
+<span class="sd">            {</span>
+<span class="sd">                state_name: {</span>
+<span class="sd">                    &#39;first_entry_count&#39;: # of sessions which hit this state</span>
+<span class="sd">                    &#39;total_entry_count&#39;: # of total hits for this state</span>
+<span class="sd">                    &#39;no_answer_count&#39;: # of hits with no answer for this state</span>
+<span class="sd">                }</span>
+<span class="sd">            }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">num_starts</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">num_completions</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">state_hit_counts</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">last_updated</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="n">entity_id</span> <span class="o">=</span> <span class="n">stats_models</span><span class="o">.</span><span class="n">ExplorationAnnotationsModel</span><span class="o">.</span><span class="n">get_entity_id</span><span class="p">(</span>
+            <span class="n">exploration_id</span><span class="p">,</span> <span class="n">exploration_version</span><span class="p">)</span>
+        <span class="n">mr_model</span> <span class="o">=</span> <span class="n">stats_models</span><span class="o">.</span><span class="n">ExplorationAnnotationsModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">entity_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mr_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">num_starts</span> <span class="o">+=</span> <span class="n">mr_model</span><span class="o">.</span><span class="n">num_starts</span>
+            <span class="n">num_completions</span> <span class="o">+=</span> <span class="n">mr_model</span><span class="o">.</span><span class="n">num_completions</span>
+            <span class="n">state_hit_counts</span> <span class="o">=</span> <span class="n">mr_model</span><span class="o">.</span><span class="n">state_hit_counts</span>
+            <span class="n">last_updated</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">mr_model</span><span class="o">.</span><span class="n">last_updated</span><span class="p">)</span>
+
+        <span class="n">realtime_model</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get_realtime_datastore_class</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">get_active_realtime_layer_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">),</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">realtime_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">num_starts</span> <span class="o">+=</span> <span class="n">realtime_model</span><span class="o">.</span><span class="n">num_starts</span>
+            <span class="n">num_completions</span> <span class="o">+=</span> <span class="n">realtime_model</span><span class="o">.</span><span class="n">num_completions</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s">&#39;start_exploration_count&#39;</span><span class="p">:</span> <span class="n">num_starts</span><span class="p">,</span>
+            <span class="s">&#39;complete_exploration_count&#39;</span><span class="p">:</span> <span class="n">num_completions</span><span class="p">,</span>
+            <span class="s">&#39;state_hit_counts&#39;</span><span class="p">:</span> <span class="n">state_hit_counts</span><span class="p">,</span>
+            <span class="s">&#39;last_updated&#39;</span><span class="p">:</span> <span class="n">last_updated</span><span class="p">,</span>
+        <span class="p">}</span>
+
+</div></div>
+<div class="viewcode-block" id="StatisticsMRJobManager"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_jobs.StatisticsMRJobManager">[docs]</a><span class="k">class</span> <span class="nc">StatisticsMRJobManager</span><span class="p">(</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">BaseMapReduceJobManagerForContinuousComputations</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Job that calculates and creates stats models for exploration view.</span>
+<span class="sd">       Includes: * number of visits to the exploration</span>
+<span class="sd">                 * number of completions of the exploration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_TYPE_STATE_COUNTER_STRING</span> <span class="o">=</span> <span class="s">&#39;counter&#39;</span>
+    <span class="n">_TYPE_EVENT_STRING</span> <span class="o">=</span> <span class="s">&#39;event&#39;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_continuous_computation_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">StatisticsAggregator</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StatisticsMRJobManager.entity_classes_to_map_over"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_jobs.StatisticsMRJobManager.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">stats_models</span><span class="o">.</span><span class="n">StartExplorationEventLogEntryModel</span><span class="p">,</span>
+                <span class="n">stats_models</span><span class="o">.</span><span class="n">MaybeLeaveExplorationEventLogEntryModel</span><span class="p">,</span>
+                <span class="n">stats_models</span><span class="o">.</span><span class="n">CompleteExplorationEventLogEntryModel</span><span class="p">,</span>
+                <span class="n">stats_models</span><span class="o">.</span><span class="n">StateHitEventLogEntryModel</span><span class="p">,</span>
+                <span class="n">stats_models</span><span class="o">.</span><span class="n">StateCounterModel</span><span class="p">]</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="StatisticsMRJobManager.map"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_jobs.StatisticsMRJobManager.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">StatisticsMRJobManager</span><span class="o">.</span><span class="n">_entity_created_before_job_queued</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">stats_models</span><span class="o">.</span><span class="n">StateCounterModel</span><span class="p">):</span>
+                <span class="n">first_dot_index</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+                <span class="n">exploration_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">[:</span><span class="n">first_dot_index</span><span class="p">]</span>
+                <span class="n">state_name</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="n">first_dot_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+
+                <span class="n">value</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="n">StatisticsMRJobManager</span><span class="o">.</span><span class="n">_TYPE_STATE_COUNTER_STRING</span><span class="p">,</span>
+                    <span class="s">&#39;exploration_id&#39;</span><span class="p">:</span> <span class="n">exploration_id</span><span class="p">,</span>
+                    <span class="s">&#39;version&#39;</span><span class="p">:</span> <span class="n">_NO_SPECIFIED_VERSION_STRING</span><span class="p">,</span>
+                    <span class="s">&#39;state_name&#39;</span><span class="p">:</span> <span class="n">state_name</span><span class="p">,</span>
+                    <span class="s">&#39;first_entry_count&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">first_entry_count</span><span class="p">,</span>
+                    <span class="s">&#39;subsequent_entries_count&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">subsequent_entries_count</span><span class="p">,</span>
+                    <span class="s">&#39;resolved_answer_count&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">resolved_answer_count</span><span class="p">,</span>
+                    <span class="s">&#39;active_answer_count&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">active_answer_count</span><span class="p">}</span>
+                <span class="k">yield</span> <span class="p">(</span>
+                    <span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">_NO_SPECIFIED_VERSION_STRING</span><span class="p">),</span>
+                    <span class="n">value</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">_ALL_VERSIONS_STRING</span><span class="p">),</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">version</span> <span class="o">=</span> <span class="n">_NO_SPECIFIED_VERSION_STRING</span>
+                <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">exploration_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">version</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">exploration_version</span><span class="p">)</span>
+
+                <span class="n">value</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="n">StatisticsMRJobManager</span><span class="o">.</span><span class="n">_TYPE_EVENT_STRING</span><span class="p">,</span>
+                    <span class="s">&#39;event_type&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">event_type</span><span class="p">,</span>
+                    <span class="s">&#39;session_id&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                    <span class="s">&#39;state_name&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">state_name</span><span class="p">,</span>
+                    <span class="s">&#39;created_on&#39;</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">created_on</span><span class="p">),</span>
+                    <span class="s">&#39;exploration_id&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">exploration_id</span><span class="p">,</span>
+                    <span class="s">&#39;version&#39;</span><span class="p">:</span> <span class="n">version</span><span class="p">}</span>
+
+                <span class="k">yield</span> <span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">version</span><span class="p">),</span> <span class="n">value</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="p">(</span>
+                    <span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">_ALL_VERSIONS_STRING</span><span class="p">),</span>
+                    <span class="n">value</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="StatisticsMRJobManager.reduce"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_jobs.StatisticsMRJobManager.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">stringified_values</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_services</span>
+        <span class="n">exploration</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="p">(</span><span class="n">exp_id</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">version</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+                    <span class="n">_NO_SPECIFIED_VERSION_STRING</span><span class="p">,</span> <span class="n">_ALL_VERSIONS_STRING</span><span class="p">]:</span>
+                <span class="n">exploration</span> <span class="o">=</span> <span class="n">exp_services</span><span class="o">.</span><span class="n">get_exploration_by_id</span><span class="p">(</span>
+                    <span class="n">exp_id</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">exploration</span> <span class="o">=</span> <span class="n">exp_services</span><span class="o">.</span><span class="n">get_exploration_by_id</span><span class="p">(</span><span class="n">exp_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="o">.</span><span class="n">EntityNotFoundError</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c"># Number of times exploration was started</span>
+        <span class="n">new_models_start_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c"># Number of times exploration was completed</span>
+        <span class="n">new_models_complete_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c"># Session ids that have completed this state</span>
+        <span class="n">new_models_end_sessions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="c"># {session_id: (created-on timestamp of last known maybe leave event,</span>
+        <span class="c"># state_name)}</span>
+        <span class="n">session_id_to_latest_leave_event</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
+        <span class="n">old_models_start_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">old_models_complete_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c"># {state_name: {&#39;total_entry_count&#39;: ...,</span>
+        <span class="c">#               &#39;first_entry_count&#39;: ...,</span>
+        <span class="c">#               &#39;no_answer_count&#39;: ...}}</span>
+        <span class="n">state_hit_counts</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="n">exploration</span><span class="o">.</span><span class="n">states</span><span class="p">:</span>
+            <span class="n">state_hit_counts</span><span class="p">[</span><span class="n">state_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s">&#39;total_entry_count&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s">&#39;first_entry_count&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s">&#39;no_answer_count&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="c"># {state_name: set(session ids that have reached this state)}</span>
+        <span class="n">state_session_ids</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="n">exploration</span><span class="o">.</span><span class="n">states</span><span class="p">:</span>
+            <span class="n">state_session_ids</span><span class="p">[</span><span class="n">state_name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+
+        <span class="c"># Iterate over and process each event for this exploration.</span>
+        <span class="k">for</span> <span class="n">value_str</span> <span class="ow">in</span> <span class="n">stringified_values</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">value_str</span><span class="p">)</span>
+
+            <span class="n">state_name</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;state_name&#39;</span><span class="p">]</span>
+
+            <span class="c"># Convert the state name to unicode, if necessary.</span>
+            <span class="c"># Note: sometimes, item.state_name is None for</span>
+            <span class="c"># StateHitEventLogEntryModel.</span>
+            <span class="c"># TODO(sll): Track down the reason for this, and fix it.</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">state_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span>
+                    <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state_name</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">)):</span>
+                <span class="n">state_name</span> <span class="o">=</span> <span class="n">state_name</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span>
+                    <span class="n">StatisticsMRJobManager</span><span class="o">.</span><span class="n">_TYPE_STATE_COUNTER_STRING</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">state_name</span> <span class="o">==</span> <span class="n">exploration</span><span class="o">.</span><span class="n">init_state_name</span><span class="p">:</span>
+                    <span class="n">old_models_start_count</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;first_entry_count&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">state_name</span> <span class="o">==</span> <span class="n">OLD_END_DEST</span><span class="p">:</span>
+                    <span class="n">old_models_complete_count</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;first_entry_count&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">state_hit_counts</span><span class="p">[</span><span class="n">state_name</span><span class="p">][</span><span class="s">&#39;no_answer_count&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
+                        <span class="n">value</span><span class="p">[</span><span class="s">&#39;first_entry_count&#39;</span><span class="p">]</span>
+                        <span class="o">+</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;subsequent_entries_count&#39;</span><span class="p">]</span>
+                        <span class="o">-</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;resolved_answer_count&#39;</span><span class="p">]</span>
+                        <span class="o">-</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;active_answer_count&#39;</span><span class="p">])</span>
+                    <span class="n">state_hit_counts</span><span class="p">[</span><span class="n">state_name</span><span class="p">][</span><span class="s">&#39;first_entry_count&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
+                        <span class="n">value</span><span class="p">[</span><span class="s">&#39;first_entry_count&#39;</span><span class="p">])</span>
+                    <span class="n">state_hit_counts</span><span class="p">[</span><span class="n">state_name</span><span class="p">][</span><span class="s">&#39;total_entry_count&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
+                        <span class="n">value</span><span class="p">[</span><span class="s">&#39;first_entry_count&#39;</span><span class="p">]</span>
+                        <span class="o">+</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;subsequent_entries_count&#39;</span><span class="p">])</span>
+                <span class="k">continue</span>
+
+            <span class="n">event_type</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;event_type&#39;</span><span class="p">]</span>
+            <span class="n">created_on</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;created_on&#39;</span><span class="p">]</span>
+            <span class="n">session_id</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;session_id&#39;</span><span class="p">]</span>
+
+            <span class="c"># If this is a start event, increment start count.</span>
+            <span class="k">if</span> <span class="n">event_type</span> <span class="o">==</span> <span class="n">feconf</span><span class="o">.</span><span class="n">EVENT_TYPE_START_EXPLORATION</span><span class="p">:</span>
+                <span class="n">new_models_start_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">event_type</span> <span class="o">==</span> <span class="n">feconf</span><span class="o">.</span><span class="n">EVENT_TYPE_COMPLETE_EXPLORATION</span><span class="p">:</span>
+                <span class="n">new_models_complete_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="c"># Track that we have seen a &#39;real&#39; end for this session id</span>
+                <span class="n">new_models_end_sessions</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">event_type</span> <span class="o">==</span> <span class="n">feconf</span><span class="o">.</span><span class="n">EVENT_TYPE_MAYBE_LEAVE_EXPLORATION</span><span class="p">:</span>
+                <span class="c"># Identify the last learner event for this session.</span>
+                <span class="n">latest_timestamp_so_far</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">session_id_to_latest_leave_event</span><span class="p">[</span><span class="n">session_id</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">latest_timestamp_so_far</span> <span class="o">&lt;</span> <span class="n">created_on</span><span class="p">:</span>
+                    <span class="n">latest_timestamp_so_far</span> <span class="o">=</span> <span class="n">created_on</span>
+                    <span class="n">session_id_to_latest_leave_event</span><span class="p">[</span><span class="n">session_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">created_on</span><span class="p">,</span> <span class="n">state_name</span><span class="p">)</span>
+            <span class="c"># If this is a state hit, increment the total count and record that</span>
+            <span class="c"># we have seen this session id.</span>
+            <span class="k">elif</span> <span class="n">event_type</span> <span class="o">==</span> <span class="n">feconf</span><span class="o">.</span><span class="n">EVENT_TYPE_STATE_HIT</span><span class="p">:</span>
+                <span class="n">state_hit_counts</span><span class="p">[</span><span class="n">state_name</span><span class="p">][</span><span class="s">&#39;total_entry_count&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">state_session_ids</span><span class="p">[</span><span class="n">state_name</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span>
+
+        <span class="c"># After iterating through all events, take the size of the set of</span>
+        <span class="c"># session ids as the first entry count.</span>
+        <span class="k">for</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="n">state_session_ids</span><span class="p">:</span>
+            <span class="n">state_hit_counts</span><span class="p">[</span><span class="n">state_name</span><span class="p">][</span><span class="s">&#39;first_entry_count&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span>
+                <span class="n">state_session_ids</span><span class="p">[</span><span class="n">state_name</span><span class="p">])</span>
+
+        <span class="c"># Get the set of session ids that left without completing. This is</span>
+        <span class="c"># determined as the set of session ids with maybe-leave events at</span>
+        <span class="c"># intermediate states, minus the ones that have a maybe-leave event</span>
+        <span class="c"># at the END state.</span>
+        <span class="n">leave_states</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">session_id_to_latest_leave_event</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span>
+            <span class="n">new_models_end_sessions</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">session_id</span> <span class="ow">in</span> <span class="n">leave_states</span><span class="p">:</span>
+            <span class="c"># Grab the state name of the state they left on and count that as a</span>
+            <span class="c"># &#39;no answer&#39; for that state.</span>
+            <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">state_name</span><span class="p">)</span> <span class="o">=</span> <span class="n">session_id_to_latest_leave_event</span><span class="p">[</span><span class="n">session_id</span><span class="p">]</span>
+            <span class="n">state_hit_counts</span><span class="p">[</span><span class="n">state_name</span><span class="p">][</span><span class="s">&#39;no_answer_count&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">num_starts</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">old_models_start_count</span> <span class="o">+</span> <span class="n">new_models_start_count</span><span class="p">)</span>
+        <span class="n">num_completions</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">old_models_complete_count</span> <span class="o">+</span> <span class="n">new_models_complete_count</span><span class="p">)</span>
+
+        <span class="n">stats_models</span><span class="o">.</span><span class="n">ExplorationAnnotationsModel</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+            <span class="n">exp_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">version</span><span class="p">),</span> <span class="n">num_starts</span><span class="p">,</span> <span class="n">num_completions</span><span class="p">,</span>
+            <span class="n">state_hit_counts</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="StatisticsAudit"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_jobs.StatisticsAudit">[docs]</a><span class="k">class</span> <span class="nc">StatisticsAudit</span><span class="p">(</span><span class="n">jobs</span><span class="o">.</span><span class="n">BaseMapReduceJobManager</span><span class="p">):</span>
+
+    <span class="n">_STATE_COUNTER_ERROR_KEY</span> <span class="o">=</span> <span class="s">&#39;State Counter ERROR&#39;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StatisticsAudit.entity_classes_to_map_over"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_jobs.StatisticsAudit.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">stats_models</span><span class="o">.</span><span class="n">ExplorationAnnotationsModel</span><span class="p">,</span>
+            <span class="n">stats_models</span><span class="o">.</span><span class="n">StateCounterModel</span><span class="p">]</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="StatisticsAudit.map"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_jobs.StatisticsAudit.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">stats_models</span><span class="o">.</span><span class="n">StateCounterModel</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">first_entry_count</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span>
+                    <span class="n">StatisticsAudit</span><span class="o">.</span><span class="n">_STATE_COUNTER_ERROR_KEY</span><span class="p">,</span>
+                    <span class="s">&#39;Less than 0: </span><span class="si">%s</span><span class="s"> </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">first_entry_count</span><span class="p">))</span>
+        <span class="c"># Older versions of ExplorationAnnotations didn&#39;t store exp_id</span>
+        <span class="c"># This is short hand for making sure we get ones updated most recently</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">exploration_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">exploration_id</span><span class="p">,</span> <span class="p">{</span>
+                    <span class="s">&#39;version&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+                    <span class="s">&#39;starts&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">num_starts</span><span class="p">,</span>
+                    <span class="s">&#39;completions&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">num_completions</span><span class="p">,</span>
+                    <span class="s">&#39;state_hit&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">state_hit_counts</span>
+                <span class="p">})</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="StatisticsAudit.reduce"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_jobs.StatisticsAudit.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">stringified_values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">StatisticsAudit</span><span class="o">.</span><span class="n">_STATE_COUNTER_ERROR_KEY</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">value_str</span> <span class="ow">in</span> <span class="n">stringified_values</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">value_str</span><span class="p">,)</span>
+            <span class="k">return</span>
+
+        <span class="c"># If the code reaches this point, we are looking at values that</span>
+        <span class="c"># correspond to each version of a particular exploration.</span>
+
+        <span class="c"># These variables correspond to the _ALL_VERSIONS_STRING version.</span>
+        <span class="n">all_starts</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">all_completions</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">all_state_hit</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="c"># These variables correspond to the sum of counts for all other</span>
+        <span class="c"># versions besides _ALL_VERSIONS_STRING.</span>
+        <span class="n">sum_starts</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">sum_completions</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">sum_state_hit</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">value_str</span> <span class="ow">in</span> <span class="n">stringified_values</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">value_str</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;starts&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span>
+                    <span class="s">&#39;Negative start count: exp_id:</span><span class="si">%s</span><span class="s"> version:</span><span class="si">%s</span><span class="s"> starts:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                    <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;version&#39;</span><span class="p">],</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;starts&#39;</span><span class="p">]),)</span>
+
+            <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;completions&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span>
+                    <span class="s">&#39;Negative completion count: exp_id:</span><span class="si">%s</span><span class="s"> version:</span><span class="si">%s</span><span class="s"> &#39;</span>
+                    <span class="s">&#39;completions:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                    <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;version&#39;</span><span class="p">],</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;completions&#39;</span><span class="p">]),)</span>
+
+            <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;completions&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;starts&#39;</span><span class="p">]:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="s">&#39;Completions &gt; starts: exp_id:</span><span class="si">%s</span><span class="s"> version:</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&gt;</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;version&#39;</span><span class="p">],</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;completions&#39;</span><span class="p">],</span>
+                    <span class="n">value</span><span class="p">[</span><span class="s">&#39;starts&#39;</span><span class="p">]),)</span>
+
+            <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;version&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">_ALL_VERSIONS_STRING</span><span class="p">:</span>
+                <span class="n">all_starts</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;starts&#39;</span><span class="p">]</span>
+                <span class="n">all_completions</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;completions&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">state_name</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span> <span class="ow">in</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;state_hit&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                    <span class="n">all_state_hit</span><span class="p">[</span><span class="n">state_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="s">&#39;first_entry_count&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sum_starts</span> <span class="o">+=</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;starts&#39;</span><span class="p">]</span>
+                <span class="n">sum_completions</span> <span class="o">+=</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;completions&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">state_name</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span> <span class="ow">in</span> <span class="n">value</span><span class="p">[</span><span class="s">&#39;state_hit&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                    <span class="n">sum_state_hit</span><span class="p">[</span><span class="n">state_name</span><span class="p">]</span> <span class="o">+=</span> <span class="n">counts</span><span class="p">[</span><span class="s">&#39;first_entry_count&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">sum_starts</span> <span class="o">!=</span> <span class="n">all_starts</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="s">&#39;Non-all != all for starts: exp_id:</span><span class="si">%s</span><span class="s"> sum: </span><span class="si">%s</span><span class="s"> all: </span><span class="si">%s</span><span class="s">&#39;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">sum_starts</span><span class="p">,</span> <span class="n">all_starts</span><span class="p">),)</span>
+        <span class="k">if</span> <span class="n">sum_completions</span> <span class="o">!=</span> <span class="n">all_completions</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="s">&#39;Non-all != all for completions: exp_id:</span><span class="si">%s</span><span class="s"> sum: </span><span class="si">%s</span><span class="s"> all: </span><span class="si">%s</span><span class="s">&#39;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">sum_completions</span><span class="p">,</span> <span class="n">all_completions</span><span class="p">),)</span>
+
+        <span class="k">for</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="n">all_state_hit</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">state_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sum_state_hit</span> <span class="ow">and</span>
+                    <span class="n">all_state_hit</span><span class="p">[</span><span class="n">state_name</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="p">(</span>
+                    <span class="s">&#39;state hit count not same exp_id:</span><span class="si">%s</span><span class="s"> state:</span><span class="si">%s</span><span class="s">, &#39;</span>
+                    <span class="s">&#39;all:</span><span class="si">%s</span><span class="s"> sum: null&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">key</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span> <span class="n">all_state_hit</span><span class="p">[</span><span class="n">state_name</span><span class="p">]),)</span>
+            <span class="k">elif</span> <span class="n">all_state_hit</span><span class="p">[</span><span class="n">state_name</span><span class="p">]</span> <span class="o">!=</span> <span class="n">sum_state_hit</span><span class="p">[</span><span class="n">state_name</span><span class="p">]:</span>
+                <span class="k">yield</span> <span class="p">(</span>
+                    <span class="s">&#39;state hit count not same exp_id: </span><span class="si">%s</span><span class="s"> state: </span><span class="si">%s</span><span class="s"> &#39;</span>
+                    <span class="s">&#39;all: </span><span class="si">%s</span><span class="s"> sum:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">key</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span> <span class="n">all_state_hit</span><span class="p">[</span><span class="n">state_name</span><span class="p">],</span>
+                        <span class="n">sum_state_hit</span><span class="p">[</span><span class="n">state_name</span><span class="p">]),)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

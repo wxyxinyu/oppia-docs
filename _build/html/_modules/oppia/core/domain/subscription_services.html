@@ -1,0 +1,193 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.subscription_services &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.subscription_services</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Services for managing subscriptions.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">user_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">user</span>
+<span class="p">])</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+
+<div class="viewcode-block" id="subscribe_to_thread"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.subscription_services.subscribe_to_thread">[docs]</a><span class="k">def</span> <span class="nf">subscribe_to_thread</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">feedback_thread_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Subscribes a user to a feedback thread.</span>
+
+<span class="sd">    Callers of this function should ensure that the user_id and</span>
+<span class="sd">    feedback_thread_id are valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">subscriptions_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserSubscriptionsModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">subscriptions_model</span><span class="p">:</span>
+        <span class="n">subscriptions_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserSubscriptionsModel</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">user_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">feedback_thread_id</span> <span class="ow">not</span> <span class="ow">in</span>
+            <span class="n">subscriptions_model</span><span class="o">.</span><span class="n">feedback_thread_ids</span><span class="p">):</span>
+        <span class="n">subscriptions_model</span><span class="o">.</span><span class="n">feedback_thread_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">feedback_thread_id</span><span class="p">)</span>
+        <span class="n">subscriptions_model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="subscribe_to_activity"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.subscription_services.subscribe_to_activity">[docs]</a><span class="k">def</span> <span class="nf">subscribe_to_activity</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">activity_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Subscribes a user to an activity (and, therefore, indirectly to all</span>
+<span class="sd">    feedback threads for that activity).</span>
+
+<span class="sd">    Callers of this function should ensure that the user_id and activity_id</span>
+<span class="sd">    are valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">subscriptions_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserSubscriptionsModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">subscriptions_model</span><span class="p">:</span>
+        <span class="n">subscriptions_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserSubscriptionsModel</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">user_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">activity_id</span> <span class="ow">not</span> <span class="ow">in</span>
+            <span class="n">subscriptions_model</span><span class="o">.</span><span class="n">activity_ids</span><span class="p">):</span>
+        <span class="n">subscriptions_model</span><span class="o">.</span><span class="n">activity_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">activity_id</span><span class="p">)</span>
+        <span class="n">subscriptions_model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="get_activity_ids_subscribed_to"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.subscription_services.get_activity_ids_subscribed_to">[docs]</a><span class="k">def</span> <span class="nf">get_activity_ids_subscribed_to</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list with all subscriptions&#39; ids of given user.</span>
+
+<span class="sd">    Callers of this function should ensure that the user_id is valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">subscriptions_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserSubscriptionsModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">subscriptions_model</span><span class="o">.</span><span class="n">activity_ids</span>
+        <span class="k">if</span> <span class="n">subscriptions_model</span> <span class="k">else</span> <span class="p">[])</span>
+
+</div>
+<div class="viewcode-block" id="get_last_seen_notifications_msec"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.subscription_services.get_last_seen_notifications_msec">[docs]</a><span class="k">def</span> <span class="nf">get_last_seen_notifications_msec</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the last time, in milliseconds since the Epoch, when the user</span>
+<span class="sd">    checked their notifications in the dashboard page or the notifications</span>
+<span class="sd">    dropdown.</span>
+
+<span class="sd">    If the user has never checked the dashboard page or the notifications</span>
+<span class="sd">    dropdown, returns None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">subscriptions_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserSubscriptionsModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">subscriptions_model</span><span class="o">.</span><span class="n">last_checked</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">subscriptions_model</span> <span class="ow">and</span> <span class="n">subscriptions_model</span><span class="o">.</span><span class="n">last_checked</span><span class="p">)</span>
+        <span class="k">else</span> <span class="bp">None</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="record_user_has_seen_notifications"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.subscription_services.record_user_has_seen_notifications">[docs]</a><span class="k">def</span> <span class="nf">record_user_has_seen_notifications</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">last_seen_msecs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Updates the last_checked time for this user (which represents the time</span>
+<span class="sd">    the user last saw the notifications in the dashboard page or the</span>
+<span class="sd">    notifications dropdown).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">subscriptions_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserSubscriptionsModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">subscriptions_model</span><span class="p">:</span>
+        <span class="n">subscriptions_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserSubscriptionsModel</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">user_id</span><span class="p">)</span>
+
+    <span class="n">subscriptions_model</span><span class="o">.</span><span class="n">last_checked</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span>
+        <span class="n">last_seen_msecs</span> <span class="o">/</span> <span class="mf">1000.0</span><span class="p">)</span>
+    <span class="n">subscriptions_model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

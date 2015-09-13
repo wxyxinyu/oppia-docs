@@ -1,0 +1,155 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.extensions.triggers package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-extensions-triggers-package">
+<h1>oppia.extensions.triggers package<a class="headerlink" href="#oppia-extensions-triggers-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.extensions.triggers.trigger_classes">
+<span id="oppia-extensions-triggers-trigger-classes-module"></span><h2>oppia.extensions.triggers.trigger_classes module<a class="headerlink" href="#module-oppia.extensions.triggers.trigger_classes" title="Permalink to this headline">¶</a></h2>
+<p>Base class for defining triggers.</p>
+<p>Although this module is in extensions/, it is not provided as an extension
+framework for third-party developers. This is because reacting to triggers
+involves changes to core code.</p>
+<dl class="class">
+<dt id="oppia.extensions.triggers.trigger_classes.BaseTrigger">
+<em class="property">class </em><code class="descclassname">oppia.extensions.triggers.trigger_classes.</code><code class="descname">BaseTrigger</code><a class="reference internal" href="_modules/oppia/extensions/triggers/trigger_classes.html#BaseTrigger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.triggers.trigger_classes.BaseTrigger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Base trigger definition class.</p>
+<p>This class is not meant to be user-editable. The only methods on it should
+be get()-type methods.</p>
+<dl class="attribute">
+<dt id="oppia.extensions.triggers.trigger_classes.BaseTrigger.customization_arg_specs">
+<code class="descname">customization_arg_specs</code><a class="headerlink" href="#oppia.extensions.triggers.trigger_classes.BaseTrigger.customization_arg_specs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.extensions.triggers.trigger_classes.BaseTrigger.get_trigger_type">
+<em class="property">classmethod </em><code class="descname">get_trigger_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/extensions/triggers/trigger_classes.html#BaseTrigger.get_trigger_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.triggers.trigger_classes.BaseTrigger.get_trigger_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.triggers.trigger_classes.ClickButton">
+<em class="property">class </em><code class="descclassname">oppia.extensions.triggers.trigger_classes.</code><code class="descname">ClickButton</code><a class="reference internal" href="_modules/oppia/extensions/triggers/trigger_classes.html#ClickButton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.triggers.trigger_classes.ClickButton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.triggers.trigger_classes.BaseTrigger" title="oppia.extensions.triggers.trigger_classes.BaseTrigger"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.triggers.trigger_classes.BaseTrigger</span></code></a></p>
+<p>The presence of this trigger adds a button to the UI. The trigger is
+invoked when the learner clicks this button.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.extensions.triggers.trigger_classes.NthResubmission">
+<em class="property">class </em><code class="descclassname">oppia.extensions.triggers.trigger_classes.</code><code class="descname">NthResubmission</code><a class="reference internal" href="_modules/oppia/extensions/triggers/trigger_classes.html#NthResubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.extensions.triggers.trigger_classes.NthResubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.extensions.triggers.trigger_classes.BaseTrigger" title="oppia.extensions.triggers.trigger_classes.BaseTrigger"><code class="xref py py-class docutils literal"><span class="pre">oppia.extensions.triggers.trigger_classes.BaseTrigger</span></code></a></p>
+<p>This trigger is invoked when an answer is submitted to the same state
+for the nth time in succession, and the destination that would result due
+to normal evaluation would cause a further loop-around to the same state.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.extensions.triggers">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.extensions.triggers" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.extensions.triggers package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.triggers.trigger_classes">oppia.extensions.triggers.trigger_classes module</a></li>
+<li><a class="reference internal" href="#module-oppia.extensions.triggers">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.extensions.triggers.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.extensions.triggers.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

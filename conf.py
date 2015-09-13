@@ -19,18 +19,50 @@ import shlex
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../oppia/'))
+sys.path.insert(0, os.path.abspath('../oppia/core/tests/'))
+sys.path.insert(0, os.path.abspath(
+    '../oppia_tools/google_appengine_1.9.19/google_appengine'))
+sys.path.insert(0, os.path.abspath(
+    '../oppia_tools/webtest-1.4.2'))
+sys.path.insert(0, os.path.abspath(
+    '../oppia_tools/google_appengine_1.9.19/google_appengine/lib/webob_0_9'))
+sys.path.insert(0, os.path.abspath(
+    '../oppia_tools/google_appengine_1.9.19/google_appengine/lib/webapp2-2.5.2'))
+# CURR_DIR = os.path.abspath(os.getcwd())
+# OPPIA_TOOLS_DIR = os.path.join(CURR_DIR, '..', 'oppia_tools')
+# THIRD_PARTY_DIR = os.path.join(CURR_DIR, 'third_party')
+
+# DIRS_TO_ADD_TO_SYS_PATH = [
+#     os.path.join(
+#         OPPIA_TOOLS_DIR, 'google_appengine_1.9.19', 'google_appengine'),
+#     CURR_DIR,
+#     os.path.join(OPPIA_TOOLS_DIR, 'webtest-1.4.2'),
+#     os.path.join(
+#         OPPIA_TOOLS_DIR, 'google_appengine_1.9.19', 'google_appengine',
+#         'lib', 'webob_0_9'),
+#     os.path.join(CURR_DIR, 'third_party', 'bleach-1.2.2'),
+#     os.path.join(THIRD_PARTY_DIR, 'html5lib-python-0.95'),
+#     os.path.join(THIRD_PARTY_DIR, 'gae-mapreduce-1.9.17.0'),
+#     os.path.join(THIRD_PARTY_DIR, 'gae-cloud-storage-1.9.15.0'),
+#     os.path.join(THIRD_PARTY_DIR, 'gae-pipeline-1.9.17.0'),
+#     os.path.join(THIRD_PARTY_DIR, 'graphy-1.0.0'),
+#     os.path.join(THIRD_PARTY_DIR, 'simplejson-3.7.1'),
+# ]
+# sys.path.insert(0, '..')
 
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-#needs_sphinx = '1.0'
+# needs_sphinx = '1.0'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',

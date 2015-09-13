@@ -1,0 +1,331 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.user_jobs &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.user_jobs</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Jobs for queries personalized to individual users.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">core</span> <span class="kn">import</span> <span class="n">jobs</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">feedback_services</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">subscription_services</span>
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">exp_models</span><span class="p">,</span> <span class="n">feedback_models</span><span class="p">,</span> <span class="n">user_models</span><span class="p">)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">exploration</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">feedback</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">user</span><span class="p">])</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+
+<div class="viewcode-block" id="RecentUpdatesRealtimeModel"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_jobs.RecentUpdatesRealtimeModel">[docs]</a><span class="k">class</span> <span class="nc">RecentUpdatesRealtimeModel</span><span class="p">(</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">BaseRealtimeDatastoreClassForContinuousComputations</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="DashboardRecentUpdatesAggregator"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_jobs.DashboardRecentUpdatesAggregator">[docs]</a><span class="k">class</span> <span class="nc">DashboardRecentUpdatesAggregator</span><span class="p">(</span><span class="n">jobs</span><span class="o">.</span><span class="n">BaseContinuousComputationManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A continuous-computation job that computes a list of recent updates</span>
+<span class="sd">    of explorations and feedback threads to show on a user&#39;s dashboard.</span>
+
+<span class="sd">    This job does not have a realtime component. There will be a delay in</span>
+<span class="sd">    propagating new updates to the dashboard; the length of the delay will be</span>
+<span class="sd">    approximately the time it takes a batch job to run.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="DashboardRecentUpdatesAggregator.get_event_types_listened_to"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_jobs.DashboardRecentUpdatesAggregator.get_event_types_listened_to">[docs]</a>    <span class="k">def</span> <span class="nf">get_event_types_listened_to</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_realtime_datastore_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RecentUpdatesRealtimeModel</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_batch_job_manager_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RecentUpdatesMRJobManager</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_handle_incoming_event</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">active_realtime_layer</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="c"># Public query methods.</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="DashboardRecentUpdatesAggregator.get_recent_notifications"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_jobs.DashboardRecentUpdatesAggregator.get_recent_notifications">[docs]</a>    <span class="k">def</span> <span class="nf">get_recent_notifications</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets a list of recent notifications to show on this user&#39;s</span>
+<span class="sd">        dashboard.</span>
+
+<span class="sd">        Returns a 2-tuple. The first element is a float representing the number</span>
+<span class="sd">        of milliseconds since the Epoch when the job was queued. The second</span>
+<span class="sd">        element is a list of recent updates to explorations and feedback</span>
+<span class="sd">        threads; each entry is a dict with keys &#39;type&#39;, &#39;activity_id&#39;,</span>
+<span class="sd">        &#39;activity_title&#39;, &#39;last_updated_ms&#39;, &#39;author_id&#39; and &#39;subject&#39;. Here,</span>
+<span class="sd">        &#39;type&#39; is either feconf.UPDATE_TYPE_EXPLORATION_COMMIT or</span>
+<span class="sd">        feconf.UPDATE_TYPE_FEEDBACK_MESSAGE, &#39;activity_id&#39; is the id of the</span>
+<span class="sd">        exploration being committed to or to which the feedback thread belongs,</span>
+<span class="sd">        and &#39;activity_title&#39; is the corresponding title.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">user_model</span> <span class="o">=</span> <span class="n">user_models</span><span class="o">.</span><span class="n">UserRecentChangesBatchModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">user_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">user_model</span><span class="o">.</span><span class="n">job_queued_msec</span> <span class="k">if</span> <span class="n">user_model</span> <span class="k">else</span> <span class="bp">None</span><span class="p">,</span>
+            <span class="n">user_model</span><span class="o">.</span><span class="n">output</span> <span class="k">if</span> <span class="n">user_model</span> <span class="k">else</span> <span class="p">[])</span>
+
+</div></div>
+<div class="viewcode-block" id="RecentUpdatesMRJobManager"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_jobs.RecentUpdatesMRJobManager">[docs]</a><span class="k">class</span> <span class="nc">RecentUpdatesMRJobManager</span><span class="p">(</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">BaseMapReduceJobManagerForContinuousComputations</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Manager for a MapReduce job that computes a list of recent notifications</span>
+<span class="sd">    for explorations and feedback threads watched by a user.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_continuous_computation_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DashboardRecentUpdatesAggregator</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="RecentUpdatesMRJobManager.entity_classes_to_map_over"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_jobs.RecentUpdatesMRJobManager.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">user_models</span><span class="o">.</span><span class="n">UserSubscriptionsModel</span><span class="p">]</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="RecentUpdatesMRJobManager.map"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_jobs.RecentUpdatesMRJobManager.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="n">user_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">job_queued_msec</span> <span class="o">=</span> <span class="n">RecentUpdatesMRJobManager</span><span class="o">.</span><span class="n">_get_job_queued_msec</span><span class="p">()</span>
+        <span class="n">reducer_key</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">@</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">job_queued_msec</span><span class="p">)</span>
+
+        <span class="n">activity_ids_list</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">activity_ids</span>
+        <span class="n">feedback_thread_ids_list</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">feedback_thread_ids</span>
+
+        <span class="n">activity_models</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span>
+            <span class="n">activity_ids_list</span><span class="p">,</span> <span class="n">include_deleted</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">activity_model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">activity_models</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">activity_model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="s">&#39;Could not find activity </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">activity_ids_list</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+                <span class="k">continue</span>
+
+            <span class="c"># Find the last commit that is not due to an automatic migration.</span>
+            <span class="n">latest_manual_commit_version</span> <span class="o">=</span> <span class="n">activity_model</span><span class="o">.</span><span class="n">version</span>
+            <span class="n">metadata_obj</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">get_snapshots_metadata</span><span class="p">(</span>
+                <span class="n">activity_model</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="p">[</span><span class="n">latest_manual_commit_version</span><span class="p">],</span>
+                <span class="n">allow_deleted</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">while</span> <span class="n">metadata_obj</span><span class="p">[</span><span class="s">&#39;committer_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">feconf</span><span class="o">.</span><span class="n">MIGRATION_BOT_USER_ID</span><span class="p">:</span>
+                <span class="n">latest_manual_commit_version</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="n">metadata_obj</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">get_snapshots_metadata</span><span class="p">(</span>
+                        <span class="n">activity_model</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                        <span class="p">[</span><span class="n">latest_manual_commit_version</span><span class="p">],</span>
+                        <span class="n">allow_deleted</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="k">yield</span> <span class="p">(</span><span class="n">reducer_key</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="n">feconf</span><span class="o">.</span><span class="n">UPDATE_TYPE_EXPLORATION_COMMIT</span><span class="p">,</span>
+                <span class="s">&#39;activity_id&#39;</span><span class="p">:</span> <span class="n">activity_model</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="s">&#39;activity_title&#39;</span><span class="p">:</span> <span class="n">activity_model</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                <span class="s">&#39;author_id&#39;</span><span class="p">:</span> <span class="n">metadata_obj</span><span class="p">[</span><span class="s">&#39;committer_id&#39;</span><span class="p">],</span>
+                <span class="s">&#39;last_updated_ms&#39;</span><span class="p">:</span> <span class="n">metadata_obj</span><span class="p">[</span><span class="s">&#39;created_on_ms&#39;</span><span class="p">],</span>
+                <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="n">feconf</span><span class="o">.</span><span class="n">COMMIT_MESSAGE_EXPLORATION_DELETED</span>
+                    <span class="k">if</span> <span class="n">activity_model</span><span class="o">.</span><span class="n">deleted</span>
+                    <span class="k">else</span> <span class="n">metadata_obj</span><span class="p">[</span><span class="s">&#39;commit_message&#39;</span><span class="p">]</span>
+                <span class="p">),</span>
+            <span class="p">})</span>
+
+            <span class="c"># If the user subscribes to this activity, he/she is automatically</span>
+            <span class="c"># subscribed to all feedback threads for this activity.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">activity_model</span><span class="o">.</span><span class="n">deleted</span><span class="p">:</span>
+                <span class="n">threads</span> <span class="o">=</span> <span class="n">feedback_services</span><span class="o">.</span><span class="n">get_threadlist</span><span class="p">(</span><span class="n">activity_model</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">thread</span><span class="p">[</span><span class="s">&#39;thread_id&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">feedback_thread_ids_list</span><span class="p">:</span>
+                        <span class="n">feedback_thread_ids_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">thread</span><span class="p">[</span><span class="s">&#39;thread_id&#39;</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">feedback_thread_id</span> <span class="ow">in</span> <span class="n">feedback_thread_ids_list</span><span class="p">:</span>
+            <span class="n">last_message</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">feedback_models</span><span class="o">.</span><span class="n">FeedbackMessageModel</span><span class="o">.</span><span class="n">get_most_recent_message</span><span class="p">(</span>
+                    <span class="n">feedback_thread_id</span><span class="p">))</span>
+
+            <span class="k">yield</span> <span class="p">(</span><span class="n">reducer_key</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="n">feconf</span><span class="o">.</span><span class="n">UPDATE_TYPE_FEEDBACK_MESSAGE</span><span class="p">,</span>
+                <span class="s">&#39;activity_id&#39;</span><span class="p">:</span> <span class="n">last_message</span><span class="o">.</span><span class="n">exploration_id</span><span class="p">,</span>
+                <span class="s">&#39;activity_title&#39;</span><span class="p">:</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span>
+                    <span class="n">last_message</span><span class="o">.</span><span class="n">exploration_id</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                <span class="s">&#39;author_id&#39;</span><span class="p">:</span> <span class="n">last_message</span><span class="o">.</span><span class="n">author_id</span><span class="p">,</span>
+                <span class="s">&#39;last_updated_ms&#39;</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span>
+                    <span class="n">last_message</span><span class="o">.</span><span class="n">created_on</span><span class="p">),</span>
+                <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="n">last_message</span><span class="o">.</span><span class="n">get_thread_subject</span><span class="p">(),</span>
+            <span class="p">})</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="RecentUpdatesMRJobManager.reduce"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_jobs.RecentUpdatesMRJobManager.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">stringified_values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s">&#39;@&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">&#39;Invalid reducer key for RecentUpdatesMRJob: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
+
+        <span class="n">user_id</span> <span class="o">=</span> <span class="n">key</span><span class="p">[:</span><span class="n">key</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;@&#39;</span><span class="p">)]</span>
+        <span class="n">job_queued_msec</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;@&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:])</span>
+
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">sv</span><span class="p">)</span> <span class="k">for</span> <span class="n">sv</span> <span class="ow">in</span> <span class="n">stringified_values</span><span class="p">]</span>
+        <span class="n">sorted_values</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="n">values</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s">&#39;last_updated_ms&#39;</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="n">user_models</span><span class="o">.</span><span class="n">UserRecentChangesBatchModel</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">sorted_values</span><span class="p">[:</span> <span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_QUERY_LIMIT</span><span class="p">],</span>
+            <span class="n">job_queued_msec</span><span class="o">=</span><span class="n">job_queued_msec</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="DashboardSubscriptionsOneOffJob"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_jobs.DashboardSubscriptionsOneOffJob">[docs]</a><span class="k">class</span> <span class="nc">DashboardSubscriptionsOneOffJob</span><span class="p">(</span><span class="n">jobs</span><span class="o">.</span><span class="n">BaseMapReduceJobManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;One-off job for subscribing users to explorations and feedback</span>
+<span class="sd">    threads.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="DashboardSubscriptionsOneOffJob.entity_classes_to_map_over"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_jobs.DashboardSubscriptionsOneOffJob.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationRightsModel</span><span class="p">,</span>
+            <span class="n">feedback_models</span><span class="o">.</span><span class="n">FeedbackMessageModel</span><span class="p">,</span>
+        <span class="p">]</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="DashboardSubscriptionsOneOffJob.map"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_jobs.DashboardSubscriptionsOneOffJob.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">feedback_models</span><span class="o">.</span><span class="n">FeedbackMessageModel</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">author_id</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">author_id</span><span class="p">,</span> <span class="p">{</span>
+                    <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;feedback&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">thread_id</span>
+                <span class="p">})</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationRightsModel</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">deleted</span><span class="p">:</span>
+                <span class="k">return</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">community_owned</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">owner_id</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">owner_id</span><span class="p">,</span> <span class="p">{</span>
+                        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;exploration&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span>
+                    <span class="p">})</span>
+                <span class="k">for</span> <span class="n">editor_id</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">editor_ids</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">editor_id</span><span class="p">,</span> <span class="p">{</span>
+                        <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;exploration&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span>
+                    <span class="p">})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># Go through the history.</span>
+                <span class="n">current_version</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">version</span>
+                <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">current_version</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">model</span> <span class="o">=</span> <span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationRightsModel</span><span class="o">.</span><span class="n">get_version</span><span class="p">(</span>
+                        <span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">model</span><span class="o">.</span><span class="n">community_owned</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">owner_id</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">owner_ids</span><span class="p">:</span>
+                            <span class="k">yield</span> <span class="p">(</span><span class="n">owner_id</span><span class="p">,</span> <span class="p">{</span>
+                                <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;exploration&#39;</span><span class="p">,</span>
+                                <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span>
+                            <span class="p">})</span>
+                        <span class="k">for</span> <span class="n">editor_id</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">editor_ids</span><span class="p">:</span>
+                            <span class="k">yield</span> <span class="p">(</span><span class="n">editor_id</span><span class="p">,</span> <span class="p">{</span>
+                                <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;exploration&#39;</span><span class="p">,</span>
+                                <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span>
+                            <span class="p">})</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="DashboardSubscriptionsOneOffJob.reduce"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.user_jobs.DashboardSubscriptionsOneOffJob.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">stringified_values</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">stringified_values</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;feedback&#39;</span><span class="p">:</span>
+                <span class="n">subscription_services</span><span class="o">.</span><span class="n">subscribe_to_thread</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">item</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;exploration&#39;</span><span class="p">:</span>
+                <span class="n">subscription_services</span><span class="o">.</span><span class="n">subscribe_to_activity</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">])</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

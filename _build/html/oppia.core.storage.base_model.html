@@ -1,0 +1,410 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.storage.base_model package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-core-storage-base-model-package">
+<h1>oppia.core.storage.base_model package<a class="headerlink" href="#oppia-core-storage-base-model-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core.storage.base_model.gae_models">
+<span id="oppia-core-storage-base-model-gae-models-module"></span><h2>oppia.core.storage.base_model.gae_models module<a class="headerlink" href="#module-oppia.core.storage.base_model.gae_models" title="Permalink to this headline">¶</a></h2>
+<p>Base model class.</p>
+<dl class="class">
+<dt id="oppia.core.storage.base_model.gae_models.BaseMapReduceBatchResultsModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.base_model.gae_models.</code><code class="descname">BaseMapReduceBatchResultsModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#BaseMapReduceBatchResultsModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseMapReduceBatchResultsModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.core.storage.base_model.gae_models.BaseModel" title="oppia.core.storage.base_model.gae_models.BaseModel"><code class="xref py py-class docutils literal"><span class="pre">oppia.core.storage.base_model.gae_models.BaseModel</span></code></a></p>
+<p>Base model for batch storage for MR jobs.</p>
+<p>This model turns off caching, because this results in stale data being
+shown after each MapReduce job run. Classes which are used by a MR job to
+store its batch results should subclass this class.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.base_model.gae_models.BaseModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.base_model.gae_models.</code><code class="descname">BaseModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#BaseModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">google.appengine.ext.ndb.model.Model</span></code></p>
+<p>Base model for all persistent object storage classes.</p>
+<dl class="exception">
+<dt id="oppia.core.storage.base_model.gae_models.BaseModel.EntityNotFoundError">
+<em class="property">exception </em><code class="descname">EntityNotFoundError</code><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#BaseModel.EntityNotFoundError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseModel.EntityNotFoundError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/exceptions.html#exceptions.Exception" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></a></p>
+<p>Raised when no entity for a given id exists in the datastore.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.BaseModel.created_on">
+<code class="descclassname">BaseModel.</code><code class="descname">created_on</code><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseModel.created_on" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a datetime object.</p>
+<p>Note: Unlike Django, auto_now_add can be overridden by setting the
+value before writing the entity.  And unlike classic db, auto_now
+does not supply a default value.  Also unlike classic db, when the
+entity is written, the property values are updated to match what
+was written.  Finally, beware that this also updates the value in
+the in-process cache, <em>and</em> that auto_now_add may interact weirdly
+with transaction retries (a retry of a property with auto_now_add
+set will reuse the value that was set on the first try).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.storage.base_model.gae_models.BaseModel.delete">
+<code class="descclassname">BaseModel.</code><code class="descname">delete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#BaseModel.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseModel.delete" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.BaseModel.deleted">
+<code class="descclassname">BaseModel.</code><code class="descname">deleted</code><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseModel.deleted" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python bool.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.base_model.gae_models.BaseModel.get">
+<em class="property">classmethod </em><code class="descclassname">BaseModel.</code><code class="descname">get</code><span class="sig-paren">(</span><em>entity_id</em>, <em>strict=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#BaseModel.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseModel.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets an entity by id. Fails noisily if strict == True.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>entity_id</strong> &#8211; str. The id of the entity.</li>
+<li><strong>strict</strong> &#8211; bool. Whether to fail noisily if no entity with the given id
+exists in the datastore.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None, if strict == False and no undeleted entity with the given id
+exists in the datastore. Otherwise, the entity instance that
+corresponds to the given id.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Raises:
+- base_models.BaseModel.EntityNotFoundError: if strict == True and</p>
+<blockquote>
+<div>no undeleted entity with the given id exists in the datastore.</div></blockquote>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.base_model.gae_models.BaseModel.get_all">
+<em class="property">classmethod </em><code class="descclassname">BaseModel.</code><code class="descname">get_all</code><span class="sig-paren">(</span><em>include_deleted_entities=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#BaseModel.get_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseModel.get_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a filterable iterable of all entities of this class.</p>
+<p>If include_deleted_entities is True then entities that have been marked
+deleted are returned as well.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.base_model.gae_models.BaseModel.get_multi">
+<em class="property">classmethod </em><code class="descclassname">BaseModel.</code><code class="descname">get_multi</code><span class="sig-paren">(</span><em>entity_ids</em>, <em>include_deleted=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#BaseModel.get_multi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseModel.get_multi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list, each entry of which is the instance model
+corresponding to the entity_id, except for the following two cases (in
+which the corresponding entry is None instead):</p>
+<blockquote>
+<div><ul class="simple">
+<li>the instance is not found</li>
+<li>the instance has been deleted, and <cite>include_deleted</cite> is True.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.base_model.gae_models.BaseModel.get_new_id">
+<em class="property">classmethod </em><code class="descclassname">BaseModel.</code><code class="descname">get_new_id</code><span class="sig-paren">(</span><em>entity_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#BaseModel.get_new_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseModel.get_new_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets a new id for an entity, based on its name.</p>
+<p>The returned id is guaranteed to be unique among all instances of this
+entity.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entity_name</strong> &#8211; the name of the entity. Coerced to a utf-8 encoded
+string. Defaults to &#8216;&#8217;.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a new unique id for this entity class.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/library/functions.html#str" title="(in Python v2.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+<p>Raises:
+- Exception: if an id cannot be generated within a reasonable number</p>
+<blockquote>
+<div>of attempts.</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.BaseModel.id">
+<code class="descclassname">BaseModel.</code><code class="descname">id</code><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseModel.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>A unique id for this model instance.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.BaseModel.last_updated">
+<code class="descclassname">BaseModel.</code><code class="descname">last_updated</code><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseModel.last_updated" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a datetime object.</p>
+<p>Note: Unlike Django, auto_now_add can be overridden by setting the
+value before writing the entity.  And unlike classic db, auto_now
+does not supply a default value.  Also unlike classic db, when the
+entity is written, the property values are updated to match what
+was written.  Finally, beware that this also updates the value in
+the in-process cache, <em>and</em> that auto_now_add may interact weirdly
+with transaction retries (a retry of a property with auto_now_add
+set will reuse the value that was set on the first try).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.storage.base_model.gae_models.BaseModel.put">
+<code class="descclassname">BaseModel.</code><code class="descname">put</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#BaseModel.put"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseModel.put" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.base_model.gae_models.BaseModel.put_multi">
+<em class="property">classmethod </em><code class="descclassname">BaseModel.</code><code class="descname">put_multi</code><span class="sig-paren">(</span><em>entities</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#BaseModel.put_multi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseModel.put_multi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.base_model.gae_models.BaseSnapshotContentModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.base_model.gae_models.</code><code class="descname">BaseSnapshotContentModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#BaseSnapshotContentModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseSnapshotContentModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.core.storage.base_model.gae_models.BaseModel" title="oppia.core.storage.base_model.gae_models.BaseModel"><code class="xref py py-class docutils literal"><span class="pre">oppia.core.storage.base_model.gae_models.BaseModel</span></code></a></p>
+<p>Base class for snapshot content classes.</p>
+<p>The id of this model is computed using VersionedModel.get_snapshot_id().</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.BaseSnapshotContentModel.content">
+<code class="descname">content</code><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseSnapshotContentModel.content" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.base_model.gae_models.BaseSnapshotMetadataModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.base_model.gae_models.</code><code class="descname">BaseSnapshotMetadataModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#BaseSnapshotMetadataModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseSnapshotMetadataModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.core.storage.base_model.gae_models.BaseModel" title="oppia.core.storage.base_model.gae_models.BaseModel"><code class="xref py py-class docutils literal"><span class="pre">oppia.core.storage.base_model.gae_models.BaseModel</span></code></a></p>
+<p>Base class for snapshot metadata classes.</p>
+<p>The id of this model is computed using VersionedModel.get_snapshot_id().</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.BaseSnapshotMetadataModel.commit_cmds">
+<code class="descname">commit_cmds</code><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseSnapshotMetadataModel.commit_cmds" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.BaseSnapshotMetadataModel.commit_message">
+<code class="descname">commit_message</code><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseSnapshotMetadataModel.commit_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unindexed Property whose value is a text string of unlimited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.BaseSnapshotMetadataModel.commit_type">
+<code class="descname">commit_type</code><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseSnapshotMetadataModel.commit_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.BaseSnapshotMetadataModel.committer_id">
+<code class="descname">committer_id</code><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.BaseSnapshotMetadataModel.committer_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.base_model.gae_models.VersionedModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.base_model.gae_models.</code><code class="descname">VersionedModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#VersionedModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.VersionedModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#oppia.core.storage.base_model.gae_models.BaseModel" title="oppia.core.storage.base_model.gae_models.BaseModel"><code class="xref py py-class docutils literal"><span class="pre">oppia.core.storage.base_model.gae_models.BaseModel</span></code></a></p>
+<p>Model that handles storage of the version history of model instances.</p>
+<p>To use this class, you must declare a SNAPSHOT_METADATA_CLASS and a
+SNAPSHOT_CONTENT_CLASS. The former must contain the String fields
+&#8216;committer_id&#8217;, &#8216;commit_type&#8217; and &#8216;commit_message&#8217;, and a JSON field for
+the Python list of dicts, &#8216;commit_cmds&#8217;. The latter must contain the JSON
+field &#8216;content&#8217;. The item that is being versioned must be serializable to a
+JSON blob.</p>
+<p>Note that commit() should be used for VersionedModels, as opposed to put()
+for direct subclasses of BaseModel.</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.VersionedModel.ALLOW_REVERT">
+<code class="descname">ALLOW_REVERT</code><em class="property"> = False</em><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.VersionedModel.ALLOW_REVERT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.VersionedModel.COMMIT_TYPE_CHOICES">
+<code class="descname">COMMIT_TYPE_CHOICES</code><em class="property"> = ['create', 'revert', 'edit', 'delete']</em><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.VersionedModel.COMMIT_TYPE_CHOICES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.VersionedModel.SNAPSHOT_CONTENT_CLASS">
+<code class="descname">SNAPSHOT_CONTENT_CLASS</code><em class="property"> = None</em><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.VersionedModel.SNAPSHOT_CONTENT_CLASS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.VersionedModel.SNAPSHOT_METADATA_CLASS">
+<code class="descname">SNAPSHOT_METADATA_CLASS</code><em class="property"> = None</em><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.VersionedModel.SNAPSHOT_METADATA_CLASS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.storage.base_model.gae_models.VersionedModel.commit">
+<code class="descname">commit</code><span class="sig-paren">(</span><em>committer_id</em>, <em>commit_message</em>, <em>commit_cmds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#VersionedModel.commit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.VersionedModel.commit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves a version snapshot and updates the model.</p>
+<p>commit_cmds should give sufficient information to reconstruct the
+commit.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.storage.base_model.gae_models.VersionedModel.delete">
+<code class="descname">delete</code><span class="sig-paren">(</span><em>committer_id</em>, <em>commit_message</em>, <em>force_deletion=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#VersionedModel.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.VersionedModel.delete" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.base_model.gae_models.VersionedModel.get">
+<em class="property">classmethod </em><code class="descname">get</code><span class="sig-paren">(</span><em>entity_id</em>, <em>strict=True</em>, <em>version=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#VersionedModel.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.VersionedModel.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets an entity by id. Fails noisily if strict == True.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.base_model.gae_models.VersionedModel.get_snapshots_metadata">
+<em class="property">classmethod </em><code class="descname">get_snapshots_metadata</code><span class="sig-paren">(</span><em>model_instance_id</em>, <em>version_numbers</em>, <em>allow_deleted=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#VersionedModel.get_snapshots_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.VersionedModel.get_snapshots_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of dicts, each representing a model snapshot.</p>
+<p>One dict is returned for each version number in the list of version
+numbers requested. If any of the version numbers does not exist, an
+error is raised.</p>
+<p>If <cite>allow_deleted</cite> is False, an error is raised if the current model
+has been deleted.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.base_model.gae_models.VersionedModel.get_version">
+<em class="property">classmethod </em><code class="descname">get_version</code><span class="sig-paren">(</span><em>model_instance_id</em>, <em>version_number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#VersionedModel.get_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.VersionedModel.get_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a model instance representing the given version.</p>
+<p>The snapshot content is used to populate this model instance. The
+snapshot metadata is not used.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.storage.base_model.gae_models.VersionedModel.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#VersionedModel.put"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.VersionedModel.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>For VersionedModels, this method is replaced with commit().</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.base_model.gae_models.VersionedModel.revert">
+<em class="property">classmethod </em><code class="descname">revert</code><span class="sig-paren">(</span><em>model</em>, <em>committer_id</em>, <em>commit_message</em>, <em>version_number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/base_model/gae_models.html#VersionedModel.revert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.VersionedModel.revert" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.base_model.gae_models.VersionedModel.version">
+<code class="descname">version</code><a class="headerlink" href="#oppia.core.storage.base_model.gae_models.VersionedModel.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="oppia-core-storage-base-model-gae-models-test-module">
+<h2>oppia.core.storage.base_model.gae_models_test module<a class="headerlink" href="#oppia-core-storage-base-model-gae-models-test-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core.storage.base_model">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.core.storage.base_model" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.core.storage.base_model package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.core.storage.base_model.gae_models">oppia.core.storage.base_model.gae_models module</a></li>
+<li><a class="reference internal" href="#oppia-core-storage-base-model-gae-models-test-module">oppia.core.storage.base_model.gae_models_test module</a></li>
+<li><a class="reference internal" href="#module-oppia.core.storage.base_model">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.core.storage.base_model.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.core.storage.base_model.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

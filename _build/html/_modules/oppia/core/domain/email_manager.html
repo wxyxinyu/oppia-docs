@@ -1,0 +1,255 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.email_manager &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.email_manager</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Config properties and functions for managing email notifications.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">config_domain</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">html_cleaner</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">rights_manager</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">user_services</span>
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">email_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span><span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">email</span><span class="p">])</span>
+<span class="n">email_services</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_email_services</span><span class="p">()</span>
+<span class="n">transaction_services</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_transaction_services</span><span class="p">()</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+
+
+<span class="c"># Stub for logging.error(), so that it can be swapped out in tests.</span>
+<span class="n">log_new_error</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">error</span>
+
+<span class="n">EMAIL_CONTENT_SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;dict&#39;</span><span class="p">,</span>
+    <span class="s">&#39;properties&#39;</span><span class="p">:</span> <span class="p">[{</span>
+        <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;subject&#39;</span><span class="p">,</span>
+        <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;unicode&#39;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;html_body&#39;</span><span class="p">,</span>
+        <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;unicode&#39;</span><span class="p">,</span>
+            <span class="s">&#39;ui_config&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&#39;rows&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}],</span>
+<span class="p">}</span>
+
+<span class="n">EMAIL_SENDER_NAME</span> <span class="o">=</span> <span class="n">config_domain</span><span class="o">.</span><span class="n">ConfigProperty</span><span class="p">(</span>
+    <span class="s">&#39;email_sender_name&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;unicode&#39;</span><span class="p">},</span>
+    <span class="s">&#39;The sender name for outgoing emails.&#39;</span><span class="p">,</span> <span class="s">&#39;Site Admin&#39;</span><span class="p">)</span>
+<span class="n">EMAIL_FOOTER</span> <span class="o">=</span> <span class="n">config_domain</span><span class="o">.</span><span class="n">ConfigProperty</span><span class="p">(</span>
+    <span class="s">&#39;email_footer&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="s">&#39;unicode&#39;</span><span class="p">,</span> <span class="s">&#39;ui_config&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;rows&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}},</span>
+    <span class="s">&#39;The footer to append to all outgoing emails. (This should be written in &#39;</span>
+    <span class="s">&#39;HTML and include an unsubscribe link.)&#39;</span><span class="p">,</span>
+    <span class="s">&#39;You can unsubscribe from these emails from the &#39;</span>
+    <span class="s">&#39;&lt;a href=&quot;https://www.example.com&quot;&gt;Preferences&lt;/a&gt; page.&#39;</span><span class="p">)</span>
+<span class="c"># NOTE TO DEVELOPERS: post-signup emails will not be sent if this placeholder</span>
+<span class="c"># is left unmodified. If this policy changes, the deployment instructions at</span>
+<span class="c"># https://code.google.com/p/oppia/wiki/DeployingOppia should be updated.</span>
+<span class="n">SIGNUP_EMAIL_CONTENT</span> <span class="o">=</span> <span class="n">config_domain</span><span class="o">.</span><span class="n">ConfigProperty</span><span class="p">(</span>
+    <span class="s">&#39;signup_email_content&#39;</span><span class="p">,</span> <span class="n">EMAIL_CONTENT_SCHEMA</span><span class="p">,</span>
+    <span class="s">&#39;Content of email sent after a new user signs up. (The email body should &#39;</span>
+    <span class="s">&#39;be written with HTML and not include a salutation or footer.) These &#39;</span>
+    <span class="s">&#39;emails are only sent if the functionality is enabled in feconf.py.&#39;</span><span class="p">,</span>
+    <span class="p">{</span>
+        <span class="s">&#39;subject&#39;</span><span class="p">:</span> <span class="s">&#39;THIS IS A PLACEHOLDER.&#39;</span><span class="p">,</span>
+        <span class="s">&#39;html_body&#39;</span><span class="p">:</span> <span class="s">&#39;THIS IS A &lt;b&gt;PLACEHOLDER&lt;/b&gt; AND SHOULD BE REPLACED.&#39;</span><span class="p">,</span>
+    <span class="p">})</span>
+
+
+<span class="n">SENDER_VALIDATORS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">email_models</span><span class="o">.</span><span class="n">INTENT_SIGNUP</span><span class="p">:</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">==</span> <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_COMMITTER_ID</span><span class="p">),</span>
+    <span class="n">email_models</span><span class="o">.</span><span class="n">INTENT_DAILY_BATCH</span><span class="p">:</span> <span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">==</span> <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_COMMITTER_ID</span><span class="p">),</span>
+    <span class="n">email_models</span><span class="o">.</span><span class="n">INTENT_MARKETING</span><span class="p">:</span> <span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">Actor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">is_admin</span><span class="p">()),</span>
+    <span class="n">email_models</span><span class="o">.</span><span class="n">INTENT_PUBLICIZE_EXPLORATION</span><span class="p">:</span> <span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">Actor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">is_moderator</span><span class="p">()),</span>
+    <span class="n">email_models</span><span class="o">.</span><span class="n">INTENT_UNPUBLISH_EXPLORATION</span><span class="p">:</span> <span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">Actor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">is_moderator</span><span class="p">()),</span>
+    <span class="n">email_models</span><span class="o">.</span><span class="n">INTENT_DELETE_EXPLORATION</span><span class="p">:</span> <span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">rights_manager</span><span class="o">.</span><span class="n">Actor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">is_moderator</span><span class="p">()),</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">_require_sender_id_is_valid</span><span class="p">(</span><span class="n">intent</span><span class="p">,</span> <span class="n">sender_id</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">intent</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SENDER_VALIDATORS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Invalid email intent string: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">intent</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">SENDER_VALIDATORS</span><span class="p">[</span><span class="n">intent</span><span class="p">](</span><span class="n">sender_id</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">&#39;Invalid sender_id </span><span class="si">%s</span><span class="s"> for email with intent </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="n">sender_id</span><span class="p">,</span> <span class="n">intent</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Invalid sender_id for email with intent </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">intent</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_send_email</span><span class="p">(</span>
+        <span class="n">recipient_id</span><span class="p">,</span> <span class="n">sender_id</span><span class="p">,</span> <span class="n">intent</span><span class="p">,</span> <span class="n">email_subject</span><span class="p">,</span> <span class="n">email_html_body</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sends an email to the given recipient.</span>
+
+<span class="sd">    This function should be used for sending all user-facing emails.</span>
+
+<span class="sd">    Raises an Exception if the sender_id is not appropriate for the given</span>
+<span class="sd">    intent. Currently we support only system-generated emails and emails</span>
+<span class="sd">    initiated by moderator actions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_require_sender_id_is_valid</span><span class="p">(</span><span class="n">intent</span><span class="p">,</span> <span class="n">sender_id</span><span class="p">)</span>
+
+    <span class="n">recipient_email</span> <span class="o">=</span> <span class="n">user_services</span><span class="o">.</span><span class="n">get_email_from_user_id</span><span class="p">(</span><span class="n">recipient_id</span><span class="p">)</span>
+    <span class="n">cleaned_html_body</span> <span class="o">=</span> <span class="n">html_cleaner</span><span class="o">.</span><span class="n">clean</span><span class="p">(</span><span class="n">email_html_body</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cleaned_html_body</span> <span class="o">!=</span> <span class="n">email_html_body</span><span class="p">:</span>
+        <span class="n">log_new_error</span><span class="p">(</span>
+            <span class="s">&#39;Original email HTML body does not match cleaned HTML body:</span><span class="se">\n</span><span class="s">&#39;</span>
+            <span class="s">&#39;Original:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n\n</span><span class="s">Cleaned:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span>
+            <span class="p">(</span><span class="n">email_html_body</span><span class="p">,</span> <span class="n">cleaned_html_body</span><span class="p">))</span>
+        <span class="k">return</span>
+
+    <span class="n">raw_plaintext_body</span> <span class="o">=</span> <span class="n">cleaned_html_body</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&lt;br/&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+        <span class="s">&#39;&lt;br&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&lt;/p&gt;&lt;p&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&lt;/p&gt;</span><span class="se">\n</span><span class="s">&lt;p&gt;&#39;</span><span class="p">)</span>
+    <span class="n">cleaned_plaintext_body</span> <span class="o">=</span> <span class="n">html_cleaner</span><span class="o">.</span><span class="n">strip_html_tags</span><span class="p">(</span><span class="n">raw_plaintext_body</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_send_email_in_transaction</span><span class="p">():</span>
+        <span class="n">sender_email</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> &lt;</span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">EMAIL_SENDER_NAME</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_EMAIL_ADDRESS</span><span class="p">)</span>
+        <span class="n">email_services</span><span class="o">.</span><span class="n">send_mail</span><span class="p">(</span>
+            <span class="n">sender_email</span><span class="p">,</span> <span class="n">recipient_email</span><span class="p">,</span> <span class="n">email_subject</span><span class="p">,</span>
+            <span class="n">cleaned_plaintext_body</span><span class="p">,</span> <span class="n">cleaned_html_body</span><span class="p">)</span>
+        <span class="n">email_models</span><span class="o">.</span><span class="n">SentEmailModel</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+            <span class="n">recipient_id</span><span class="p">,</span> <span class="n">recipient_email</span><span class="p">,</span> <span class="n">sender_id</span><span class="p">,</span> <span class="n">sender_email</span><span class="p">,</span> <span class="n">intent</span><span class="p">,</span>
+            <span class="n">email_subject</span><span class="p">,</span> <span class="n">cleaned_html_body</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">transaction_services</span><span class="o">.</span><span class="n">run_in_transaction</span><span class="p">(</span><span class="n">_send_email_in_transaction</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="send_post_signup_email"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.email_manager.send_post_signup_email">[docs]</a><span class="k">def</span> <span class="nf">send_post_signup_email</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sends a post-signup email to the given user.</span>
+
+<span class="sd">    The caller is responsible for ensuring that emails are allowed to be sent</span>
+<span class="sd">    to users (i.e. feconf.CAN_SEND_EMAILS_TO_USERS is True).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">content</span> <span class="ow">in</span> <span class="n">SIGNUP_EMAIL_CONTENT</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">content</span> <span class="o">==</span> <span class="n">SIGNUP_EMAIL_CONTENT</span><span class="o">.</span><span class="n">default_value</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+            <span class="n">log_new_error</span><span class="p">(</span>
+                <span class="s">&#39;Please ensure that the value for the admin config property &#39;</span>
+                <span class="s">&#39;SIGNUP_EMAIL_CONTENT is set, before allowing post-signup &#39;</span>
+                <span class="s">&#39;emails to be sent.&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+    <span class="n">user_settings</span> <span class="o">=</span> <span class="n">user_services</span><span class="o">.</span><span class="n">get_user_settings</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+    <span class="n">email_subject</span> <span class="o">=</span> <span class="n">SIGNUP_EMAIL_CONTENT</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="s">&#39;subject&#39;</span><span class="p">]</span>
+    <span class="n">email_body</span> <span class="o">=</span> <span class="s">&#39;Hi </span><span class="si">%s</span><span class="s">,&lt;br&gt;&lt;br&gt;</span><span class="si">%s</span><span class="s">&lt;br&gt;&lt;br&gt;</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="n">user_settings</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+        <span class="n">SIGNUP_EMAIL_CONTENT</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="s">&#39;html_body&#39;</span><span class="p">],</span>
+        <span class="n">EMAIL_FOOTER</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="n">_send_email</span><span class="p">(</span>
+        <span class="n">user_id</span><span class="p">,</span> <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_COMMITTER_ID</span><span class="p">,</span> <span class="n">email_models</span><span class="o">.</span><span class="n">INTENT_SIGNUP</span><span class="p">,</span>
+        <span class="n">email_subject</span><span class="p">,</span> <span class="n">email_body</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

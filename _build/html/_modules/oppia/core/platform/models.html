@@ -1,0 +1,232 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.platform.models &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.platform.models</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Interface for storage model switching.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="c"># Valid model names.</span>
+<span class="n">NAMES</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">create_enum</span><span class="p">(</span>
+    <span class="s">&#39;base_model&#39;</span><span class="p">,</span> <span class="s">&#39;config&#39;</span><span class="p">,</span> <span class="s">&#39;email&#39;</span><span class="p">,</span> <span class="s">&#39;exploration&#39;</span><span class="p">,</span> <span class="s">&#39;feedback&#39;</span><span class="p">,</span> <span class="s">&#39;file&#39;</span><span class="p">,</span> <span class="s">&#39;job&#39;</span><span class="p">,</span>
+    <span class="s">&#39;recommendations&#39;</span><span class="p">,</span> <span class="s">&#39;statistics&#39;</span><span class="p">,</span> <span class="s">&#39;user&#39;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_Platform</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">import_models</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+
+<span class="k">class</span> <span class="nc">_Gae</span><span class="p">(</span><span class="n">_Platform</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">import_models</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">model_names</span><span class="p">):</span>
+
+        <span class="n">returned_models</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">model_names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">NAMES</span><span class="o">.</span><span class="n">base_model</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">core.storage.base_model</span> <span class="kn">import</span> <span class="n">gae_models</span> <span class="k">as</span> <span class="n">base_models</span>
+                <span class="n">returned_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base_models</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="n">NAMES</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">core.storage.config</span> <span class="kn">import</span> <span class="n">gae_models</span> <span class="k">as</span> <span class="n">config_models</span>
+                <span class="n">returned_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">config_models</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="n">NAMES</span><span class="o">.</span><span class="n">email</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">core.storage.email</span> <span class="kn">import</span> <span class="n">gae_models</span> <span class="k">as</span> <span class="n">email_models</span>
+                <span class="n">returned_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">email_models</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="n">NAMES</span><span class="o">.</span><span class="n">exploration</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">core.storage.exploration</span> <span class="kn">import</span> <span class="n">gae_models</span> <span class="k">as</span> <span class="n">exp_models</span>
+                <span class="n">returned_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exp_models</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="n">NAMES</span><span class="o">.</span><span class="n">feedback</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">core.storage.feedback</span> <span class="kn">import</span> <span class="n">gae_models</span> <span class="k">as</span> <span class="n">feedback_models</span>
+                <span class="n">returned_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feedback_models</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="n">NAMES</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">core.storage.file</span> <span class="kn">import</span> <span class="n">gae_models</span> <span class="k">as</span> <span class="n">file_models</span>
+                <span class="n">returned_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_models</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="n">NAMES</span><span class="o">.</span><span class="n">job</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">core.storage.job</span> <span class="kn">import</span> <span class="n">gae_models</span> <span class="k">as</span> <span class="n">job_models</span>
+                <span class="n">returned_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job_models</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="n">NAMES</span><span class="o">.</span><span class="n">recommendations</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">core.storage.recommendations</span> <span class="kn">import</span> <span class="n">gae_models</span> <span class="k">as</span> <span class="n">recommendations_models</span>
+                <span class="n">returned_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">recommendations_models</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="n">NAMES</span><span class="o">.</span><span class="n">statistics</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">core.storage.statistics</span> <span class="kn">import</span> <span class="n">gae_models</span> <span class="k">as</span> <span class="n">statistics_models</span>
+                <span class="n">returned_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">statistics_models</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="n">NAMES</span><span class="o">.</span><span class="n">user</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">core.storage.user</span> <span class="kn">import</span> <span class="n">gae_models</span> <span class="k">as</span> <span class="n">user_models</span>
+                <span class="n">returned_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user_models</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Invalid model name: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">returned_models</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">import_transaction_services</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.platform.transactions</span> <span class="kn">import</span> <span class="n">gae_transaction_services</span>
+        <span class="k">return</span> <span class="n">gae_transaction_services</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">import_current_user_services</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.platform.users</span> <span class="kn">import</span> <span class="n">gae_current_user_services</span>
+        <span class="k">return</span> <span class="n">gae_current_user_services</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">import_email_services</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.platform.email</span> <span class="kn">import</span> <span class="n">gae_email_services</span>
+        <span class="k">return</span> <span class="n">gae_email_services</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">import_memcache_services</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.platform.memcache</span> <span class="kn">import</span> <span class="n">gae_memcache_services</span>
+        <span class="k">return</span> <span class="n">gae_memcache_services</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">import_taskqueue_services</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.platform.taskqueue</span> <span class="kn">import</span> <span class="n">gae_taskqueue_services</span>
+        <span class="k">return</span> <span class="n">gae_taskqueue_services</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">import_search_services</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.platform.search</span> <span class="kn">import</span> <span class="n">gae_search_services</span>
+        <span class="k">return</span> <span class="n">gae_search_services</span>
+
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s">&#39;gae&#39;</span>
+
+
+<div class="viewcode-block" id="Registry"><a class="viewcode-back" href="../../../../oppia.core.platform.html#oppia.core.platform.models.Registry">[docs]</a><span class="k">class</span> <span class="nc">Registry</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">_PLATFORM_MAPPING</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">_Gae</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="n">_Gae</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_PLATFORM_MAPPING</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">feconf</span><span class="o">.</span><span class="n">PLATFORM</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Registry.import_models"><a class="viewcode-back" href="../../../../oppia.core.platform.html#oppia.core.platform.models.Registry.import_models">[docs]</a>    <span class="k">def</span> <span class="nf">import_models</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">model_names</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get</span><span class="p">()</span><span class="o">.</span><span class="n">import_models</span><span class="p">(</span><span class="n">model_names</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Registry.import_current_user_services"><a class="viewcode-back" href="../../../../oppia.core.platform.html#oppia.core.platform.models.Registry.import_current_user_services">[docs]</a>    <span class="k">def</span> <span class="nf">import_current_user_services</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get</span><span class="p">()</span><span class="o">.</span><span class="n">import_current_user_services</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Registry.import_transaction_services"><a class="viewcode-back" href="../../../../oppia.core.platform.html#oppia.core.platform.models.Registry.import_transaction_services">[docs]</a>    <span class="k">def</span> <span class="nf">import_transaction_services</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get</span><span class="p">()</span><span class="o">.</span><span class="n">import_transaction_services</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Registry.import_email_services"><a class="viewcode-back" href="../../../../oppia.core.platform.html#oppia.core.platform.models.Registry.import_email_services">[docs]</a>    <span class="k">def</span> <span class="nf">import_email_services</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get</span><span class="p">()</span><span class="o">.</span><span class="n">import_email_services</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Registry.import_memcache_services"><a class="viewcode-back" href="../../../../oppia.core.platform.html#oppia.core.platform.models.Registry.import_memcache_services">[docs]</a>    <span class="k">def</span> <span class="nf">import_memcache_services</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get</span><span class="p">()</span><span class="o">.</span><span class="n">import_memcache_services</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Registry.import_taskqueue_services"><a class="viewcode-back" href="../../../../oppia.core.platform.html#oppia.core.platform.models.Registry.import_taskqueue_services">[docs]</a>    <span class="k">def</span> <span class="nf">import_taskqueue_services</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get</span><span class="p">()</span><span class="o">.</span><span class="n">import_taskqueue_services</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Registry.import_search_services"><a class="viewcode-back" href="../../../../oppia.core.platform.html#oppia.core.platform.models.Registry.import_search_services">[docs]</a>    <span class="k">def</span> <span class="nf">import_search_services</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get</span><span class="p">()</span><span class="o">.</span><span class="n">import_search_services</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

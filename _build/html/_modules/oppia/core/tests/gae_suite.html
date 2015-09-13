@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.tests.gae_suite &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.tests.gae_suite</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Oppia test suite.</span>
+
+<span class="sd">In general, this script should not be run directly. Instead, invoke</span>
+<span class="sd">it from the command line by running</span>
+
+<span class="sd">    bash scripts/test.sh</span>
+
+<span class="sd">from the oppia/ root folder.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="n">CURR_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">CURR_DIR</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">feconf</span>
+
+<span class="n">OPPIA_TOOLS_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CURR_DIR</span><span class="p">,</span> <span class="s">&#39;..&#39;</span><span class="p">,</span> <span class="s">&#39;oppia_tools&#39;</span><span class="p">)</span>
+<span class="n">THIRD_PARTY_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CURR_DIR</span><span class="p">,</span> <span class="s">&#39;third_party&#39;</span><span class="p">)</span>
+
+<span class="n">DIRS_TO_ADD_TO_SYS_PATH</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">OPPIA_TOOLS_DIR</span><span class="p">,</span> <span class="s">&#39;google_appengine_1.9.19&#39;</span><span class="p">,</span> <span class="s">&#39;google_appengine&#39;</span><span class="p">),</span>
+    <span class="n">CURR_DIR</span><span class="p">,</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OPPIA_TOOLS_DIR</span><span class="p">,</span> <span class="s">&#39;webtest-1.4.2&#39;</span><span class="p">),</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">OPPIA_TOOLS_DIR</span><span class="p">,</span> <span class="s">&#39;google_appengine_1.9.19&#39;</span><span class="p">,</span> <span class="s">&#39;google_appengine&#39;</span><span class="p">,</span>
+        <span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;webob_0_9&#39;</span><span class="p">),</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CURR_DIR</span><span class="p">,</span> <span class="s">&#39;third_party&#39;</span><span class="p">,</span> <span class="s">&#39;bleach-1.2.2&#39;</span><span class="p">),</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">THIRD_PARTY_DIR</span><span class="p">,</span> <span class="s">&#39;html5lib-python-0.95&#39;</span><span class="p">),</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">THIRD_PARTY_DIR</span><span class="p">,</span> <span class="s">&#39;gae-mapreduce-1.9.17.0&#39;</span><span class="p">),</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">THIRD_PARTY_DIR</span><span class="p">,</span> <span class="s">&#39;gae-cloud-storage-1.9.15.0&#39;</span><span class="p">),</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">THIRD_PARTY_DIR</span><span class="p">,</span> <span class="s">&#39;gae-pipeline-1.9.17.0&#39;</span><span class="p">),</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">THIRD_PARTY_DIR</span><span class="p">,</span> <span class="s">&#39;graphy-1.0.0&#39;</span><span class="p">),</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">THIRD_PARTY_DIR</span><span class="p">,</span> <span class="s">&#39;simplejson-3.7.1&#39;</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="n">_PARSER</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+<span class="n">_PARSER</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+    <span class="s">&#39;--test_target&#39;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s">&#39;optional dotted module name of the test(s) to run&#39;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="create_test_suites"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.gae_suite.create_test_suites">[docs]</a><span class="k">def</span> <span class="nf">create_test_suites</span><span class="p">(</span><span class="n">test_target</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates test suites. If test_dir is None, runs all tests.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">test_target</span> <span class="ow">and</span> <span class="s">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">test_target</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;The delimiter in test_target should be a dot (.)&#39;</span><span class="p">)</span>
+
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestLoader</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">([</span>
+        <span class="n">loader</span><span class="o">.</span><span class="n">loadTestsFromName</span><span class="p">(</span><span class="n">test_target</span><span class="p">)]</span> <span class="k">if</span> <span class="n">test_target</span>
+        <span class="k">else</span> <span class="p">[</span><span class="n">loader</span><span class="o">.</span><span class="n">discover</span><span class="p">(</span>
+            <span class="n">CURR_DIR</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s">&#39;*_test.py&#39;</span><span class="p">,</span> <span class="n">top_level_dir</span><span class="o">=</span><span class="n">CURR_DIR</span><span class="p">)])</span>
+
+</div>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../../oppia.core.tests.html#oppia.core.tests.gae_suite.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Runs the tests.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_iterate</span><span class="p">(</span><span class="n">test_suite_or_case</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iterate through all the test cases in `test_suite_or_case`.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">suite</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">test_suite_or_case</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">test_suite_or_case</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">suite</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">subtest</span> <span class="ow">in</span> <span class="n">_iterate</span><span class="p">(</span><span class="n">test</span><span class="p">):</span>
+                    <span class="k">yield</span> <span class="n">subtest</span>
+
+    <span class="n">feconf</span><span class="o">.</span><span class="n">PLATFORM</span> <span class="o">=</span> <span class="s">&#39;gae&#39;</span>
+
+    <span class="k">for</span> <span class="n">directory</span> <span class="ow">in</span> <span class="n">DIRS_TO_ADD_TO_SYS_PATH</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">directory</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Directory </span><span class="si">%s</span><span class="s"> does not exist.&#39;</span> <span class="o">%</span> <span class="n">directory</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">directory</span><span class="p">)</span>
+
+    <span class="kn">import</span> <span class="nn">dev_appserver</span>
+    <span class="n">dev_appserver</span><span class="o">.</span><span class="n">fix_sys_path</span><span class="p">()</span>
+
+    <span class="n">parsed_args</span> <span class="o">=</span> <span class="n">_PARSER</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">suites</span> <span class="o">=</span> <span class="n">create_test_suites</span><span class="p">(</span><span class="n">parsed_args</span><span class="o">.</span><span class="n">test_target</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">unittest</span><span class="o">.</span><span class="n">TextTestRunner</span><span class="p">(</span><span class="n">verbosity</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">suite</span><span class="p">)</span>
+               <span class="k">for</span> <span class="n">suite</span> <span class="ow">in</span> <span class="n">suites</span><span class="p">]</span>
+
+    <span class="n">tests_run</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="n">tests_run</span> <span class="o">+=</span> <span class="n">result</span><span class="o">.</span><span class="n">testsRun</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">errors</span> <span class="ow">or</span> <span class="n">result</span><span class="o">.</span><span class="n">failures</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Test suite failed: </span><span class="si">%s</span><span class="s"> tests run, </span><span class="si">%s</span><span class="s"> errors, </span><span class="si">%s</span><span class="s"> failures.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">testsRun</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">errors</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">failures</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">tests_run</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;No tests were run.&#39;</span><span class="p">)</span>
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

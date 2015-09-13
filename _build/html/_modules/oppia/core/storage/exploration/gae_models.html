@@ -1,0 +1,481 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.storage.exploration.gae_models &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.storage.exploration.gae_models</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Model for an Oppia exploration.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+
+<span class="kn">import</span> <span class="nn">core.storage.base_model.gae_models</span> <span class="kn">as</span> <span class="nn">base_models</span>
+<span class="kn">import</span> <span class="nn">core.storage.user.gae_models</span> <span class="kn">as</span> <span class="nn">user_models</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+
+<span class="kn">from</span> <span class="nn">google.appengine.ext</span> <span class="kn">import</span> <span class="n">ndb</span>
+
+
+<span class="n">EXPLORATION_STATUS_PRIVATE</span> <span class="o">=</span> <span class="s">&#39;private&#39;</span>
+<span class="n">EXPLORATION_STATUS_PUBLIC</span> <span class="o">=</span> <span class="s">&#39;public&#39;</span>
+<span class="n">EXPLORATION_STATUS_PUBLICIZED</span> <span class="o">=</span> <span class="s">&#39;publicized&#39;</span>
+
+
+<div class="viewcode-block" id="ExplorationSnapshotMetadataModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExplorationSnapshotMetadataModel">[docs]</a><span class="k">class</span> <span class="nc">ExplorationSnapshotMetadataModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseSnapshotMetadataModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Storage model for the metadata for an exploration snapshot.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ExplorationSnapshotContentModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExplorationSnapshotContentModel">[docs]</a><span class="k">class</span> <span class="nc">ExplorationSnapshotContentModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseSnapshotContentModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Storage model for the content of an exploration snapshot.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ExplorationModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExplorationModel">[docs]</a><span class="k">class</span> <span class="nc">ExplorationModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">VersionedModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Versioned storage model for an Oppia exploration.</span>
+
+<span class="sd">    This class should only be imported by the exploration domain file, the</span>
+<span class="sd">    exploration services file, and the Exploration model test file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">SNAPSHOT_METADATA_CLASS</span> <span class="o">=</span> <span class="n">ExplorationSnapshotMetadataModel</span>
+    <span class="n">SNAPSHOT_CONTENT_CLASS</span> <span class="o">=</span> <span class="n">ExplorationSnapshotContentModel</span>
+    <span class="n">ALLOW_REVERT</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="c"># What this exploration is called.</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The category this exploration belongs to.</span>
+    <span class="n">category</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The objective of this exploration.</span>
+    <span class="n">objective</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">TextProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># The ISO 639-1 code for the language this exploration is written in.</span>
+    <span class="n">language_code</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_LANGUAGE_CODE</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Tags (topics, skills, concepts, etc.) associated with this</span>
+    <span class="c"># exploration.</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">repeated</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># DEPRECATED in v2.0.0.rc.2. Do not use. Retaining it here because deletion</span>
+    <span class="c"># caused GAE to raise an error on fetching a specific version of the</span>
+    <span class="c"># exploration model.</span>
+    <span class="c"># TODO(sll): Fix this error and remove this property.</span>
+    <span class="n">skill_tags</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">repeated</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># A blurb for this exploration.</span>
+    <span class="n">blurb</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">TextProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># &#39;Author notes&#39; for this exploration.</span>
+    <span class="n">author_notes</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">TextProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># The default HTML template to use for displaying the exploration to the</span>
+    <span class="c"># reader. This is a filename in data/skins (without the .html suffix).</span>
+    <span class="n">default_skin</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s">&#39;conversation_v1&#39;</span><span class="p">)</span>
+
+    <span class="c"># Schema storing specifications of the contents of any gadget panels,</span>
+    <span class="c"># along with associated customizations for each gadget instance.</span>
+    <span class="n">skin_customizations</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_SKIN_CUSTOMIZATIONS</span><span class="p">,</span>
+        <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="c"># The version of the states blob schema.</span>
+    <span class="n">states_schema_version</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The name of the initial state of this exploration.</span>
+    <span class="n">init_state_name</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># A dict representing the states of this exploration. This dict should</span>
+    <span class="c"># not be empty.</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="p">{},</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># The dict of parameter specifications associated with this exploration.</span>
+    <span class="c"># Each specification is a dict whose keys are param names and whose values</span>
+    <span class="c"># are each dicts with a single key, &#39;obj_type&#39;, whose value is a string.</span>
+    <span class="n">param_specs</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="p">{},</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># The list of parameter changes to be performed once at the start of a</span>
+    <span class="c"># reader&#39;s encounter with an exploration.</span>
+    <span class="n">param_changes</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">repeated</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExplorationModel.get_exploration_count"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExplorationModel.get_exploration_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_exploration_count</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the total number of explorations.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_all</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ExplorationModel.commit"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExplorationModel.commit">[docs]</a>    <span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Updates the exploration using the properties dict, then saves it.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ExplorationModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span>
+            <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_trusted_commit</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_type</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Record the event to the commit log after the model commit.</span>
+
+<span class="sd">        Note that this extends the superclass method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ExplorationModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_trusted_commit</span><span class="p">(</span>
+            <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_type</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+
+        <span class="n">committer_user_settings_model</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">user_models</span><span class="o">.</span><span class="n">UserSettingsModel</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">committer_id</span><span class="p">))</span>
+        <span class="n">committer_username</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">committer_user_settings_model</span><span class="o">.</span><span class="n">username</span>
+            <span class="k">if</span> <span class="n">committer_user_settings_model</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">exp_rights</span> <span class="o">=</span> <span class="n">ExplorationRightsModel</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="c"># TODO(msl): test if put_async() leads to any problems (make</span>
+        <span class="c"># sure summary dicts get updated correctly when explorations</span>
+        <span class="c"># are changed)</span>
+        <span class="n">ExplorationCommitLogEntryModel</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;exploration-</span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)),</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">committer_id</span><span class="p">,</span>
+            <span class="n">username</span><span class="o">=</span><span class="n">committer_username</span><span class="p">,</span>
+            <span class="n">exploration_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">commit_type</span><span class="o">=</span><span class="n">commit_type</span><span class="p">,</span>
+            <span class="n">commit_message</span><span class="o">=</span><span class="n">commit_message</span><span class="p">,</span>
+            <span class="n">commit_cmds</span><span class="o">=</span><span class="n">commit_cmds</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+            <span class="n">post_commit_status</span><span class="o">=</span><span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+            <span class="n">post_commit_community_owned</span><span class="o">=</span><span class="n">exp_rights</span><span class="o">.</span><span class="n">community_owned</span><span class="p">,</span>
+            <span class="n">post_commit_is_private</span><span class="o">=</span><span class="p">(</span>
+                <span class="n">exp_rights</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">put_async</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="ExplorationRightsSnapshotMetadataModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExplorationRightsSnapshotMetadataModel">[docs]</a><span class="k">class</span> <span class="nc">ExplorationRightsSnapshotMetadataModel</span><span class="p">(</span>
+        <span class="n">base_models</span><span class="o">.</span><span class="n">BaseSnapshotMetadataModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Storage model for the metadata for an exploration rights snapshot.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ExplorationRightsSnapshotContentModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExplorationRightsSnapshotContentModel">[docs]</a><span class="k">class</span> <span class="nc">ExplorationRightsSnapshotContentModel</span><span class="p">(</span>
+        <span class="n">base_models</span><span class="o">.</span><span class="n">BaseSnapshotContentModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Storage model for the content of an exploration rights snapshot.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ExplorationRightsModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExplorationRightsModel">[docs]</a><span class="k">class</span> <span class="nc">ExplorationRightsModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">VersionedModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Storage model for rights related to an exploration.</span>
+
+<span class="sd">    The id of each instance is the id of the corresponding exploration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SNAPSHOT_METADATA_CLASS</span> <span class="o">=</span> <span class="n">ExplorationRightsSnapshotMetadataModel</span>
+    <span class="n">SNAPSHOT_CONTENT_CLASS</span> <span class="o">=</span> <span class="n">ExplorationRightsSnapshotContentModel</span>
+    <span class="n">ALLOW_REVERT</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="c"># The user_ids of owners of this exploration.</span>
+    <span class="n">owner_ids</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">repeated</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The user_ids of users who are allowed to edit this exploration.</span>
+    <span class="n">editor_ids</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">repeated</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The user_ids of users who are allowed to view this exploration.</span>
+    <span class="n">viewer_ids</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">repeated</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># Whether this exploration is owned by the community.</span>
+    <span class="n">community_owned</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">BooleanProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># The exploration id which this exploration was cloned from. If None, this</span>
+    <span class="c"># exploration was created from scratch.</span>
+    <span class="n">cloned_from</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">()</span>
+    <span class="c"># For private explorations, whether this exploration can be viewed</span>
+    <span class="c"># by anyone who has the URL. If the exploration is not private, this</span>
+    <span class="c"># setting is ignored.</span>
+    <span class="n">viewable_if_private</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">BooleanProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="c"># The publication status of this exploration.</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">,</span>
+            <span class="n">EXPLORATION_STATUS_PUBLIC</span><span class="p">,</span>
+            <span class="n">EXPLORATION_STATUS_PUBLICIZED</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="ExplorationRightsModel.save"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExplorationRightsModel.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ExplorationRightsModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span>
+            <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_trusted_commit</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_type</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Record the event to the commit log after the model commit.</span>
+
+<span class="sd">        Note that this overrides the superclass method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ExplorationRightsModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_trusted_commit</span><span class="p">(</span>
+            <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_type</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+
+        <span class="c"># Create and delete events will already be recorded in the</span>
+        <span class="c"># ExplorationModel.</span>
+        <span class="k">if</span> <span class="n">commit_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;create&#39;</span><span class="p">,</span> <span class="s">&#39;delete&#39;</span><span class="p">]:</span>
+            <span class="n">committer_user_settings_model</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">user_models</span><span class="o">.</span><span class="n">UserSettingsModel</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">committer_id</span><span class="p">))</span>
+            <span class="n">committer_username</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">committer_user_settings_model</span><span class="o">.</span><span class="n">username</span>
+                <span class="k">if</span> <span class="n">committer_user_settings_model</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+            <span class="c"># TODO(msl): test if put_async() leads to any problems (make</span>
+            <span class="c"># sure summary dicts get updated correctly when explorations</span>
+            <span class="c"># are changed)</span>
+            <span class="n">ExplorationCommitLogEntryModel</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;rights-</span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)),</span>
+                <span class="n">user_id</span><span class="o">=</span><span class="n">committer_id</span><span class="p">,</span>
+                <span class="n">username</span><span class="o">=</span><span class="n">committer_username</span><span class="p">,</span>
+                <span class="n">exploration_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">commit_type</span><span class="o">=</span><span class="n">commit_type</span><span class="p">,</span>
+                <span class="n">commit_message</span><span class="o">=</span><span class="n">commit_message</span><span class="p">,</span>
+                <span class="n">commit_cmds</span><span class="o">=</span><span class="n">commit_cmds</span><span class="p">,</span>
+                <span class="n">version</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">post_commit_status</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                <span class="n">post_commit_community_owned</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">community_owned</span><span class="p">,</span>
+                <span class="n">post_commit_is_private</span><span class="o">=</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">put_async</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="ExplorationCommitLogEntryModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel">[docs]</a><span class="k">class</span> <span class="nc">ExplorationCommitLogEntryModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Log of commits to explorations.</span>
+
+<span class="sd">    A new instance of this model is created and saved every time a commit to</span>
+<span class="sd">    ExplorationModel or ExplorationRightsModel occurs.</span>
+
+<span class="sd">    The id for this model is of the form</span>
+<span class="sd">    &#39;exploration-{{EXP_ID}}-{{EXP_VERSION}}&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Update superclass model to make these properties indexed.</span>
+    <span class="n">created_on</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">DateTimeProperty</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">last_updated</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">DateTimeProperty</span><span class="p">(</span><span class="n">auto_now</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># The id of the user.</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The username of the user, at the time of the edit.</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The id of the exploration being edited.</span>
+    <span class="n">exploration_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The type of the commit: &#39;create&#39;, &#39;revert&#39;, &#39;edit&#39;, &#39;delete&#39;.</span>
+    <span class="n">commit_type</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The commit message.</span>
+    <span class="n">commit_message</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">TextProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># The commit_cmds dict for this commit.</span>
+    <span class="n">commit_cmds</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The version number of the exploration after this commit. Only populated</span>
+    <span class="c"># for commits to an exploration (as opposed to its rights, etc.)</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">()</span>
+
+    <span class="c"># The status of the exploration after the edit event (&#39;private&#39;, &#39;public&#39;,</span>
+    <span class="c"># &#39;publicized&#39;).</span>
+    <span class="n">post_commit_status</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Whether the exploration is community-owned after the edit event.</span>
+    <span class="n">post_commit_community_owned</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">BooleanProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Whether the exploration is private after the edit event. Having a</span>
+    <span class="c"># separate field for this makes queries faster, since an equality query</span>
+    <span class="c"># on this property is faster than an inequality query on</span>
+    <span class="c"># post_commit_status.</span>
+    <span class="n">post_commit_is_private</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">BooleanProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExplorationCommitLogEntryModel.get_all_commits"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.get_all_commits">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_commits</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">page_size</span><span class="p">,</span> <span class="n">urlsafe_start_cursor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_fetch_page_sorted_by_last_updated</span><span class="p">(</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">query</span><span class="p">(),</span> <span class="n">page_size</span><span class="p">,</span> <span class="n">urlsafe_start_cursor</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExplorationCommitLogEntryModel.get_all_non_private_commits"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.get_all_non_private_commits">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_non_private_commits</span><span class="p">(</span>
+            <span class="n">cls</span><span class="p">,</span> <span class="n">page_size</span><span class="p">,</span> <span class="n">urlsafe_start_cursor</span><span class="p">,</span> <span class="n">max_age</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_age</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">)</span> <span class="ow">and</span> <span class="n">max_age</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&#39;max_age must be a datetime.timedelta instance or None.&#39;</span><span class="p">)</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">post_commit_is_private</span> <span class="o">==</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_age</span><span class="p">:</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">last_updated</span> <span class="o">&gt;=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span> <span class="o">-</span> <span class="n">max_age</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_fetch_page_sorted_by_last_updated</span><span class="p">(</span>
+            <span class="n">query</span><span class="p">,</span> <span class="n">page_size</span><span class="p">,</span> <span class="n">urlsafe_start_cursor</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="ExpSummaryModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExpSummaryModel">[docs]</a><span class="k">class</span> <span class="nc">ExpSummaryModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Summary model for an Oppia exploration.</span>
+
+<span class="sd">    This should be used whenever the content blob of the exploration is not</span>
+<span class="sd">    needed (e.g. gallery, search, etc).</span>
+
+<span class="sd">    A ExpSummaryModel instance stores the following information:</span>
+
+<span class="sd">        id, title, category, objective, language_code, tags,</span>
+<span class="sd">        last_updated, created_on, status (private, public or</span>
+<span class="sd">        publicized), community_owned, owner_ids, editor_ids,</span>
+<span class="sd">        viewer_ids, version.</span>
+
+<span class="sd">    The key of each instance is the exploration id.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># What this exploration is called.</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The category this exploration belongs to.</span>
+    <span class="n">category</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The objective of this exploration.</span>
+    <span class="n">objective</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">TextProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># The ISO 639-1 code for the language this exploration is written in.</span>
+    <span class="n">language_code</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Tags associated with this exploration.</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">repeated</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># Aggregate user-assigned ratings of the exploration</span>
+    <span class="n">ratings</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="c"># Time when the exploration model was last updated (not to be</span>
+    <span class="c"># confused with last_updated, which is the time when the</span>
+    <span class="c"># exploration *summary* model was last updated)</span>
+    <span class="n">exploration_model_last_updated</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">DateTimeProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Time when the exploration model was created (not to be confused</span>
+    <span class="c"># with created_on, which is the time when the exploration *summary*</span>
+    <span class="c"># model was created)</span>
+    <span class="n">exploration_model_created_on</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">DateTimeProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># The publication status of this exploration.</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">EXPLORATION_STATUS_PRIVATE</span><span class="p">,</span>
+            <span class="n">EXPLORATION_STATUS_PUBLIC</span><span class="p">,</span>
+            <span class="n">EXPLORATION_STATUS_PUBLICIZED</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c"># Whether this exploration is owned by the community.</span>
+    <span class="n">community_owned</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">BooleanProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># The user_ids of owners of this exploration.</span>
+    <span class="n">owner_ids</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">repeated</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The user_ids of users who are allowed to edit this exploration.</span>
+    <span class="n">editor_ids</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">repeated</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The user_ids of users who are allowed to view this exploration.</span>
+    <span class="n">viewer_ids</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">repeated</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The version number of the exploration after this commit. Only populated</span>
+    <span class="c"># for commits to an exploration (as opposed to its rights, etc.)</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExpSummaryModel.get_non_private"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExpSummaryModel.get_non_private">[docs]</a>    <span class="k">def</span> <span class="nf">get_non_private</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an iterable with non-private exp summary models.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">query</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">deleted</span> <span class="o">==</span> <span class="bp">False</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_QUERY_LIMIT</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExpSummaryModel.get_private_at_least_viewable"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExpSummaryModel.get_private_at_least_viewable">[docs]</a>    <span class="k">def</span> <span class="nf">get_private_at_least_viewable</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an iterable with private exp summaries that are at least</span>
+<span class="sd">        viewable by the given user.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">query</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">EXPLORATION_STATUS_PRIVATE</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ndb</span><span class="o">.</span><span class="n">OR</span><span class="p">(</span><span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">owner_ids</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">,</span>
+                   <span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">editor_ids</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">,</span>
+                   <span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">viewer_ids</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">deleted</span> <span class="o">==</span> <span class="bp">False</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_QUERY_LIMIT</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExpSummaryModel.get_at_least_editable"><a class="viewcode-back" href="../../../../../oppia.core.storage.exploration.html#oppia.core.storage.exploration.gae_models.ExpSummaryModel.get_at_least_editable">[docs]</a>    <span class="k">def</span> <span class="nf">get_at_least_editable</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an iterable with exp summaries that are at least</span>
+<span class="sd">        editable by the given user.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">query</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ndb</span><span class="o">.</span><span class="n">OR</span><span class="p">(</span><span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">owner_ids</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">,</span>
+                   <span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">editor_ids</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ExpSummaryModel</span><span class="o">.</span><span class="n">deleted</span> <span class="o">==</span> <span class="bp">False</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_QUERY_LIMIT</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

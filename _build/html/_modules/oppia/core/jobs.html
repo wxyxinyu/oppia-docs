@@ -1,0 +1,1307 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.jobs &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.jobs</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Common classes and methods for managing long running jobs.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">base_models</span><span class="p">,</span> <span class="n">job_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">base_model</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">job</span><span class="p">])</span>
+<span class="n">taskqueue_services</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_taskqueue_services</span><span class="p">()</span>
+<span class="n">transaction_services</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_transaction_services</span><span class="p">()</span>
+
+<span class="kn">from</span> <span class="nn">google.appengine.api</span> <span class="kn">import</span> <span class="n">app_identity</span>
+<span class="kn">from</span> <span class="nn">google.appengine.ext</span> <span class="kn">import</span> <span class="n">ndb</span>
+
+<span class="kn">from</span> <span class="nn">mapreduce</span> <span class="kn">import</span> <span class="n">base_handler</span>
+<span class="kn">from</span> <span class="nn">mapreduce</span> <span class="kn">import</span> <span class="n">context</span>
+<span class="kn">from</span> <span class="nn">mapreduce</span> <span class="kn">import</span> <span class="n">input_readers</span>
+<span class="kn">from</span> <span class="nn">mapreduce</span> <span class="kn">import</span> <span class="n">mapreduce_pipeline</span>
+<span class="kn">from</span> <span class="nn">mapreduce</span> <span class="kn">import</span> <span class="n">model</span> <span class="k">as</span> <span class="n">mapreduce_model</span>
+<span class="kn">from</span> <span class="nn">mapreduce</span> <span class="kn">import</span> <span class="n">output_writers</span>
+<span class="kn">from</span> <span class="nn">mapreduce</span> <span class="kn">import</span> <span class="n">util</span> <span class="k">as</span> <span class="n">mapreduce_util</span>
+<span class="kn">from</span> <span class="nn">pipeline</span> <span class="kn">import</span> <span class="n">pipeline</span>
+
+<span class="n">MAPPER_PARAM_KEY_ENTITY_KINDS</span> <span class="o">=</span> <span class="s">&#39;entity_kinds&#39;</span>
+<span class="n">MAPPER_PARAM_KEY_QUEUED_TIME_MSECS</span> <span class="o">=</span> <span class="s">&#39;queued_time_msecs&#39;</span>
+<span class="c"># Name of an additional parameter to pass into the MR job for cleaning up</span>
+<span class="c"># old auxiliary job models.</span>
+<span class="n">MAPPER_PARAM_MAX_START_TIME_MSEC</span> <span class="o">=</span> <span class="s">&#39;max_start_time_msec&#39;</span>
+
+<span class="n">STATUS_CODE_NEW</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">STATUS_CODE_NEW</span>
+<span class="n">STATUS_CODE_QUEUED</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">STATUS_CODE_QUEUED</span>
+<span class="n">STATUS_CODE_STARTED</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">STATUS_CODE_STARTED</span>
+<span class="n">STATUS_CODE_COMPLETED</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">STATUS_CODE_COMPLETED</span>
+<span class="n">STATUS_CODE_FAILED</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">STATUS_CODE_FAILED</span>
+<span class="n">STATUS_CODE_CANCELED</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">STATUS_CODE_CANCELED</span>
+
+<span class="n">VALID_STATUS_CODE_TRANSITIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">STATUS_CODE_NEW</span><span class="p">:</span> <span class="p">[</span><span class="n">STATUS_CODE_QUEUED</span><span class="p">],</span>
+    <span class="n">STATUS_CODE_QUEUED</span><span class="p">:</span> <span class="p">[</span><span class="n">STATUS_CODE_STARTED</span><span class="p">,</span> <span class="n">STATUS_CODE_CANCELED</span><span class="p">],</span>
+    <span class="n">STATUS_CODE_STARTED</span><span class="p">:</span> <span class="p">[</span>
+        <span class="n">STATUS_CODE_COMPLETED</span><span class="p">,</span> <span class="n">STATUS_CODE_FAILED</span><span class="p">,</span> <span class="n">STATUS_CODE_CANCELED</span><span class="p">],</span>
+    <span class="n">STATUS_CODE_COMPLETED</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="n">STATUS_CODE_FAILED</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="n">STATUS_CODE_CANCELED</span><span class="p">:</span> <span class="p">[],</span>
+<span class="p">}</span>
+
+<span class="c"># The default amount of time that defines a &#39;recent&#39; job. Jobs that were</span>
+<span class="c"># queued more recently than this number of milliseconds ago are considered</span>
+<span class="c"># &#39;recent&#39;.</span>
+<span class="n">DEFAULT_RECENCY_MSEC</span> <span class="o">=</span> <span class="mi">14</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">1000</span>
+<span class="c"># The maximum number of previously-run jobs to show in the admin dashboard.</span>
+<span class="n">NUM_JOBS_IN_DASHBOARD_LIMIT</span> <span class="o">=</span> <span class="mi">100</span>
+
+
+<div class="viewcode-block" id="BaseJobManager"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager">[docs]</a><span class="k">class</span> <span class="nc">BaseJobManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for managing long-running jobs.</span>
+
+<span class="sd">    These jobs are not transaction-safe, and multiple jobs of the same kind</span>
+<span class="sd">    may run at once and overlap. Individual jobs should account for this. In</span>
+<span class="sd">    particular, if a job writes to some location, no other enqueued or running</span>
+<span class="sd">    job should be writing to, or reading from, that location.</span>
+
+<span class="sd">    This is expected to be the case for one-off migration jobs, as well as</span>
+<span class="sd">    batch reporting jobs. One-off migration jobs are expected to be transient</span>
+<span class="sd">    and will not be a permanent part of the codebase. Batch reporting jobs are</span>
+<span class="sd">    expected to write to a particular datastore model that is optimized for</span>
+<span class="sd">    fast querying; each batch reporting job should correspond to exactly one of</span>
+<span class="sd">    these models. The reporting jobs are expected to be run as MapReduces; to</span>
+<span class="sd">    find existing ones, search for subclasses of BaseMapReduceJobManager.</span>
+
+<span class="sd">    Note that the enqueue(), register_start(), register_completion(),</span>
+<span class="sd">    register_failure() and cancel() methods in this class batch the following</span>
+<span class="sd">    operations: (a) pre- and post-hooks, (b) updating the status of the job in</span>
+<span class="sd">    the datastore, and (c) actually performing the operation. Each entire batch</span>
+<span class="sd">    is not run in a transaction, but subclasses can still perform (a) or (c)</span>
+<span class="sd">    transactionally if they wish to.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_is_abstract</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span> <span class="ow">in</span> <span class="n">ABSTRACT_BASE_CLASSES</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.create_new"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.create_new">[docs]</a>    <span class="k">def</span> <span class="nf">create_new</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new job of this class type. Returns the id of this job.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">_is_abstract</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Tried to directly create a job using the abstract base &#39;</span>
+                <span class="s">&#39;manager class </span><span class="si">%s</span><span class="s">, which is not allowed.&#39;</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_create_new_job</span><span class="p">():</span>
+            <span class="n">job_id</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get_new_id</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+            <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">job_id</span><span class="p">,</span> <span class="n">job_type</span><span class="o">=</span><span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">job_id</span>
+
+        <span class="k">return</span> <span class="n">transaction_services</span><span class="o">.</span><span class="n">run_in_transaction</span><span class="p">(</span><span class="n">_create_new_job</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.enqueue"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.enqueue">[docs]</a>    <span class="k">def</span> <span class="nf">enqueue</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">additional_job_params</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Marks a job as queued and adds it to a queue for processing.&quot;&quot;&quot;</span>
+        <span class="c"># Ensure that preconditions are met.</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_valid_transition</span><span class="p">(</span>
+            <span class="n">job_id</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">STATUS_CODE_QUEUED</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+
+        <span class="c"># Enqueue the job.</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_pre_enqueue_hook</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_real_enqueue</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">additional_job_params</span><span class="p">)</span>
+
+        <span class="n">model</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="n">STATUS_CODE_QUEUED</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">time_queued_msec</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+        <span class="n">cls</span><span class="o">.</span><span class="n">_post_enqueue_hook</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.register_start"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.register_start">[docs]</a>    <span class="k">def</span> <span class="nf">register_start</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_valid_transition</span><span class="p">(</span>
+            <span class="n">job_id</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">STATUS_CODE_STARTED</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+
+        <span class="n">cls</span><span class="o">.</span><span class="n">_pre_start_hook</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+
+        <span class="n">model</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="n">STATUS_CODE_STARTED</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">time_started_msec</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+        <span class="n">cls</span><span class="o">.</span><span class="n">_post_start_hook</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.register_completion"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.register_completion">[docs]</a>    <span class="k">def</span> <span class="nf">register_completion</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Marks a job as completed.&quot;&quot;&quot;</span>
+        <span class="c"># Ensure that preconditions are met.</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_valid_transition</span><span class="p">(</span>
+            <span class="n">job_id</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">STATUS_CODE_COMPLETED</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+
+        <span class="n">model</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="n">STATUS_CODE_COMPLETED</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">time_finished_msec</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">output</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+        <span class="n">cls</span><span class="o">.</span><span class="n">_post_completed_hook</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.register_failure"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.register_failure">[docs]</a>    <span class="k">def</span> <span class="nf">register_failure</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Marks a job as failed.&quot;&quot;&quot;</span>
+        <span class="c"># Ensure that preconditions are met.</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_valid_transition</span><span class="p">(</span>
+            <span class="n">job_id</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">STATUS_CODE_FAILED</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+
+        <span class="n">model</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="n">STATUS_CODE_FAILED</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">time_finished_msec</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="n">error</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+        <span class="n">cls</span><span class="o">.</span><span class="n">_post_failure_hook</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.cancel"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.cancel">[docs]</a>    <span class="k">def</span> <span class="nf">cancel</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+        <span class="c"># Ensure that preconditions are met.</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_valid_transition</span><span class="p">(</span>
+            <span class="n">job_id</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">STATUS_CODE_CANCELED</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+
+        <span class="n">cancel_message</span> <span class="o">=</span> <span class="s">&#39;Canceled by </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">user_id</span> <span class="ow">or</span> <span class="s">&#39;system&#39;</span><span class="p">)</span>
+
+        <span class="c"># Cancel the job.</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_pre_cancel_hook</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">cancel_message</span><span class="p">)</span>
+
+        <span class="n">model</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="n">STATUS_CODE_CANCELED</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">time_finished_msec</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="n">cancel_message</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+        <span class="n">cls</span><span class="o">.</span><span class="n">_post_cancel_hook</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">cancel_message</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.is_active"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.is_active">[docs]</a>    <span class="k">def</span> <span class="nf">is_active</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">status_code</span> <span class="ow">in</span> <span class="p">[</span><span class="n">STATUS_CODE_QUEUED</span><span class="p">,</span> <span class="n">STATUS_CODE_STARTED</span><span class="p">]</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.has_finished"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.has_finished">[docs]</a>    <span class="k">def</span> <span class="nf">has_finished</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">status_code</span> <span class="ow">in</span> <span class="p">[</span><span class="n">STATUS_CODE_COMPLETED</span><span class="p">,</span> <span class="n">STATUS_CODE_FAILED</span><span class="p">]</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.cancel_all_unfinished_jobs"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.cancel_all_unfinished_jobs">[docs]</a>    <span class="k">def</span> <span class="nf">cancel_all_unfinished_jobs</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Cancel all queued or started jobs of this job type.&quot;&quot;&quot;</span>
+        <span class="n">unfinished_job_models</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get_unfinished_jobs</span><span class="p">(</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">unfinished_job_models</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">cancel</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_real_enqueue</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">additional_job_params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Does the actual work of enqueueing a job for deferred execution.</span>
+
+<span class="sd">        Must be implemented by subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&#39;Subclasses of BaseJobManager should implement _real_enqueue().&#39;</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.get_status_code"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.get_status_code">[docs]</a>    <span class="k">def</span> <span class="nf">get_status_code</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">status_code</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.get_time_queued_msec"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.get_time_queued_msec">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_queued_msec</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">time_queued_msec</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.get_time_started_msec"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.get_time_started_msec">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_started_msec</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">time_started_msec</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.get_time_finished_msec"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.get_time_finished_msec">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_finished_msec</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">time_finished_msec</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.get_metadata"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.get_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">get_metadata</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">metadata</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.get_output"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.get_output">[docs]</a>    <span class="k">def</span> <span class="nf">get_output</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">output</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseJobManager.get_error"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseJobManager.get_error">[docs]</a>    <span class="k">def</span> <span class="nf">get_error</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_require_correct_job_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">error</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_require_valid_transition</span><span class="p">(</span>
+            <span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">old_status_code</span><span class="p">,</span> <span class="n">new_status_code</span><span class="p">):</span>
+        <span class="n">valid_new_status_codes</span> <span class="o">=</span> <span class="n">VALID_STATUS_CODE_TRANSITIONS</span><span class="p">[</span><span class="n">old_status_code</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">new_status_code</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_new_status_codes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Invalid status code change for job </span><span class="si">%s</span><span class="s">: from </span><span class="si">%s</span><span class="s"> to </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">old_status_code</span><span class="p">,</span> <span class="n">new_status_code</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_require_correct_job_type</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_type</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">job_type</span> <span class="o">!=</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Invalid job type </span><span class="si">%s</span><span class="s"> for class </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">job_type</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_pre_enqueue_hook</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_post_enqueue_hook</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_pre_start_hook</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_post_start_hook</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_post_completed_hook</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_post_failure_hook</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_pre_cancel_hook</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">cancel_message</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_post_cancel_hook</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">cancel_message</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="BaseDeferredJobManager"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseDeferredJobManager">[docs]</a><span class="k">class</span> <span class="nc">BaseDeferredJobManager</span><span class="p">(</span><span class="n">BaseJobManager</span><span class="p">):</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">additional_job_params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Function that performs the main business logic of the job.</span>
+
+<span class="sd">        Needs to be implemented by subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_run_job</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">additional_job_params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Starts the job.&quot;&quot;&quot;</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s">&#39;Job </span><span class="si">%s</span><span class="s"> started at </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+            <span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()))</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">register_start</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="n">additional_job_params</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">())</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">&#39;Job </span><span class="si">%s</span><span class="s"> failed at </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()))</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">register_failure</span><span class="p">(</span>
+                <span class="n">job_id</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()))</span>
+            <span class="k">raise</span> <span class="n">taskqueue_services</span><span class="o">.</span><span class="n">PermanentTaskFailure</span><span class="p">(</span>
+                <span class="s">&#39;Task failed: </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()))</span>
+
+        <span class="c"># Note that the job may have been canceled after it started and before</span>
+        <span class="c"># it reached this stage. This will result in an exception when the</span>
+        <span class="c"># validity of the status code transition is checked.</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">register_completion</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s">&#39;Job </span><span class="si">%s</span><span class="s"> completed at </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+            <span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_real_enqueue</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">additional_job_params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Puts the job in the task queue.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        - job_id: str, the id of the job.</span>
+<span class="sd">        - additional_job_params: dict of additional params to pass into the</span>
+<span class="sd">            job&#39;s _run() method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">taskqueue_services</span><span class="o">.</span><span class="n">defer</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_run_job</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">additional_job_params</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="MapReduceJobPipeline"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.MapReduceJobPipeline">[docs]</a><span class="k">class</span> <span class="nc">MapReduceJobPipeline</span><span class="p">(</span><span class="n">base_handler</span><span class="o">.</span><span class="n">PipelineBase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MapReduceJobPipeline.run"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.MapReduceJobPipeline.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">job_class_str</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">job_class</span> <span class="o">=</span> <span class="n">mapreduce_util</span><span class="o">.</span><span class="n">for_name</span><span class="p">(</span><span class="n">job_class_str</span><span class="p">)</span>
+        <span class="n">job_class</span><span class="o">.</span><span class="n">register_start</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
+            <span class="n">job_class</span><span class="o">.</span><span class="n">_OUTPUT_KEY_ROOT_PIPELINE_ID</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_pipeline_id</span>
+        <span class="p">})</span>
+
+        <span class="c"># TODO(sll): Need try/except/mark-as-canceled here?</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="k">yield</span> <span class="n">mapreduce_pipeline</span><span class="o">.</span><span class="n">MapreducePipeline</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">StoreMapReduceResults</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">job_class_str</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="MapReduceJobPipeline.finalized"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.MapReduceJobPipeline.finalized">[docs]</a>    <span class="k">def</span> <span class="nf">finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Suppress the default Pipeline behavior of sending email.</span>
+        <span class="c"># TODO(sll): Should mark-as-done be here instead?</span>
+        <span class="k">pass</span>
+
+</div></div>
+<div class="viewcode-block" id="StoreMapReduceResults"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.StoreMapReduceResults">[docs]</a><span class="k">class</span> <span class="nc">StoreMapReduceResults</span><span class="p">(</span><span class="n">base_handler</span><span class="o">.</span><span class="n">PipelineBase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="StoreMapReduceResults.run"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.StoreMapReduceResults.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">job_class_str</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+        <span class="n">job_class</span> <span class="o">=</span> <span class="n">mapreduce_util</span><span class="o">.</span><span class="n">for_name</span><span class="p">(</span><span class="n">job_class_str</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">iterator</span> <span class="o">=</span> <span class="n">input_readers</span><span class="o">.</span><span class="n">GoogleCloudStorageInputReader</span><span class="p">(</span>
+                <span class="n">output</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">results_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">item_reader</span> <span class="ow">in</span> <span class="n">iterator</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">item_reader</span><span class="p">:</span>
+                    <span class="n">results_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+            <span class="n">job_class</span><span class="o">.</span><span class="n">register_completion</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">results_list</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">())</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">&#39;Job </span><span class="si">%s</span><span class="s"> failed at </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()))</span>
+            <span class="n">job_class</span><span class="o">.</span><span class="n">register_failure</span><span class="p">(</span>
+                <span class="n">job_id</span><span class="p">,</span>
+                <span class="s">&#39;</span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()))</span>
+
+</div></div>
+<div class="viewcode-block" id="GoogleCloudStorageConsistentJsonOutputWriter"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.GoogleCloudStorageConsistentJsonOutputWriter">[docs]</a><span class="k">class</span> <span class="nc">GoogleCloudStorageConsistentJsonOutputWriter</span><span class="p">(</span>
+        <span class="n">output_writers</span><span class="o">.</span><span class="n">GoogleCloudStorageConsistentOutputWriter</span><span class="p">):</span>
+
+<div class="viewcode-block" id="GoogleCloudStorageConsistentJsonOutputWriter.write"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.GoogleCloudStorageConsistentJsonOutputWriter.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GoogleCloudStorageConsistentJsonOutputWriter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="s">&#39;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+
+</div></div>
+<div class="viewcode-block" id="BaseMapReduceJobManager"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseMapReduceJobManager">[docs]</a><span class="k">class</span> <span class="nc">BaseMapReduceJobManager</span><span class="p">(</span><span class="n">BaseJobManager</span><span class="p">):</span>
+    <span class="c"># The output for this job is a list of individual results. Each item in</span>
+    <span class="c"># the list will be of whatever type is yielded from the &#39;reduce&#39; method.</span>
+    <span class="c">#</span>
+    <span class="c"># The &#39;metadata&#39; field in the BaseJob representing a MapReduceJob</span>
+    <span class="c"># is a dict with one key, _OUTPUT_KEY_ROOT_PIPELINE_ID. The corresponding</span>
+    <span class="c"># value is a string representing the ID of the MapReduceJobPipeline</span>
+    <span class="c"># as known to the mapreduce/lib/pipeline internals. This is used</span>
+    <span class="c"># to generate URLs pointing at the pipeline support UI.</span>
+    <span class="n">_OUTPUT_KEY_ROOT_PIPELINE_ID</span> <span class="o">=</span> <span class="s">&#39;root_pipeline_id&#39;</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="BaseMapReduceJobManager.get_mapper_param"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseMapReduceJobManager.get_mapper_param">[docs]</a>    <span class="k">def</span> <span class="nf">get_mapper_param</span><span class="p">(</span><span class="n">param_name</span><span class="p">):</span>
+        <span class="n">mapper_params</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">mapreduce_spec</span><span class="o">.</span><span class="n">mapper</span><span class="o">.</span><span class="n">params</span>
+        <span class="k">if</span> <span class="n">param_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mapper_params</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Could not find </span><span class="si">%s</span><span class="s"> in </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">mapper_params</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">mapreduce_spec</span><span class="o">.</span><span class="n">mapper</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseMapReduceJobManager.entity_classes_to_map_over"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseMapReduceJobManager.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of reference to the datastore classes to map over.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&#39;Classes derived from BaseMapReduceJobManager must implement &#39;</span>
+            <span class="s">&#39;entity_classes_to_map_over()&#39;</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="BaseMapReduceJobManager.map"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseMapReduceJobManager.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implements the map function.  Must be declared @staticmethod.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          item: The parameter passed to this function is a single element of</span>
+<span class="sd">          the type given by entity_class(). This function may yield as many</span>
+<span class="sd">          times as appropriate (including zero) to return key/value 2-tuples.</span>
+<span class="sd">          For example, to get a count of all explorations, one might yield</span>
+<span class="sd">          (exploration.id, 1).</span>
+
+<span class="sd">          WARNING: The OutputWriter converts mapper output keys to type str.</span>
+<span class="sd">          So, if you have keys that are of type unicode, you must yield</span>
+<span class="sd">          &quot;key.encode(&#39;utf-8&#39;)&quot;, rather than &quot;key&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&#39;Classes derived from BaseMapReduceJobManager must implement map &#39;</span>
+            <span class="s">&#39;as a @staticmethod.&#39;</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="BaseMapReduceJobManager.reduce"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseMapReduceJobManager.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implements the reduce function.  Must be declared @staticmethod.</span>
+
+<span class="sd">        This function should yield a JSON string. All emitted outputs from all</span>
+<span class="sd">        reducers will be collected in an array and set into the output value</span>
+<span class="sd">        for the job, so don&#39;t pick anything huge. If you need something huge,</span>
+<span class="sd">        persist it out into the datastore instead and return a reference (and</span>
+<span class="sd">        dereference it later to load content as needed).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          key: A key value as emitted from the map() function, above.</span>
+<span class="sd">          values: A list of all values from all mappers that were tagged with</span>
+<span class="sd">          the given key. This code can assume that it is the only process</span>
+<span class="sd">          handling values for this key. (It can probably also assume that</span>
+<span class="sd">          it will be called exactly once for each key with all of the output,</span>
+<span class="sd">          but this needs to be verified.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&#39;Classes derived from BaseMapReduceJobManager must implement &#39;</span>
+            <span class="s">&#39;reduce as a @staticmethod.&#39;</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_real_enqueue</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">additional_job_params</span><span class="p">):</span>
+        <span class="n">entity_class_types</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">entity_classes_to_map_over</span><span class="p">()</span>
+        <span class="n">entity_class_names</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">entity_class_type</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="n">entity_class_type</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">entity_class_type</span> <span class="ow">in</span> <span class="n">entity_class_types</span><span class="p">]</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;job_name&#39;</span><span class="p">:</span> <span class="n">job_id</span><span class="p">,</span>
+            <span class="s">&#39;mapper_spec&#39;</span><span class="p">:</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">.map&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">),</span>
+            <span class="s">&#39;reducer_spec&#39;</span><span class="p">:</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">.reduce&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">),</span>
+            <span class="s">&#39;input_reader_spec&#39;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s">&#39;core.jobs.MultipleDatastoreEntitiesInputReader&#39;</span><span class="p">),</span>
+            <span class="s">&#39;output_writer_spec&#39;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s">&#39;core.jobs.GoogleCloudStorageConsistentJsonOutputWriter&#39;</span><span class="p">),</span>
+            <span class="s">&#39;mapper_params&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">MAPPER_PARAM_KEY_ENTITY_KINDS</span><span class="p">:</span> <span class="n">entity_class_names</span><span class="p">,</span>
+                <span class="c"># Note that all parameters passed to the mapper need to be</span>
+                <span class="c"># strings. Also note that the value for this key is determined</span>
+                <span class="c"># just before enqueue time, so it will be roughly equal to the</span>
+                <span class="c"># actual enqueue time.</span>
+                <span class="n">MAPPER_PARAM_KEY_QUEUED_TIME_MSECS</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span>
+                    <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()),</span>
+            <span class="p">},</span>
+            <span class="s">&#39;reducer_params&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&#39;output_writer&#39;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s">&#39;bucket_name&#39;</span><span class="p">:</span> <span class="n">app_identity</span><span class="o">.</span><span class="n">get_default_gcs_bucket_name</span><span class="p">(),</span>
+                    <span class="s">&#39;content_type&#39;</span><span class="p">:</span> <span class="s">&#39;text/plain&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;naming_format&#39;</span><span class="p">:</span> <span class="s">&#39;mrdata/$name/$id/output-$num&#39;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">additional_job_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="n">additional_job_params</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;mapper_params&#39;</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                        <span class="s">&#39;Additional job param </span><span class="si">%s</span><span class="s"> shadows an existing mapper &#39;</span>
+                        <span class="s">&#39;param&#39;</span> <span class="o">%</span> <span class="n">param_name</span><span class="p">)</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;mapper_params&#39;</span><span class="p">][</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span>
+                    <span class="n">additional_job_params</span><span class="p">[</span><span class="n">param_name</span><span class="p">])</span>
+
+        <span class="n">mr_pipeline</span> <span class="o">=</span> <span class="n">MapReduceJobPipeline</span><span class="p">(</span>
+            <span class="n">job_id</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">),</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">mr_pipeline</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="s">&#39;/mapreduce/worker/pipeline&#39;</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_pre_cancel_hook</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">cancel_message</span><span class="p">):</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+        <span class="n">root_pipeline_id</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">cls</span><span class="o">.</span><span class="n">_OUTPUT_KEY_ROOT_PIPELINE_ID</span><span class="p">]</span>
+        <span class="n">pipeline</span><span class="o">.</span><span class="n">Pipeline</span><span class="o">.</span><span class="n">from_id</span><span class="p">(</span><span class="n">root_pipeline_id</span><span class="p">)</span><span class="o">.</span><span class="n">abort</span><span class="p">(</span><span class="n">cancel_message</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_entity_created_before_job_queued</span><span class="p">(</span><span class="n">entity</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks that the given entity was created before the MR job was queued.</span>
+
+<span class="sd">        Mapper methods may want to use this as a precomputation check,</span>
+<span class="sd">        especially if the datastore classes being iterated over are append-only</span>
+<span class="sd">        event logs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">created_on_msec</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">created_on</span><span class="p">)</span>
+        <span class="n">job_queued_msec</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">mapreduce_spec</span><span class="o">.</span><span class="n">mapper</span><span class="o">.</span><span class="n">params</span><span class="p">[</span>
+            <span class="n">MAPPER_PARAM_KEY_QUEUED_TIME_MSECS</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">job_queued_msec</span> <span class="o">&gt;=</span> <span class="n">created_on_msec</span>
+
+</div>
+<div class="viewcode-block" id="MultipleDatastoreEntitiesInputReader"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.MultipleDatastoreEntitiesInputReader">[docs]</a><span class="k">class</span> <span class="nc">MultipleDatastoreEntitiesInputReader</span><span class="p">(</span><span class="n">input_readers</span><span class="o">.</span><span class="n">InputReader</span><span class="p">):</span>
+    <span class="n">_ENTITY_KINDS_PARAM</span> <span class="o">=</span> <span class="s">&#39;entity_kinds&#39;</span>
+    <span class="n">_READER_LIST_PARAM</span> <span class="o">=</span> <span class="s">&#39;readers&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reader_list</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reader_list</span> <span class="o">=</span> <span class="n">reader_list</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">reader</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reader_list</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">reader</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="MultipleDatastoreEntitiesInputReader.from_json"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.MultipleDatastoreEntitiesInputReader.from_json">[docs]</a>    <span class="k">def</span> <span class="nf">from_json</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">input_shard_state</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">input_readers</span><span class="o">.</span><span class="n">DatastoreInputReader</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span>
+            <span class="n">input_shard_state</span><span class="p">[</span><span class="n">cls</span><span class="o">.</span><span class="n">_READER_LIST_PARAM</span><span class="p">]))</span>
+</div>
+<div class="viewcode-block" id="MultipleDatastoreEntitiesInputReader.to_json"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.MultipleDatastoreEntitiesInputReader.to_json">[docs]</a>    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_READER_LIST_PARAM</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reader_list</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+        <span class="p">}</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="MultipleDatastoreEntitiesInputReader.split_input"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.MultipleDatastoreEntitiesInputReader.split_input">[docs]</a>    <span class="k">def</span> <span class="nf">split_input</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">mapper_spec</span><span class="p">):</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">mapper_spec</span><span class="o">.</span><span class="n">params</span>
+        <span class="n">entity_kinds</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_ENTITY_KINDS_PARAM</span><span class="p">)</span>
+
+        <span class="n">splits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">entity_kind</span> <span class="ow">in</span> <span class="n">entity_kinds</span><span class="p">:</span>
+            <span class="n">new_mapper_spec</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">mapper_spec</span><span class="p">)</span>
+            <span class="n">new_mapper_spec</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s">&#39;entity_kind&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entity_kind</span>
+            <span class="n">splits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">input_readers</span><span class="o">.</span><span class="n">DatastoreInputReader</span><span class="o">.</span><span class="n">split_input</span><span class="p">(</span>
+                    <span class="n">new_mapper_spec</span><span class="p">))</span>
+
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">split</span> <span class="ow">in</span> <span class="n">splits</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">split</span><span class="p">:</span>
+                <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MultipleDatastoreEntitiesInputReader</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">inputs</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="MultipleDatastoreEntitiesInputReader.validate"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.MultipleDatastoreEntitiesInputReader.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">mapper_spec</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">True</span>  <span class="c"># TODO</span>
+
+</div></div>
+<div class="viewcode-block" id="BaseMapReduceJobManagerForContinuousComputations"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseMapReduceJobManagerForContinuousComputations">[docs]</a><span class="k">class</span> <span class="nc">BaseMapReduceJobManagerForContinuousComputations</span><span class="p">(</span><span class="n">BaseMapReduceJobManager</span><span class="p">):</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_continuous_computation_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the ContinuousComputationManager class associated with this</span>
+<span class="sd">        MapReduce job.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&#39;Subclasses of BaseMapReduceJobManagerForContinuousComputations &#39;</span>
+            <span class="s">&#39;must implement the _get_continuous_computation_class() method.&#39;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_job_queued_msec</span><span class="p">():</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">mapreduce_spec</span><span class="o">.</span><span class="n">mapper</span><span class="o">.</span><span class="n">params</span><span class="p">[</span>
+            <span class="n">MAPPER_PARAM_KEY_QUEUED_TIME_MSECS</span><span class="p">])</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_entity_created_before_job_queued</span><span class="p">(</span><span class="n">entity</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks that the given entity was created before the MR job was queued.</span>
+
+<span class="sd">        Mapper methods may want to use this as a precomputation check,</span>
+<span class="sd">        especially if the datastore classes being iterated over are append-only</span>
+<span class="sd">        event logs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">created_on_msec</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">created_on</span><span class="p">)</span>
+        <span class="n">job_queued_msec</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">mapreduce_spec</span><span class="o">.</span><span class="n">mapper</span><span class="o">.</span><span class="n">params</span><span class="p">[</span>
+            <span class="n">MAPPER_PARAM_KEY_QUEUED_TIME_MSECS</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">job_queued_msec</span> <span class="o">&gt;=</span> <span class="n">created_on_msec</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_post_completed_hook</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_get_continuous_computation_class</span><span class="p">()</span><span class="o">.</span><span class="n">on_batch_job_completion</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_post_cancel_hook</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">cancel_message</span><span class="p">):</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_get_continuous_computation_class</span><span class="p">()</span><span class="o">.</span><span class="n">on_batch_job_canceled</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_post_failure_hook</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_get_continuous_computation_class</span><span class="p">()</span><span class="o">.</span><span class="n">on_batch_job_failure</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="BaseRealtimeDatastoreClassForContinuousComputations"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations">[docs]</a><span class="k">class</span> <span class="nc">BaseRealtimeDatastoreClassForContinuousComputations</span><span class="p">(</span>
+        <span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Storage class for entities in the realtime layer.</span>
+
+<span class="sd">    Instances of this class represent individual entities that are stored in</span>
+<span class="sd">    the realtime datastore. Note that the realtime datastore may be formatted</span>
+<span class="sd">    differently from the datastores that are iterated over by the MapReduce</span>
+<span class="sd">    job.</span>
+
+<span class="sd">    The IDs for instances of this class are of the form 0:... or 1:..., where</span>
+<span class="sd">    the 0 or 1 indicates the realtime layer that the entity is in.</span>
+
+<span class="sd">    NOTE TO DEVELOPERS: Ensure that you wrap the id with get_realtime_id()</span>
+<span class="sd">    when doing creations, gets, puts and queries, in order to ensure that the</span>
+<span class="sd">    relevant layer prefix gets appended.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">realtime_layer</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseRealtimeDatastoreClassForContinuousComputations.get_realtime_id"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.get_realtime_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_realtime_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">,</span> <span class="n">raw_entity_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an ID used to identify the element with the given entity id</span>
+<span class="sd">        in the currently active realtime datastore layer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">layer_index</span><span class="p">,</span> <span class="n">raw_entity_id</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseRealtimeDatastoreClassForContinuousComputations.delete_layer"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.delete_layer">[docs]</a>    <span class="k">def</span> <span class="nf">delete_layer</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">layer_index</span><span class="p">,</span> <span class="n">latest_created_on_datetime</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deletes all entities in the given layer which were created before</span>
+<span class="sd">        the given datetime.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">query</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">realtime_layer</span> <span class="o">==</span> <span class="n">layer_index</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">created_on</span> <span class="o">&lt;</span> <span class="n">latest_created_on_datetime</span><span class="p">)</span>
+        <span class="n">ndb</span><span class="o">.</span><span class="n">delete_multi</span><span class="p">(</span><span class="n">query</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">keys_only</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_is_valid_realtime_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">realtime_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">realtime_id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;0:&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">realtime_id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;1:&#39;</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseRealtimeDatastoreClassForContinuousComputations.get"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cls</span><span class="o">.</span><span class="n">_is_valid_realtime_id</span><span class="p">(</span><span class="n">entity_id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Invalid realtime id: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">entity_id</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span>
+            <span class="n">BaseRealtimeDatastoreClassForContinuousComputations</span><span class="p">,</span> <span class="n">cls</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BaseRealtimeDatastoreClassForContinuousComputations.put"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseRealtimeDatastoreClassForContinuousComputations.put">[docs]</a>    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realtime_layer</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span>
+                <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realtime_layer</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Realtime layer </span><span class="si">%s</span><span class="s"> does not match realtime id </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realtime_layer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span>
+            <span class="n">BaseRealtimeDatastoreClassForContinuousComputations</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="BaseContinuousComputationManager"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseContinuousComputationManager">[docs]</a><span class="k">class</span> <span class="nc">BaseContinuousComputationManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class represents a manager for a continuously-running computation.</span>
+<span class="sd">    Such computations consist of two parts: a batch job to compute summary</span>
+<span class="sd">    views, and a realtime layer to augment these batch views with additional</span>
+<span class="sd">    data that has come in since the last batch job results were computed. The</span>
+<span class="sd">    realtime layer may provide only approximate results, but the discrepancy</span>
+<span class="sd">    should be small because the realtime layer is expected to handle a much</span>
+<span class="sd">    smaller amount of data than the batch layer.</span>
+
+<span class="sd">    The batch jobs are run continuously, with each batch job starting</span>
+<span class="sd">    immediately after the previous run has finished. There are two realtime</span>
+<span class="sd">    layers that are cleared alternatively after successive batch runs, just</span>
+<span class="sd">    before a new batch job is enqueued. Events are recorded to all three</span>
+<span class="sd">    layers.</span>
+
+<span class="sd">    Here is a schematic showing how this works. The x-axis represents the</span>
+<span class="sd">    progression of time. The arrowed intervals in the batch layer indicate how</span>
+<span class="sd">    long the corresponding batch job takes to run, and the intervals in each</span>
+<span class="sd">    realtime layer indicate spans between when the data in the realtime layer</span>
+<span class="sd">    is cleared. Note that a realtime layer is cleared as part of the post-</span>
+<span class="sd">    processing that happens when a batch job completes, which explains why the</span>
+<span class="sd">    termination of each batch interval and one of the realtime intervals</span>
+<span class="sd">    always coincides. Having two realtime layers allows the inactive layer to</span>
+<span class="sd">    be cleared whilst not affecting incoming queries to the active layer.</span>
+
+<span class="sd">    Batch layer         &lt;-----&gt;  &lt;-------&gt;  &lt;-------&gt; &lt;-------&gt; &lt;--------&gt;</span>
+<span class="sd">    Realtime layer R0   &lt;-----&gt;  &lt;------------------&gt; &lt;------------------&gt;</span>
+<span class="sd">    Realtime layer R1   &lt;----------------&gt;  &lt;-----------------&gt; &lt;------ ...</span>
+<span class="sd">                                 &lt;-- A --&gt;  &lt;-- B --&gt;</span>
+
+<span class="sd">    For example, queries arising during the time interval A will use the</span>
+<span class="sd">    results of the first batch run, plus data from the realtime layer R1.</span>
+<span class="sd">    Queries arising during the time interval B will use the results of the</span>
+<span class="sd">    second batch run, plus data from the realtime layer R0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># TODO(sll): In the previous docstring, quantify what &#39;small&#39; means</span>
+    <span class="c"># once we have some experience with this running in production.</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseContinuousComputationManager.get_event_types_listened_to"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseContinuousComputationManager.get_event_types_listened_to">[docs]</a>    <span class="k">def</span> <span class="nf">get_event_types_listened_to</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list of event types that this class subscribes to.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&#39;Subclasses of BaseContinuousComputationManager must implement &#39;</span>
+            <span class="s">&#39;get_event_types_listened_to(). This method should return a list &#39;</span>
+            <span class="s">&#39;of strings, each representing an event type that this class &#39;</span>
+            <span class="s">&#39;subscribes to.&#39;</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_realtime_datastore_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the datastore class used by the realtime layer, which should</span>
+<span class="sd">        subclass BaseRealtimeDatastoreClassForContinuousComputations. See</span>
+<span class="sd">        StartExplorationRealtimeModel in core/jobs_test.py for an example</span>
+<span class="sd">        of how to do this.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&#39;Subclasses of BaseContinuousComputationManager must implement &#39;</span>
+            <span class="s">&#39;_get_realtime_datastore_class(). This method should return &#39;</span>
+            <span class="s">&#39;the datastore class to be used by the realtime layer.&#39;</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_batch_job_manager_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the manager class for the continuously-running batch job.</span>
+<span class="sd">        See jobs_test.py for an example of how to do this.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&#39;Subclasses of BaseContinuousComputationManager must implement &#39;</span>
+            <span class="s">&#39;_get_batch_job_manager_class(). This method should return the&#39;</span>
+            <span class="s">&#39;manager class for the continuously-running batch job.&#39;</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_handle_incoming_event</span><span class="p">(</span>
+            <span class="n">cls</span><span class="p">,</span> <span class="n">active_realtime_layer</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Records incoming events in the given realtime layer.</span>
+
+<span class="sd">        This method should be implemented by subclasses. The args are the</span>
+<span class="sd">        same as those sent to the event handler corresponding to the event</span>
+<span class="sd">        type. Note that there may be more than one event type.</span>
+
+<span class="sd">        IMPORTANT: This method only gets called as part of the dequeue process</span>
+<span class="sd">        from a deferred task queue. Developers should expect a delay to occur</span>
+<span class="sd">        between when the incoming event arrives and when this method is called,</span>
+<span class="sd">        and should resolve any arguments that depend on local session</span>
+<span class="sd">        variables (such as the user currently in session) before enqueueing</span>
+<span class="sd">        this method in the corresponding event handler.</span>
+
+<span class="sd">        IMPORTANT: If an exception is raised here, the task queue will retry</span>
+<span class="sd">        calling it and any mutations made will be redone -- unless the</span>
+<span class="sd">        exception has type taskqueue_services.PermanentTaskFailure. Developers</span>
+<span class="sd">        should therefore ensure that _handle_incoming_event() is robust to</span>
+<span class="sd">        multiple calls for the same incoming event.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&#39;Subclasses of BaseContinuousComputationManager must implement &#39;</span>
+            <span class="s">&#39;_handle_incoming_event(...). Please check the docstring of this &#39;</span>
+            <span class="s">&#39;method in jobs.BaseContinuousComputationManager for important &#39;</span>
+            <span class="s">&#39;developer information.&#39;</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_active_realtime_index</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_get_active_realtime_index_transactional</span><span class="p">():</span>
+            <span class="n">cc_model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">ContinuousComputationModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cc_model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">cc_model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">ContinuousComputationModel</span><span class="p">(</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+                <span class="n">cc_model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">cc_model</span><span class="o">.</span><span class="n">active_realtime_layer_index</span>
+
+        <span class="k">return</span> <span class="n">transaction_services</span><span class="o">.</span><span class="n">run_in_transaction</span><span class="p">(</span>
+            <span class="n">_get_active_realtime_index_transactional</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseContinuousComputationManager.get_active_realtime_layer_id"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseContinuousComputationManager.get_active_realtime_layer_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_active_realtime_layer_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an ID used to identify the element with the given entity id</span>
+<span class="sd">        in the currently active realtime datastore layer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get_realtime_datastore_class</span><span class="p">()</span><span class="o">.</span><span class="n">get_realtime_id</span><span class="p">(</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">_get_active_realtime_index</span><span class="p">(),</span> <span class="n">entity_id</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_switch_active_realtime_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_switch_active_realtime_class_transactional</span><span class="p">():</span>
+            <span class="n">cc_model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">ContinuousComputationModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+            <span class="n">cc_model</span><span class="o">.</span><span class="n">active_realtime_layer_index</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="mi">1</span> <span class="o">-</span> <span class="n">cc_model</span><span class="o">.</span><span class="n">active_realtime_layer_index</span><span class="p">)</span>
+            <span class="n">cc_model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+        <span class="n">transaction_services</span><span class="o">.</span><span class="n">run_in_transaction</span><span class="p">(</span>
+            <span class="n">_switch_active_realtime_class_transactional</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_clear_inactive_realtime_layer</span><span class="p">(</span>
+            <span class="n">cls</span><span class="p">,</span> <span class="n">latest_created_on_datetime</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deletes all entries in the given realtime datastore class whose</span>
+<span class="sd">        created_on date is before latest_timestamp.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inactive_realtime_index</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get_active_realtime_index</span><span class="p">()</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_get_realtime_datastore_class</span><span class="p">()</span><span class="o">.</span><span class="n">delete_layer</span><span class="p">(</span>
+            <span class="n">inactive_realtime_index</span><span class="p">,</span> <span class="n">latest_created_on_datetime</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_kickoff_batch_job</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create and enqueue a new batch job.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">do_unfinished_jobs_exist</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">&#39;Tried to start a new batch job of type </span><span class="si">%s</span><span class="s"> while an existing &#39;</span>
+                <span class="s">&#39;job was still running &#39;</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">job_manager</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get_batch_job_manager_class</span><span class="p">()</span>
+        <span class="n">job_id</span> <span class="o">=</span> <span class="n">job_manager</span><span class="o">.</span><span class="n">create_new</span><span class="p">()</span>
+        <span class="n">job_manager</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_register_end_of_batch_job_and_return_status</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Processes a &#39;job finished&#39; event and returns the job&#39;s updated status</span>
+<span class="sd">        code.</span>
+
+<span class="sd">        Note that &#39;finish&#39; in this context might mean &#39;completed successfully&#39;</span>
+<span class="sd">        or &#39;failed&#39;.</span>
+
+<span class="sd">        Processing means the following: if the job is currently &#39;stopping&#39;, its</span>
+<span class="sd">        status is set to &#39;idle&#39;; otherwise, its status remains as &#39;running&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">_register_end_of_batch_job_transactional</span><span class="p">():</span>
+            <span class="sd">&quot;&quot;&quot;Transactionally change the computation&#39;s status when a batch job</span>
+<span class="sd">            ends.&quot;&quot;&quot;</span>
+            <span class="n">cc_model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">ContinuousComputationModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">cc_model</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span>
+                    <span class="n">job_models</span><span class="o">.</span><span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_STOPPING</span><span class="p">):</span>
+                <span class="n">cc_model</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">job_models</span><span class="o">.</span><span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_IDLE</span><span class="p">)</span>
+                <span class="n">cc_model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">cc_model</span><span class="o">.</span><span class="n">status_code</span>
+
+        <span class="k">return</span> <span class="n">transaction_services</span><span class="o">.</span><span class="n">run_in_transaction</span><span class="p">(</span>
+            <span class="n">_register_end_of_batch_job_transactional</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseContinuousComputationManager.get_status_code"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseContinuousComputationManager.get_status_code">[docs]</a>    <span class="k">def</span> <span class="nf">get_status_code</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the status code of the job.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">job_models</span><span class="o">.</span><span class="n">ContinuousComputationModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span><span class="o">.</span><span class="n">status_code</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseContinuousComputationManager.start_computation"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseContinuousComputationManager.start_computation">[docs]</a>    <span class="k">def</span> <span class="nf">start_computation</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;(Re)starts the continuous computation corresponding to this class.</span>
+
+<span class="sd">        Raises an Exception if the computation is already running.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">_start_computation_transactional</span><span class="p">():</span>
+            <span class="sd">&quot;&quot;&quot;Transactional implementation for marking a continuous</span>
+<span class="sd">            computation as started.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">cc_model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">ContinuousComputationModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cc_model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">cc_model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">ContinuousComputationModel</span><span class="p">(</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">cc_model</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span>
+                    <span class="n">job_models</span><span class="o">.</span><span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_IDLE</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="s">&#39;Attempted to start computation </span><span class="si">%s</span><span class="s">, which is already &#39;</span>
+                    <span class="s">&#39;running.&#39;</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+
+            <span class="n">cc_model</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">job_models</span><span class="o">.</span><span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_RUNNING</span><span class="p">)</span>
+            <span class="n">cc_model</span><span class="o">.</span><span class="n">last_started_msec</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()</span>
+            <span class="n">cc_model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+        <span class="n">transaction_services</span><span class="o">.</span><span class="n">run_in_transaction</span><span class="p">(</span>
+            <span class="n">_start_computation_transactional</span><span class="p">)</span>
+
+        <span class="n">cls</span><span class="o">.</span><span class="n">_clear_inactive_realtime_layer</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">())</span>
+
+        <span class="n">cls</span><span class="o">.</span><span class="n">_kickoff_batch_job</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseContinuousComputationManager.stop_computation"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseContinuousComputationManager.stop_computation">[docs]</a>    <span class="k">def</span> <span class="nf">stop_computation</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">test_mode</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Cancels the currently-running batch job.</span>
+
+<span class="sd">        No further batch runs will be kicked off.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># This is not an ancestor query, so it must be run outside a</span>
+        <span class="c"># transaction.</span>
+        <span class="n">do_unfinished_jobs_exist</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">do_unfinished_jobs_exist</span><span class="p">(</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_get_batch_job_manager_class</span><span class="p">()</span><span class="o">.</span><span class="n">__name__</span><span class="p">))</span>
+
+        <span class="k">def</span> <span class="nf">_stop_computation_transactional</span><span class="p">():</span>
+            <span class="sd">&quot;&quot;&quot;Transactional implementation for marking a continuous</span>
+<span class="sd">            computation as stopping/idle.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">cc_model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">ContinuousComputationModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+            <span class="c"># If there is no job currently running, go to IDLE immediately.</span>
+            <span class="n">new_status_code</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">job_models</span><span class="o">.</span><span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_STOPPING</span> <span class="k">if</span>
+                <span class="n">do_unfinished_jobs_exist</span> <span class="k">else</span>
+                <span class="n">job_models</span><span class="o">.</span><span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_IDLE</span><span class="p">)</span>
+            <span class="n">cc_model</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="n">new_status_code</span>
+            <span class="n">cc_model</span><span class="o">.</span><span class="n">last_stopped_msec</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()</span>
+            <span class="n">cc_model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+        <span class="n">transaction_services</span><span class="o">.</span><span class="n">run_in_transaction</span><span class="p">(</span>
+            <span class="n">_stop_computation_transactional</span><span class="p">)</span>
+
+        <span class="c"># The cancellation must be done after the continuous computation</span>
+        <span class="c"># status update.</span>
+        <span class="k">if</span> <span class="n">do_unfinished_jobs_exist</span><span class="p">:</span>
+            <span class="n">unfinished_job_models</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get_unfinished_jobs</span><span class="p">(</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_get_batch_job_manager_class</span><span class="p">()</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">job_model</span> <span class="ow">in</span> <span class="n">unfinished_job_models</span><span class="p">:</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_get_batch_job_manager_class</span><span class="p">()</span><span class="o">.</span><span class="n">cancel</span><span class="p">(</span>
+                    <span class="n">job_model</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseContinuousComputationManager.on_incoming_event"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseContinuousComputationManager.on_incoming_event">[docs]</a>    <span class="k">def</span> <span class="nf">on_incoming_event</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handle an incoming event by recording it in both realtime datastore</span>
+<span class="sd">        layers.</span>
+
+<span class="sd">        The *args and **kwargs match those passed to the _handle_event() method</span>
+<span class="sd">        of the corresponding EventHandler subclass.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">REALTIME_LAYERS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">REALTIME_LAYERS</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">_handle_incoming_event</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_process_job_completion_and_return_status</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Delete all data in the currently-active realtime_datastore class,</span>
+<span class="sd">        switch the active class, and return the status.</span>
+
+<span class="sd">        This seam was created so that tests would be able to override</span>
+<span class="sd">        on_batch_job_completion() to avoid kicking off the next job</span>
+<span class="sd">        immediately.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_switch_active_realtime_class</span><span class="p">()</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_clear_inactive_realtime_layer</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">())</span>
+
+        <span class="k">def</span> <span class="nf">_update_last_finished_time_transactional</span><span class="p">():</span>
+            <span class="n">cc_model</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">ContinuousComputationModel</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+            <span class="n">cc_model</span><span class="o">.</span><span class="n">last_finished_msec</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()</span>
+            <span class="n">cc_model</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+
+        <span class="n">transaction_services</span><span class="o">.</span><span class="n">run_in_transaction</span><span class="p">(</span>
+            <span class="n">_update_last_finished_time_transactional</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_register_end_of_batch_job_and_return_status</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_kickoff_batch_job_after_previous_one_ends</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Seam that can be overridden by tests.&quot;&quot;&quot;</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_kickoff_batch_job</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseContinuousComputationManager.on_batch_job_completion"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseContinuousComputationManager.on_batch_job_completion">[docs]</a>    <span class="k">def</span> <span class="nf">on_batch_job_completion</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Called when a batch job completes.&quot;&quot;&quot;</span>
+        <span class="n">job_status</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_process_job_completion_and_return_status</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">job_status</span> <span class="o">==</span> <span class="n">job_models</span><span class="o">.</span><span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_RUNNING</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">_kickoff_batch_job_after_previous_one_ends</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseContinuousComputationManager.on_batch_job_canceled"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseContinuousComputationManager.on_batch_job_canceled">[docs]</a>    <span class="k">def</span> <span class="nf">on_batch_job_canceled</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Job </span><span class="si">%s</span><span class="s"> canceled.&#39;</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="c"># The job should already be stopping, and should therefore be marked</span>
+        <span class="c"># idle.</span>
+        <span class="n">job_status</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_register_end_of_batch_job_and_return_status</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">job_status</span> <span class="o">!=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_IDLE</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s">&#39;Batch job for computation </span><span class="si">%s</span><span class="s"> canceled but status code not set &#39;</span>
+                <span class="s">&#39;to idle.&#39;</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseContinuousComputationManager.on_batch_job_failure"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.BaseContinuousComputationManager.on_batch_job_failure">[docs]</a>    <span class="k">def</span> <span class="nf">on_batch_job_failure</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="c"># TODO(sll): Alert the site admin via email.</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;Job </span><span class="si">%s</span><span class="s"> failed.&#39;</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="n">job_status</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_register_end_of_batch_job_and_return_status</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">job_status</span> <span class="o">==</span> <span class="n">job_models</span><span class="o">.</span><span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_RUNNING</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">_kickoff_batch_job_after_previous_one_ends</span><span class="p">()</span>
+
+</div></div>
+<span class="k">def</span> <span class="nf">_get_job_dict_from_job_model</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts an ndb.Model representing a job to a dict.</span>
+
+<span class="sd">    The dict contains the following keys:</span>
+<span class="sd">    - &#39;id&#39;: the job id</span>
+<span class="sd">    - &#39;time_started_msec&#39;: when the job was started, in milliseconds since the</span>
+<span class="sd">          epoch</span>
+<span class="sd">    - &#39;time_finished_msec&#39;: when the job was finished, in milliseconds since</span>
+<span class="sd">          the epoch</span>
+<span class="sd">    - &#39;status_code&#39;: the current status of the job</span>
+<span class="sd">    - &#39;job_type&#39;: the type of this job</span>
+<span class="sd">    - &#39;is_cancelable&#39;: whether the job can be canceled</span>
+<span class="sd">    - &#39;error&#39;: any errors pertaining to this job</span>
+<span class="sd">    - &#39;human_readable_time_started&#39;: a human-readable string representing the</span>
+<span class="sd">          time the job started, or None if time_started_msec is None.</span>
+<span class="sd">    - &#39;human_readable_time_finished&#39;: a human-readable string representing the</span>
+<span class="sd">          time the job finished, or None if time_finished_msec is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="s">&#39;time_started_msec&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">time_started_msec</span><span class="p">,</span>
+        <span class="s">&#39;time_finished_msec&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">time_finished_msec</span><span class="p">,</span>
+        <span class="s">&#39;status_code&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span>
+        <span class="s">&#39;job_type&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">job_type</span><span class="p">,</span>
+        <span class="s">&#39;is_cancelable&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">is_cancelable</span><span class="p">,</span>
+        <span class="s">&#39;error&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">error</span><span class="p">,</span>
+        <span class="s">&#39;human_readable_time_started&#39;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s">&#39;&#39;</span> <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">time_started_msec</span> <span class="ow">is</span> <span class="bp">None</span>
+            <span class="k">else</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_human_readable_time_string</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">time_started_msec</span><span class="p">)),</span>
+        <span class="s">&#39;human_readable_time_finished&#39;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s">&#39;&#39;</span> <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">time_finished_msec</span> <span class="ow">is</span> <span class="bp">None</span>
+            <span class="k">else</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_human_readable_time_string</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">time_finished_msec</span><span class="p">)),</span>
+    <span class="p">}</span>
+
+
+<div class="viewcode-block" id="get_data_for_recent_jobs"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.get_data_for_recent_jobs">[docs]</a><span class="k">def</span> <span class="nf">get_data_for_recent_jobs</span><span class="p">(</span><span class="n">recency_msec</span><span class="o">=</span><span class="n">DEFAULT_RECENCY_MSEC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get a list containing data about recent jobs.</span>
+
+<span class="sd">    This list is arranged in descending order based on the time the job</span>
+<span class="sd">    was enqueued. At most NUM_JOBS_IN_DASHBOARD_LIMIT job descriptions are</span>
+<span class="sd">    returned.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">    - recency_secs: the threshold for a recent job, in seconds.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">recent_job_models</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get_recent_jobs</span><span class="p">(</span>
+        <span class="n">NUM_JOBS_IN_DASHBOARD_LIMIT</span><span class="p">,</span> <span class="n">recency_msec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">_get_job_dict_from_job_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">recent_job_models</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="get_data_for_unfinished_jobs"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.get_data_for_unfinished_jobs">[docs]</a><span class="k">def</span> <span class="nf">get_data_for_unfinished_jobs</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Get a list containing data about all unfinished jobs.&quot;&quot;&quot;</span>
+    <span class="n">unfinished_job_models</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get_all_unfinished_jobs</span><span class="p">(</span>
+        <span class="n">NUM_JOBS_IN_DASHBOARD_LIMIT</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">_get_job_dict_from_job_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">unfinished_job_models</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="get_job_output"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.get_job_output">[docs]</a><span class="k">def</span> <span class="nf">get_job_output</span><span class="p">(</span><span class="n">job_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the output of a job.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">job_models</span><span class="o">.</span><span class="n">JobModel</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span><span class="o">.</span><span class="n">output</span>
+
+</div>
+<div class="viewcode-block" id="get_continuous_computations_info"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.get_continuous_computations_info">[docs]</a><span class="k">def</span> <span class="nf">get_continuous_computations_info</span><span class="p">(</span><span class="n">cc_classes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns data about the given computations.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      cc_classes: a list of subclasses of BaseContinuousComputationManager.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of dicts, each representing a continuous computation. Each dict</span>
+<span class="sd">      has the following keys:</span>
+<span class="sd">      - &#39;computation_type&#39;: the type of the computation</span>
+<span class="sd">      - &#39;status_code&#39;: the current status of the computation</span>
+<span class="sd">      - &#39;last_started_msec&#39;: when a batch job for the computation was last</span>
+<span class="sd">            started, in milliseconds since the epoch</span>
+<span class="sd">      - &#39;last_finished_msec&#39;: when a batch job for the computation last</span>
+<span class="sd">            finished, in milliseconds since the epoch</span>
+<span class="sd">      - &#39;last_stopped_msec&#39;: when a batch job for the computation was last</span>
+<span class="sd">            stopped, in milliseconds since the epoch</span>
+<span class="sd">      - &#39;active_realtime_layer_index&#39;: the index of the active realtime layer</span>
+<span class="sd">      - &#39;is_startable&#39;: whether an admin should be allowed to start this</span>
+<span class="sd">            computation</span>
+<span class="sd">      - &#39;is_stoppable&#39;: whether an admin should be allowed to stop this</span>
+<span class="sd">            computation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cc_models</span> <span class="o">=</span> <span class="n">job_models</span><span class="o">.</span><span class="n">ContinuousComputationModel</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">cc_class</span><span class="o">.</span><span class="n">__name__</span> <span class="k">for</span> <span class="n">cc_class</span> <span class="ow">in</span> <span class="n">cc_classes</span><span class="p">])</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cc_models</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">cc_dict</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s">&#39;computation_type&#39;</span><span class="p">:</span> <span class="n">cc_classes</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+                <span class="s">&#39;status_code&#39;</span><span class="p">:</span> <span class="s">&#39;never_started&#39;</span><span class="p">,</span>
+                <span class="s">&#39;last_started_msec&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+                <span class="s">&#39;last_finished_msec&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+                <span class="s">&#39;last_stopped_msec&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+                <span class="s">&#39;active_realtime_layer_index&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+                <span class="s">&#39;is_startable&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+                <span class="s">&#39;is_stoppable&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cc_dict</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s">&#39;computation_type&#39;</span><span class="p">:</span> <span class="n">cc_classes</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+                <span class="s">&#39;status_code&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span>
+                <span class="s">&#39;last_started_msec&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">last_started_msec</span><span class="p">,</span>
+                <span class="s">&#39;last_finished_msec&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">last_finished_msec</span><span class="p">,</span>
+                <span class="s">&#39;last_stopped_msec&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">last_stopped_msec</span><span class="p">,</span>
+                <span class="s">&#39;active_realtime_layer_index&#39;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="n">model</span><span class="o">.</span><span class="n">active_realtime_layer_index</span><span class="p">),</span>
+                <span class="c"># TODO(sll): If a job is stopping, can it be started while it</span>
+                <span class="c"># is in the process of stopping?</span>
+                <span class="s">&#39;is_startable&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="p">(</span>
+                    <span class="n">job_models</span><span class="o">.</span><span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_IDLE</span><span class="p">),</span>
+                <span class="s">&#39;is_stoppable&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="p">(</span>
+                    <span class="n">job_models</span><span class="o">.</span><span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_RUNNING</span><span class="p">),</span>
+            <span class="p">}</span>
+
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cc_dict</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="get_stuck_jobs"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.get_stuck_jobs">[docs]</a><span class="k">def</span> <span class="nf">get_stuck_jobs</span><span class="p">(</span><span class="n">recency_msecs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of jobs which were last updated at most recency_msecs</span>
+<span class="sd">    milliseconds ago and have experienced more than one retry.&quot;&quot;&quot;</span>
+    <span class="n">threshold_time</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span> <span class="o">-</span>
+        <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">recency_msecs</span><span class="p">))</span>
+    <span class="n">shard_state_model_class</span> <span class="o">=</span> <span class="n">mapreduce_model</span><span class="o">.</span><span class="n">ShardState</span>
+
+    <span class="c"># TODO(sll): Clean up old jobs so that this query does not have to iterate</span>
+    <span class="c"># over so many elements in a full table scan.</span>
+    <span class="n">recent_job_models</span> <span class="o">=</span> <span class="n">shard_state_model_class</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">stuck_jobs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">job_model</span> <span class="ow">in</span> <span class="n">recent_job_models</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">job_model</span><span class="o">.</span><span class="n">update_time</span> <span class="o">&gt;</span> <span class="n">threshold_time</span> <span class="ow">and</span> <span class="n">job_model</span><span class="o">.</span><span class="n">retries</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">stuck_jobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job_model</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">stuck_jobs</span>
+
+</div>
+<div class="viewcode-block" id="JobCleanupManager"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.JobCleanupManager">[docs]</a><span class="k">class</span> <span class="nc">JobCleanupManager</span><span class="p">(</span><span class="n">BaseMapReduceJobManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;One-off job for cleaning up old auxiliary entities for MR jobs.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JobCleanupManager.entity_classes_to_map_over"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.JobCleanupManager.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">mapreduce_model</span><span class="o">.</span><span class="n">MapreduceState</span><span class="p">,</span>
+            <span class="n">mapreduce_model</span><span class="o">.</span><span class="n">ShardState</span>
+        <span class="p">]</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="JobCleanupManager.map"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.JobCleanupManager.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="n">max_start_time_msec</span> <span class="o">=</span> <span class="n">JobCleanupManager</span><span class="o">.</span><span class="n">get_mapper_param</span><span class="p">(</span>
+            <span class="n">MAPPER_PARAM_MAX_START_TIME_MSEC</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">mapreduce_model</span><span class="o">.</span><span class="n">MapreduceState</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">result_status</span> <span class="o">==</span> <span class="s">&#39;success&#39;</span> <span class="ow">and</span>
+                    <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span> <span class="o">&lt;</span>
+                    <span class="n">max_start_time_msec</span><span class="p">):</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="s">&#39;mr_state_deleted&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="s">&#39;mr_state_remaining&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">mapreduce_model</span><span class="o">.</span><span class="n">ShardState</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">result_status</span> <span class="o">==</span> <span class="s">&#39;success&#39;</span> <span class="ow">and</span>
+                    <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">update_time</span><span class="p">)</span> <span class="o">&lt;</span>
+                    <span class="n">max_start_time_msec</span><span class="p">):</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="s">&#39;shard_state_deleted&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="s">&#39;shard_state_remaining&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="JobCleanupManager.reduce"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs.JobCleanupManager.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">stringified_values</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">stringified_values</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;_deleted&#39;</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s">&#39;Delete count: </span><span class="si">%s</span><span class="s"> entities (</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">key</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s">&#39;Entities remaining count: </span><span class="si">%s</span><span class="s"> entities (</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">key</span><span class="p">))</span>
+
+</div></div>
+<span class="n">ABSTRACT_BASE_CLASSES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+    <span class="n">BaseJobManager</span><span class="p">,</span> <span class="n">BaseDeferredJobManager</span><span class="p">,</span> <span class="n">BaseMapReduceJobManager</span><span class="p">,</span>
+    <span class="n">BaseMapReduceJobManagerForContinuousComputations</span><span class="p">])</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.jobs_registry &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.jobs_registry</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Job registries.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_jobs</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">stats_jobs</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">user_jobs</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">feedback_jobs</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">recommendations_jobs</span>
+
+<span class="c"># List of all manager classes for one-off batch jobs for which to show controls</span>
+<span class="c"># on the admin dashboard.</span>
+<span class="n">ONE_OFF_JOB_MANAGERS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">user_jobs</span><span class="o">.</span><span class="n">DashboardSubscriptionsOneOffJob</span><span class="p">,</span>
+    <span class="n">exp_jobs</span><span class="o">.</span><span class="n">IndexAllExplorationsJobManager</span><span class="p">,</span>
+    <span class="n">exp_jobs</span><span class="o">.</span><span class="n">ExpSummariesCreationOneOffJob</span><span class="p">,</span>
+    <span class="n">exp_jobs</span><span class="o">.</span><span class="n">ExplorationValidityJobManager</span><span class="p">,</span>
+    <span class="n">stats_jobs</span><span class="o">.</span><span class="n">StatisticsAudit</span><span class="p">,</span>
+    <span class="n">exp_jobs</span><span class="o">.</span><span class="n">ExplorationMigrationJobManager</span><span class="p">]</span>
+
+<span class="c"># List of all ContinuousComputation managers to show controls for on the</span>
+<span class="c"># admin dashboard.</span>
+<span class="c"># NOTE TO DEVELOPERS: When a new ContinuousComputation manager is defined,</span>
+<span class="c"># it should be registered here.</span>
+<span class="n">ALL_CONTINUOUS_COMPUTATION_MANAGERS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">exp_jobs</span><span class="o">.</span><span class="n">SearchRanker</span><span class="p">,</span>
+    <span class="n">stats_jobs</span><span class="o">.</span><span class="n">StatisticsAggregator</span><span class="p">,</span>
+    <span class="n">user_jobs</span><span class="o">.</span><span class="n">DashboardRecentUpdatesAggregator</span><span class="p">,</span>
+    <span class="n">feedback_jobs</span><span class="o">.</span><span class="n">FeedbackAnalyticsAggregator</span><span class="p">,</span>
+    <span class="n">recommendations_jobs</span><span class="o">.</span><span class="n">ExplorationRecommendationsAggregator</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="ContinuousComputationEventDispatcher"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs_registry.ContinuousComputationEventDispatcher">[docs]</a><span class="k">class</span> <span class="nc">ContinuousComputationEventDispatcher</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dispatches events to the relevant ContinuousComputation classes.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ContinuousComputationEventDispatcher.dispatch_event"><a class="viewcode-back" href="../../../oppia.core.html#oppia.core.jobs_registry.ContinuousComputationEventDispatcher.dispatch_event">[docs]</a>    <span class="k">def</span> <span class="nf">dispatch_event</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dispatches an incoming event to the ContinuousComputation</span>
+<span class="sd">        classes which listen to events of that type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">klass</span> <span class="ow">in</span> <span class="n">ALL_CONTINUOUS_COMPUTATION_MANAGERS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">event_type</span> <span class="ow">in</span> <span class="n">klass</span><span class="o">.</span><span class="n">get_event_types_listened_to</span><span class="p">():</span>
+                <span class="n">klass</span><span class="o">.</span><span class="n">on_incoming_event</span><span class="p">(</span><span class="n">event_type</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

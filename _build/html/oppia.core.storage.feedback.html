@@ -1,0 +1,317 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.storage.feedback package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-core-storage-feedback-package">
+<h1>oppia.core.storage.feedback package<a class="headerlink" href="#oppia-core-storage-feedback-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core.storage.feedback.gae_models">
+<span id="oppia-core-storage-feedback-gae-models-module"></span><h2>oppia.core.storage.feedback.gae_models module<a class="headerlink" href="#module-oppia.core.storage.feedback.gae_models" title="Permalink to this headline">¶</a></h2>
+<p>Models for Oppia feedback threads and messages.</p>
+<dl class="class">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackAnalyticsModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.feedback.gae_models.</code><code class="descname">FeedbackAnalyticsModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackAnalyticsModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackAnalyticsModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseMapReduceBatchResultsModel</span></code></p>
+<p>Model for storing feedback thread analytics for an exploration.</p>
+<p>The key of each instance is the exploration id.</p>
+<dl class="classmethod">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackAnalyticsModel.create">
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>id</em>, <em>num_open_threads</em>, <em>num_total_threads</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackAnalyticsModel.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackAnalyticsModel.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new FeedbackAnalyticsModel entry.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackAnalyticsModel.num_open_threads">
+<code class="descname">num_open_threads</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackAnalyticsModel.num_open_threads" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackAnalyticsModel.num_total_threads">
+<code class="descname">num_total_threads</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackAnalyticsModel.num_total_threads" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.feedback.gae_models.</code><code class="descname">FeedbackMessageModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackMessageModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>Feedback messages. One or more of these messages make a thread.</p>
+<dl class="docutils">
+<dt>The id/key of instances of this class has the form</dt>
+<dd>[EXPLORATION_ID].[THREAD_ID].[MESSAGE_ID]</dd>
+</dl>
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.author_id">
+<code class="descname">author_id</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.author_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.create">
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>thread_id</em>, <em>message_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackMessageModel.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new FeedbackMessageModel entry.</p>
+<p>Throws an exception if a message with the given thread ID and message
+ID combination exists already.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.exploration_id">
+<code class="descname">exploration_id</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.exploration_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get">
+<em class="property">classmethod </em><code class="descname">get</code><span class="sig-paren">(</span><em>thread_id</em>, <em>message_id</em>, <em>strict=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackMessageModel.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the FeedbackMessageModel entry for the given ID.</p>
+<p>If the message id is valid and it is not marked as deleted, returns the
+message instance. Otherwise:
+- if strict is True, raises EntityNotFoundError
+- if strict is False, returns None.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_all_messages">
+<em class="property">classmethod </em><code class="descname">get_all_messages</code><span class="sig-paren">(</span><em>page_size</em>, <em>urlsafe_start_cursor</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackMessageModel.get_all_messages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_all_messages" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_message_count">
+<em class="property">classmethod </em><code class="descname">get_message_count</code><span class="sig-paren">(</span><em>thread_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackMessageModel.get_message_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_message_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of messages in the thread.</p>
+<p>Includes the deleted entries.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_messages">
+<em class="property">classmethod </em><code class="descname">get_messages</code><span class="sig-paren">(</span><em>thread_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackMessageModel.get_messages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_messages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an array of messages in the thread.</p>
+<p>Does not include the deleted entries.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_most_recent_message">
+<em class="property">classmethod </em><code class="descname">get_most_recent_message</code><span class="sig-paren">(</span><em>thread_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackMessageModel.get_most_recent_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_most_recent_message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_thread_subject">
+<code class="descname">get_thread_subject</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackMessageModel.get_thread_subject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_thread_subject" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.message_id">
+<code class="descname">message_id</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.message_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.text">
+<code class="descname">text</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.text" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.thread_id">
+<code class="descname">thread_id</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.thread_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.updated_status">
+<code class="descname">updated_status</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.updated_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackMessageModel.updated_subject">
+<code class="descname">updated_subject</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.updated_subject" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackThreadModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.feedback.gae_models.</code><code class="descname">FeedbackThreadModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackThreadModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackThreadModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>Threads for each exploration.</p>
+<dl class="docutils">
+<dt>The id/key of instances of this class has the form</dt>
+<dd>[EXPLORATION_ID].[THREAD_ID]</dd>
+</dl>
+<dl class="classmethod">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackThreadModel.create">
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>exploration_id</em>, <em>thread_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackThreadModel.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new FeedbackThreadModel entry.</p>
+<p>Throws an exception if a thread with the given exploration ID and
+thread ID combination exists already.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackThreadModel.exploration_id">
+<code class="descname">exploration_id</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.exploration_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackThreadModel.generate_new_thread_id">
+<em class="property">classmethod </em><code class="descname">generate_new_thread_id</code><span class="sig-paren">(</span><em>exploration_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackThreadModel.generate_new_thread_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.generate_new_thread_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a new thread id, unique within the exploration.</p>
+<p>Exploration ID + the generated thread ID is globally unique.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackThreadModel.get_by_exp_and_thread_id">
+<em class="property">classmethod </em><code class="descname">get_by_exp_and_thread_id</code><span class="sig-paren">(</span><em>exploration_id</em>, <em>thread_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackThreadModel.get_by_exp_and_thread_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.get_by_exp_and_thread_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the FeedbackThreadModel entry for the given ID.</p>
+<p>Returns None if the thread is not found or is already deleted.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackThreadModel.get_threads">
+<em class="property">classmethod </em><code class="descname">get_threads</code><span class="sig-paren">(</span><em>exploration_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/feedback/gae_models.html#FeedbackThreadModel.get_threads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.get_threads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an array of threads associated to the exploration.</p>
+<p>Does not include the deleted entries.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackThreadModel.original_author_id">
+<code class="descname">original_author_id</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.original_author_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackThreadModel.state_name">
+<code class="descname">state_name</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.state_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackThreadModel.status">
+<code class="descname">status</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackThreadModel.subject">
+<code class="descname">subject</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.subject" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.feedback.gae_models.FeedbackThreadModel.summary">
+<code class="descname">summary</code><a class="headerlink" href="#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unindexed Property whose value is a text string of unlimited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.core.storage.feedback">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.core.storage.feedback" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.core.storage.feedback package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.core.storage.feedback.gae_models">oppia.core.storage.feedback.gae_models module</a></li>
+<li><a class="reference internal" href="#module-oppia.core.storage.feedback">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.core.storage.feedback.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.core.storage.feedback.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

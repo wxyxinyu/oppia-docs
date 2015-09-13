@@ -1,0 +1,555 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.storage.base_model.gae_models &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.storage.base_model.gae_models</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Base model class.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="n">transaction_services</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_transaction_services</span><span class="p">()</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="kn">from</span> <span class="nn">google.appengine.datastore</span> <span class="kn">import</span> <span class="n">datastore_query</span>
+<span class="kn">from</span> <span class="nn">google.appengine.ext</span> <span class="kn">import</span> <span class="n">ndb</span>
+
+
+<div class="viewcode-block" id="BaseModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.BaseModel">[docs]</a><span class="k">class</span> <span class="nc">BaseModel</span><span class="p">(</span><span class="n">ndb</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base model for all persistent object storage classes.&quot;&quot;&quot;</span>
+
+    <span class="c"># When this entity was first created. This can be overwritten and</span>
+    <span class="c"># set explicitly.</span>
+    <span class="n">created_on</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">DateTimeProperty</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># When this entity was last updated. This cannot be set directly.</span>
+    <span class="n">last_updated</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">DateTimeProperty</span><span class="p">(</span><span class="n">auto_now</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Whether the current version of the model instance is deleted.</span>
+    <span class="n">deleted</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">BooleanProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A unique id for this model instance.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">id</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_pre_put_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This is run before model instances are saved to the datastore.</span>
+
+<span class="sd">        Subclasses of BaseModel should override this method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="BaseModel.EntityNotFoundError"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.BaseModel.EntityNotFoundError">[docs]</a>    <span class="k">class</span> <span class="nc">EntityNotFoundError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Raised when no entity for a given id exists in the datastore.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseModel.get"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.BaseModel.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets an entity by id. Fails noisily if strict == True.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          entity_id: str. The id of the entity.</span>
+<span class="sd">          strict: bool. Whether to fail noisily if no entity with the given id</span>
+<span class="sd">            exists in the datastore.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          None, if strict == False and no undeleted entity with the given id</span>
+<span class="sd">          exists in the datastore. Otherwise, the entity instance that</span>
+<span class="sd">          corresponds to the given id.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">        - base_models.BaseModel.EntityNotFoundError: if strict == True and</span>
+<span class="sd">            no undeleted entity with the given id exists in the datastore.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">entity</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">entity_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">entity</span> <span class="ow">and</span> <span class="n">entity</span><span class="o">.</span><span class="n">deleted</span><span class="p">:</span>
+            <span class="n">entity</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="n">strict</span> <span class="ow">and</span> <span class="n">entity</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">cls</span><span class="o">.</span><span class="n">EntityNotFoundError</span><span class="p">(</span>
+                <span class="s">&#39;Entity for class </span><span class="si">%s</span><span class="s"> with id </span><span class="si">%s</span><span class="s"> not found&#39;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">entity</span>
+</div>
+<div class="viewcode-block" id="BaseModel.put"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.BaseModel.put">[docs]</a>    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseModel.get_multi"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.BaseModel.get_multi">[docs]</a>    <span class="k">def</span> <span class="nf">get_multi</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">entity_ids</span><span class="p">,</span> <span class="n">include_deleted</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list, each entry of which is the instance model</span>
+<span class="sd">        corresponding to the entity_id, except for the following two cases (in</span>
+<span class="sd">        which the corresponding entry is None instead):</span>
+<span class="sd">          - the instance is not found</span>
+<span class="sd">          - the instance has been deleted, and `include_deleted` is True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">entity_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">ndb</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">entity_id</span> <span class="ow">in</span> <span class="n">entity_ids</span><span class="p">]</span>
+        <span class="n">entities</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span><span class="n">entity_keys</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">include_deleted</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entities</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">entities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">and</span> <span class="n">entities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">deleted</span><span class="p">:</span>
+                    <span class="n">entities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="n">entities</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseModel.put_multi"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.BaseModel.put_multi">[docs]</a>    <span class="k">def</span> <span class="nf">put_multi</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">entities</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ndb</span><span class="o">.</span><span class="n">put_multi</span><span class="p">(</span><span class="n">entities</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BaseModel.delete"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.BaseModel.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseModel.get_all"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.BaseModel.get_all">[docs]</a>    <span class="k">def</span> <span class="nf">get_all</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">include_deleted_entities</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a filterable iterable of all entities of this class.</span>
+
+<span class="sd">        If include_deleted_entities is True then entities that have been marked</span>
+<span class="sd">        deleted are returned as well.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">query</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">include_deleted_entities</span><span class="p">:</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">deleted</span> <span class="o">==</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">query</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseModel.get_new_id"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.BaseModel.get_new_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">entity_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets a new id for an entity, based on its name.</span>
+
+<span class="sd">        The returned id is guaranteed to be unique among all instances of this</span>
+<span class="sd">        entity.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          entity_name: the name of the entity. Coerced to a utf-8 encoded</span>
+<span class="sd">            string. Defaults to &#39;&#39;.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          str: a new unique id for this entity class.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">        - Exception: if an id cannot be generated within a reasonable number</span>
+<span class="sd">            of attempts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">entity_name</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">entity_name</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">entity_name</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+        <span class="n">MAX_RETRIES</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="n">RAND_RANGE</span> <span class="o">=</span> <span class="mi">127</span> <span class="o">*</span> <span class="mi">127</span>
+        <span class="n">ID_LENGTH</span> <span class="o">=</span> <span class="mi">12</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">MAX_RETRIES</span><span class="p">):</span>
+            <span class="n">new_id</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">convert_to_hash</span><span class="p">(</span>
+                <span class="s">&#39;</span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">entity_name</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_random_int</span><span class="p">(</span><span class="n">RAND_RANGE</span><span class="p">)),</span>
+                <span class="n">ID_LENGTH</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">new_id</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">new_id</span>
+
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;New id generator is producing too many collisions.&#39;</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_fetch_page_sorted_by_last_updated</span><span class="p">(</span>
+            <span class="n">cls</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">page_size</span><span class="p">,</span> <span class="n">urlsafe_start_cursor</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">urlsafe_start_cursor</span><span class="p">:</span>
+            <span class="n">start_cursor</span> <span class="o">=</span> <span class="n">datastore_query</span><span class="o">.</span><span class="n">Cursor</span><span class="p">(</span><span class="n">urlsafe</span><span class="o">=</span><span class="n">urlsafe_start_cursor</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start_cursor</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="o">-</span><span class="n">cls</span><span class="o">.</span><span class="n">last_updated</span><span class="p">)</span><span class="o">.</span><span class="n">fetch_page</span><span class="p">(</span>
+            <span class="n">page_size</span><span class="p">,</span> <span class="n">start_cursor</span><span class="o">=</span><span class="n">start_cursor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">urlsafe</span><span class="p">()</span> <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="bp">None</span><span class="p">),</span>
+            <span class="n">result</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="VersionedModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.VersionedModel">[docs]</a><span class="k">class</span> <span class="nc">VersionedModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Model that handles storage of the version history of model instances.</span>
+
+<span class="sd">    To use this class, you must declare a SNAPSHOT_METADATA_CLASS and a</span>
+<span class="sd">    SNAPSHOT_CONTENT_CLASS. The former must contain the String fields</span>
+<span class="sd">    &#39;committer_id&#39;, &#39;commit_type&#39; and &#39;commit_message&#39;, and a JSON field for</span>
+<span class="sd">    the Python list of dicts, &#39;commit_cmds&#39;. The latter must contain the JSON</span>
+<span class="sd">    field &#39;content&#39;. The item that is being versioned must be serializable to a</span>
+<span class="sd">    JSON blob.</span>
+
+<span class="sd">    Note that commit() should be used for VersionedModels, as opposed to put()</span>
+<span class="sd">    for direct subclasses of BaseModel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># The class designated as the snapshot model. This should be a subclass of</span>
+    <span class="c"># BaseSnapshotMetadataModel.</span>
+    <span class="n">SNAPSHOT_METADATA_CLASS</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="c"># The class designated as the snapshot content model. This should be a</span>
+    <span class="c"># subclass of BaseSnapshotContentModel.</span>
+    <span class="n">SNAPSHOT_CONTENT_CLASS</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="c"># Whether reverting is allowed. Default is False.</span>
+    <span class="n">ALLOW_REVERT</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="c">### IMPORTANT: Subclasses should only overwrite things above this line. ###</span>
+
+    <span class="c"># The possible commit types.</span>
+    <span class="n">_COMMIT_TYPE_CREATE</span> <span class="o">=</span> <span class="s">&#39;create&#39;</span>
+    <span class="n">_COMMIT_TYPE_REVERT</span> <span class="o">=</span> <span class="s">&#39;revert&#39;</span>
+    <span class="n">_COMMIT_TYPE_EDIT</span> <span class="o">=</span> <span class="s">&#39;edit&#39;</span>
+    <span class="n">_COMMIT_TYPE_DELETE</span> <span class="o">=</span> <span class="s">&#39;delete&#39;</span>
+    <span class="c"># A list containing the possible commit types.</span>
+    <span class="n">COMMIT_TYPE_CHOICES</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_COMMIT_TYPE_CREATE</span><span class="p">,</span> <span class="n">_COMMIT_TYPE_REVERT</span><span class="p">,</span> <span class="n">_COMMIT_TYPE_EDIT</span><span class="p">,</span>
+        <span class="n">_COMMIT_TYPE_DELETE</span>
+    <span class="p">]</span>
+    <span class="c"># The delimiter used to separate the version number from the model instance</span>
+    <span class="c"># id. To get the instance id from a snapshot id, use Python&#39;s rfind()</span>
+    <span class="c"># method to find the location of this delimiter.</span>
+    <span class="n">_VERSION_DELIMITER</span> <span class="o">=</span> <span class="s">&#39;-&#39;</span>
+    <span class="c"># The reserved prefix for keys that are automatically inserted into a</span>
+    <span class="c"># commit_cmd dict by this model.</span>
+    <span class="n">_AUTOGENERATED_PREFIX</span> <span class="o">=</span> <span class="s">&#39;AUTO&#39;</span>
+    <span class="c"># The current version number of this instance. In each PUT operation,</span>
+    <span class="c"># this number is incremented and a snapshot of the modified instance is</span>
+    <span class="c"># stored in the snapshot metadata and content models. The snapshot</span>
+    <span class="c"># version number starts at 1 when the model instance is first created.</span>
+    <span class="c"># All data in this instance represents the version at HEAD; data about the</span>
+    <span class="c"># previous versions is stored in the snapshot models.</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_require_not_marked_deleted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">deleted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;This model instance has been deleted.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compute_snapshot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates a snapshot (a Python dict) from the model fields.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;created_on&#39;</span><span class="p">,</span> <span class="s">&#39;last_updated&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_reconstitute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">snapshot_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Makes this instance into a reconstitution of the given snapshot.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">populate</span><span class="p">(</span><span class="o">**</span><span class="n">snapshot_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_reconstitute_from_snapshot_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">snapshot_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Makes this instance into a reconstitution of the given snapshot.&quot;&quot;&quot;</span>
+        <span class="n">snapshot_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SNAPSHOT_CONTENT_CLASS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+        <span class="n">snapshot_dict</span> <span class="o">=</span> <span class="n">snapshot_model</span><span class="o">.</span><span class="n">content</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reconstitute</span><span class="p">(</span><span class="n">snapshot_dict</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_snapshot_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">instance_id</span><span class="p">,</span> <span class="n">version_number</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">instance_id</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">_VERSION_DELIMITER</span><span class="p">,</span> <span class="n">version_number</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_trusted_commit</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_type</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">SNAPSHOT_METADATA_CLASS</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;No snapshot metadata class defined.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">SNAPSHOT_CONTENT_CLASS</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;No snapshot content class defined.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">commit_cmds</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Expected commit_cmds to be a list of dicts, received </span><span class="si">%s</span><span class="s">&#39;</span>
+                <span class="o">%</span> <span class="n">commit_cmds</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">commit_cmds</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="s">&#39;Expected commit_cmds to be a list of dicts, received </span><span class="si">%s</span><span class="s">&#39;</span>
+                    <span class="o">%</span> <span class="n">commit_cmds</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">snapshot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_snapshot</span><span class="p">()</span>
+        <span class="n">snapshot_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_snapshot_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+
+        <span class="n">snapshot_metadata_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SNAPSHOT_METADATA_CLASS</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">snapshot_id</span><span class="p">,</span> <span class="n">committer_id</span><span class="o">=</span><span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_type</span><span class="o">=</span><span class="n">commit_type</span><span class="p">,</span>
+            <span class="n">commit_message</span><span class="o">=</span><span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="o">=</span><span class="n">commit_cmds</span><span class="p">)</span>
+        <span class="n">snapshot_content_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SNAPSHOT_CONTENT_CLASS</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">snapshot_id</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">snapshot</span><span class="p">)</span>
+
+        <span class="n">transaction_services</span><span class="o">.</span><span class="n">run_in_transaction</span><span class="p">(</span>
+            <span class="n">ndb</span><span class="o">.</span><span class="n">put_multi</span><span class="p">,</span>
+            <span class="p">[</span><span class="n">snapshot_metadata_instance</span><span class="p">,</span> <span class="n">snapshot_content_instance</span><span class="p">,</span> <span class="bp">self</span><span class="p">])</span>
+
+<div class="viewcode-block" id="VersionedModel.delete"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.VersionedModel.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">force_deletion</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">force_deletion</span><span class="p">:</span>
+            <span class="n">current_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span>
+
+            <span class="n">version_numbers</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">num</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">current_version</span><span class="p">)]</span>
+            <span class="n">snapshot_ids</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_snapshot_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">version_number</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">version_number</span> <span class="ow">in</span> <span class="n">version_numbers</span><span class="p">]</span>
+
+            <span class="n">metadata_keys</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">ndb</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SNAPSHOT_METADATA_CLASS</span><span class="p">,</span> <span class="n">snapshot_id</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">snapshot_id</span> <span class="ow">in</span> <span class="n">snapshot_ids</span><span class="p">]</span>
+            <span class="n">ndb</span><span class="o">.</span><span class="n">delete_multi</span><span class="p">(</span><span class="n">metadata_keys</span><span class="p">)</span>
+
+            <span class="n">content_keys</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">ndb</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SNAPSHOT_CONTENT_CLASS</span><span class="p">,</span> <span class="n">snapshot_id</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">snapshot_id</span> <span class="ow">in</span> <span class="n">snapshot_ids</span><span class="p">]</span>
+            <span class="n">ndb</span><span class="o">.</span><span class="n">delete_multi</span><span class="p">(</span><span class="n">content_keys</span><span class="p">)</span>
+
+            <span class="nb">super</span><span class="p">(</span><span class="n">VersionedModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require_not_marked_deleted</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deleted</span> <span class="o">=</span> <span class="bp">True</span>
+
+            <span class="n">CMD_DELETE</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">_mark_deleted&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_AUTOGENERATED_PREFIX</span>
+            <span class="n">commit_cmds</span> <span class="o">=</span> <span class="p">[{</span>
+                <span class="s">&#39;cmd&#39;</span><span class="p">:</span> <span class="n">CMD_DELETE</span>
+            <span class="p">}]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_trusted_commit</span><span class="p">(</span>
+                <span class="n">committer_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_COMMIT_TYPE_DELETE</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span>
+                <span class="n">commit_cmds</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="VersionedModel.put"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.VersionedModel.put">[docs]</a>    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;For VersionedModels, this method is replaced with commit().&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="VersionedModel.commit"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.VersionedModel.commit">[docs]</a>    <span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Saves a version snapshot and updates the model.</span>
+
+<span class="sd">        commit_cmds should give sufficient information to reconstruct the</span>
+<span class="sd">        commit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require_not_marked_deleted</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">commit_cmd</span> <span class="ow">in</span> <span class="n">commit_cmds</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s">&#39;cmd&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">commit_cmd</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="s">&#39;Invalid commit_cmd: </span><span class="si">%s</span><span class="s">. Expected a </span><span class="se">\&#39;</span><span class="s">cmd</span><span class="se">\&#39;</span><span class="s"> key.&#39;</span>
+                    <span class="o">%</span> <span class="n">commit_cmd</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">commit_cmd</span><span class="p">[</span><span class="s">&#39;cmd&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_AUTOGENERATED_PREFIX</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="s">&#39;Invalid change list command: &#39;</span> <span class="o">%</span> <span class="n">commit_cmd</span><span class="p">[</span><span class="s">&#39;cmd&#39;</span><span class="p">])</span>
+
+        <span class="n">commit_type</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_COMMIT_TYPE_CREATE</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_COMMIT_TYPE_EDIT</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trusted_commit</span><span class="p">(</span>
+            <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_type</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="VersionedModel.revert"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.VersionedModel.revert">[docs]</a>    <span class="k">def</span> <span class="nf">revert</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">version_number</span><span class="p">):</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">_require_not_marked_deleted</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">model</span><span class="o">.</span><span class="n">ALLOW_REVERT</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s">&#39;Reverting of objects of type </span><span class="si">%s</span><span class="s"> is not allowed.&#39;</span>
+                <span class="o">%</span> <span class="n">model</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+
+        <span class="n">CMD_REVERT</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">_revert_version_number&#39;</span> <span class="o">%</span> <span class="n">model</span><span class="o">.</span><span class="n">_AUTOGENERATED_PREFIX</span>
+        <span class="n">commit_cmds</span> <span class="o">=</span> <span class="p">[{</span>
+            <span class="s">&#39;cmd&#39;</span><span class="p">:</span> <span class="n">CMD_REVERT</span><span class="p">,</span>
+            <span class="s">&#39;version_number&#39;</span><span class="p">:</span> <span class="n">version_number</span>
+        <span class="p">}]</span>
+
+        <span class="c"># Do not overwrite the version number.</span>
+        <span class="n">current_version</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">version</span>
+
+        <span class="c"># If a new property is introduced after a certain version of a model,</span>
+        <span class="c"># the property should be its default value when an old snapshot of the</span>
+        <span class="c"># model is applied during reversion. E.g. states_schema_version in</span>
+        <span class="c"># ExplorationModel may be added after some version of a saved</span>
+        <span class="c"># exploration. If that exploration is reverted to a version that does</span>
+        <span class="c"># not have a states_schema_version property, it should revert to the</span>
+        <span class="c"># default states_schema_version value rather than taking the</span>
+        <span class="c"># states_schema_version value from the latest exploration version.</span>
+        <span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_get_snapshot_id</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">version_number</span><span class="p">)</span>
+        <span class="n">new_model</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="n">new_model</span><span class="o">.</span><span class="n">_reconstitute_from_snapshot_id</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+        <span class="n">new_model</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">current_version</span>
+
+        <span class="n">new_model</span><span class="o">.</span><span class="n">_trusted_commit</span><span class="p">(</span>
+            <span class="n">committer_id</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">_COMMIT_TYPE_REVERT</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span>
+            <span class="n">commit_cmds</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="VersionedModel.get_version"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.VersionedModel.get_version">[docs]</a>    <span class="k">def</span> <span class="nf">get_version</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">model_instance_id</span><span class="p">,</span> <span class="n">version_number</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a model instance representing the given version.</span>
+
+<span class="sd">        The snapshot content is used to populate this model instance. The</span>
+<span class="sd">        snapshot metadata is not used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">model_instance_id</span><span class="p">)</span><span class="o">.</span><span class="n">_require_not_marked_deleted</span><span class="p">()</span>
+
+        <span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_get_snapshot_id</span><span class="p">(</span><span class="n">model_instance_id</span><span class="p">,</span> <span class="n">version_number</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">model_instance_id</span><span class="p">)</span><span class="o">.</span><span class="n">_reconstitute_from_snapshot_id</span><span class="p">(</span>
+            <span class="n">snapshot_id</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="VersionedModel.get"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.VersionedModel.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets an entity by id. Fails noisily if strict == True.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">VersionedModel</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entity_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_version</span><span class="p">(</span><span class="n">entity_id</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="VersionedModel.get_snapshots_metadata"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.VersionedModel.get_snapshots_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">get_snapshots_metadata</span><span class="p">(</span>
+            <span class="n">cls</span><span class="p">,</span> <span class="n">model_instance_id</span><span class="p">,</span> <span class="n">version_numbers</span><span class="p">,</span> <span class="n">allow_deleted</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list of dicts, each representing a model snapshot.</span>
+
+<span class="sd">        One dict is returned for each version number in the list of version</span>
+<span class="sd">        numbers requested. If any of the version numbers does not exist, an</span>
+<span class="sd">        error is raised.</span>
+
+<span class="sd">        If `allow_deleted` is False, an error is raised if the current model</span>
+<span class="sd">        has been deleted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">allow_deleted</span><span class="p">:</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">model_instance_id</span><span class="p">)</span><span class="o">.</span><span class="n">_require_not_marked_deleted</span><span class="p">()</span>
+
+        <span class="n">snapshot_ids</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">_get_snapshot_id</span><span class="p">(</span><span class="n">model_instance_id</span><span class="p">,</span> <span class="n">version_number</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">version_number</span> <span class="ow">in</span> <span class="n">version_numbers</span><span class="p">]</span>
+        <span class="n">metadata_keys</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">ndb</span><span class="o">.</span><span class="n">Key</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">SNAPSHOT_METADATA_CLASS</span><span class="p">,</span> <span class="n">snapshot_id</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">snapshot_id</span> <span class="ow">in</span> <span class="n">snapshot_ids</span><span class="p">]</span>
+        <span class="n">returned_models</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span><span class="n">metadata_keys</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">returned_models</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="s">&#39;Invalid version number </span><span class="si">%s</span><span class="s"> for model </span><span class="si">%s</span><span class="s"> with id </span><span class="si">%s</span><span class="s">&#39;</span>
+                    <span class="o">%</span> <span class="p">(</span><span class="n">version_numbers</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">model_instance_id</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="p">[{</span>
+            <span class="s">&#39;committer_id&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">committer_id</span><span class="p">,</span>
+            <span class="s">&#39;commit_message&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">commit_message</span><span class="p">,</span>
+            <span class="s">&#39;commit_cmds&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">commit_cmds</span><span class="p">,</span>
+            <span class="s">&#39;commit_type&#39;</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">commit_type</span><span class="p">,</span>
+            <span class="s">&#39;version_number&#39;</span><span class="p">:</span> <span class="n">version_numbers</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span>
+            <span class="s">&#39;created_on_ms&#39;</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_time_in_millisecs</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">created_on</span><span class="p">),</span>
+        <span class="p">}</span> <span class="k">for</span> <span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">returned_models</span><span class="p">)]</span>
+
+</div></div>
+<div class="viewcode-block" id="BaseSnapshotMetadataModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.BaseSnapshotMetadataModel">[docs]</a><span class="k">class</span> <span class="nc">BaseSnapshotMetadataModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for snapshot metadata classes.</span>
+
+<span class="sd">    The id of this model is computed using VersionedModel.get_snapshot_id().</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># The id of the user who committed this revision.</span>
+    <span class="n">committer_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The type of the commit associated with this snapshot.</span>
+    <span class="n">commit_type</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="n">VersionedModel</span><span class="o">.</span><span class="n">COMMIT_TYPE_CHOICES</span><span class="p">)</span>
+    <span class="c"># The commit message associated with this snapshot.</span>
+    <span class="n">commit_message</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">TextProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># A sequence of commands that can be used to describe this commit.</span>
+    <span class="c"># Represented as a list of dicts.</span>
+    <span class="n">commit_cmds</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="BaseSnapshotContentModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.BaseSnapshotContentModel">[docs]</a><span class="k">class</span> <span class="nc">BaseSnapshotContentModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for snapshot content classes.</span>
+
+<span class="sd">    The id of this model is computed using VersionedModel.get_snapshot_id().</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># The snapshot content, as a JSON blob.</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="BaseMapReduceBatchResultsModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.base_model.html#oppia.core.storage.base_model.gae_models.BaseMapReduceBatchResultsModel">[docs]</a><span class="k">class</span> <span class="nc">BaseMapReduceBatchResultsModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base model for batch storage for MR jobs.</span>
+
+<span class="sd">    This model turns off caching, because this results in stale data being</span>
+<span class="sd">    shown after each MapReduce job run. Classes which are used by a MR job to</span>
+<span class="sd">    store its batch results should subclass this class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_use_cache</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">_use_memcache</span> <span class="o">=</span> <span class="bp">False</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

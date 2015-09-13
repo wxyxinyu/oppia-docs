@@ -1,0 +1,267 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.stats_services &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.stats_services</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Services for exploration-related statistics.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_domain</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_services</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">stats_domain</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">stats_jobs</span>
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">stats_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span><span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">statistics</span><span class="p">])</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+
+
+<span class="n">IMPROVE_TYPE_DEFAULT</span> <span class="o">=</span> <span class="s">&#39;default&#39;</span>
+<span class="n">IMPROVE_TYPE_INCOMPLETE</span> <span class="o">=</span> <span class="s">&#39;incomplete&#39;</span>
+
+
+<div class="viewcode-block" id="get_top_unresolved_answers_for_default_rule"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_services.get_top_unresolved_answers_for_default_rule">[docs]</a><span class="k">def</span> <span class="nf">get_top_unresolved_answers_for_default_rule</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">state_name</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">answer</span><span class="p">:</span> <span class="n">count</span> <span class="k">for</span> <span class="p">(</span><span class="n">answer</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span> <span class="ow">in</span>
+        <span class="n">stats_domain</span><span class="o">.</span><span class="n">StateRuleAnswerLog</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">exploration_id</span><span class="p">,</span> <span class="n">state_name</span><span class="p">,</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">DEFAULT_RULESPEC_STR</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">get_top_answers</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="get_state_rules_stats"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_services.get_state_rules_stats">[docs]</a><span class="k">def</span> <span class="nf">get_state_rules_stats</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">state_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets statistics for the answer groups and rules of this state.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dict, keyed by the string &#39;{HANDLER_NAME}.{RULE_STR}&#39;, whose</span>
+<span class="sd">        values are the corresponding stats_domain.StateRuleAnswerLog</span>
+<span class="sd">        instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">exp_services</span><span class="o">.</span><span class="n">get_exploration_by_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">state_name</span><span class="p">]</span>
+
+    <span class="c"># TODO(bhenning): Everything is handler name submit; therefore, it is</span>
+    <span class="c"># pointless and should be removed.</span>
+    <span class="n">_OLD_SUBMIT_HANDLER_NAME</span> <span class="o">=</span> <span class="s">&#39;submit&#39;</span>
+    <span class="n">rule_keys</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">interaction</span><span class="o">.</span><span class="n">answer_groups</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">rule_specs</span><span class="p">:</span>
+            <span class="n">rule_keys</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
+                <span class="n">_OLD_SUBMIT_HANDLER_NAME</span><span class="p">,</span> <span class="n">rule</span><span class="o">.</span><span class="n">stringify_classified_rule</span><span class="p">()))</span>
+
+    <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">interaction</span><span class="o">.</span><span class="n">default_outcome</span><span class="p">:</span>
+        <span class="n">rule_keys</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
+            <span class="n">_OLD_SUBMIT_HANDLER_NAME</span><span class="p">,</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">DEFAULT_RULESPEC_STR</span><span class="p">))</span>
+
+    <span class="n">answer_logs</span> <span class="o">=</span> <span class="n">stats_domain</span><span class="o">.</span><span class="n">StateRuleAnswerLog</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="p">[{</span>
+            <span class="s">&#39;state_name&#39;</span><span class="p">:</span> <span class="n">state_name</span><span class="p">,</span>
+            <span class="s">&#39;rule_str&#39;</span><span class="p">:</span> <span class="n">rule_key</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">}</span> <span class="k">for</span> <span class="n">rule_key</span> <span class="ow">in</span> <span class="n">rule_keys</span><span class="p">])</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">answer_log</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">answer_logs</span><span class="p">):</span>
+        <span class="n">results</span><span class="p">[</span><span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rule_keys</span><span class="p">[</span><span class="n">ind</span><span class="p">])]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;answers&#39;</span><span class="p">:</span> <span class="n">answer_log</span><span class="o">.</span><span class="n">get_top_answers</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>
+            <span class="s">&#39;rule_hits&#39;</span><span class="p">:</span> <span class="n">answer_log</span><span class="o">.</span><span class="n">total_answer_count</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">results</span>
+
+</div>
+<div class="viewcode-block" id="get_state_improvements"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_services.get_state_improvements">[docs]</a><span class="k">def</span> <span class="nf">get_state_improvements</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">exploration_version</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of dicts, each representing a suggestion for improvement</span>
+<span class="sd">    to a particular state.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ranked_states</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">exp_services</span><span class="o">.</span><span class="n">get_exploration_by_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="n">state_names</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+    <span class="n">default_rule_answer_logs</span> <span class="o">=</span> <span class="n">stats_domain</span><span class="o">.</span><span class="n">StateRuleAnswerLog</span><span class="o">.</span><span class="n">get_multi</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="p">[{</span>
+            <span class="s">&#39;state_name&#39;</span><span class="p">:</span> <span class="n">state_name</span><span class="p">,</span>
+            <span class="s">&#39;rule_str&#39;</span><span class="p">:</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">DEFAULT_RULESPEC_STR</span>
+        <span class="p">}</span> <span class="k">for</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="n">state_names</span><span class="p">])</span>
+
+    <span class="n">statistics</span> <span class="o">=</span> <span class="n">stats_jobs</span><span class="o">.</span><span class="n">StatisticsAggregator</span><span class="o">.</span><span class="n">get_statistics</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">exploration_version</span><span class="p">)</span>
+    <span class="n">state_hit_counts</span> <span class="o">=</span> <span class="n">statistics</span><span class="p">[</span><span class="s">&#39;state_hit_counts&#39;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">state_names</span><span class="p">):</span>
+        <span class="n">total_entry_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">no_answer_submitted_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="n">state_hit_counts</span><span class="p">:</span>
+            <span class="n">total_entry_count</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">state_hit_counts</span><span class="p">[</span><span class="n">state_name</span><span class="p">][</span><span class="s">&#39;total_entry_count&#39;</span><span class="p">])</span>
+            <span class="n">no_answer_submitted_count</span> <span class="o">=</span> <span class="n">state_hit_counts</span><span class="p">[</span><span class="n">state_name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s">&#39;no_answer_count&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">total_entry_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">total_entry_count</span>
+        <span class="n">default_rule_answer_log</span> <span class="o">=</span> <span class="n">default_rule_answer_logs</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+        <span class="n">default_count</span> <span class="o">=</span> <span class="n">default_rule_answer_log</span><span class="o">.</span><span class="n">total_answer_count</span>
+
+        <span class="n">eligible_flags</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">exploration</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">state_name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">default_count</span> <span class="o">&gt;</span> <span class="n">threshold</span> <span class="ow">and</span>
+                <span class="n">state</span><span class="o">.</span><span class="n">interaction</span><span class="o">.</span><span class="n">default_outcome</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span>
+                <span class="n">state</span><span class="o">.</span><span class="n">interaction</span><span class="o">.</span><span class="n">default_outcome</span><span class="o">.</span><span class="n">dest</span> <span class="o">==</span> <span class="n">state_name</span><span class="p">):</span>
+            <span class="n">eligible_flags</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s">&#39;rank&#39;</span><span class="p">:</span> <span class="n">default_count</span><span class="p">,</span>
+                <span class="s">&#39;improve_type&#39;</span><span class="p">:</span> <span class="n">IMPROVE_TYPE_DEFAULT</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">no_answer_submitted_count</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">:</span>
+            <span class="n">eligible_flags</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s">&#39;rank&#39;</span><span class="p">:</span> <span class="n">no_answer_submitted_count</span><span class="p">,</span>
+                <span class="s">&#39;improve_type&#39;</span><span class="p">:</span> <span class="n">IMPROVE_TYPE_INCOMPLETE</span><span class="p">})</span>
+
+        <span class="k">if</span> <span class="n">eligible_flags</span><span class="p">:</span>
+            <span class="n">eligible_flags</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                <span class="n">eligible_flags</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">flag</span><span class="p">:</span> <span class="n">flag</span><span class="p">[</span><span class="s">&#39;rank&#39;</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">ranked_states</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s">&#39;rank&#39;</span><span class="p">:</span> <span class="n">eligible_flags</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;rank&#39;</span><span class="p">],</span>
+                <span class="s">&#39;state_name&#39;</span><span class="p">:</span> <span class="n">state_name</span><span class="p">,</span>
+                <span class="s">&#39;type&#39;</span><span class="p">:</span> <span class="n">eligible_flags</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;improve_type&#39;</span><span class="p">],</span>
+            <span class="p">})</span>
+
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">state</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">ranked_states</span> <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="s">&#39;rank&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="s">&#39;rank&#39;</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="get_versions_for_exploration_stats"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_services.get_versions_for_exploration_stats">[docs]</a><span class="k">def</span> <span class="nf">get_versions_for_exploration_stats</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns list of versions for this exploration.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">stats_models</span><span class="o">.</span><span class="n">ExplorationAnnotationsModel</span><span class="o">.</span><span class="n">get_versions</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="get_exploration_stats"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.stats_services.get_exploration_stats">[docs]</a><span class="k">def</span> <span class="nf">get_exploration_stats</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">exploration_version</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a dict with state statistics for the given exploration id.</span>
+
+<span class="sd">    Note that exploration_version should be a string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exploration</span> <span class="o">=</span> <span class="n">exp_services</span><span class="o">.</span><span class="n">get_exploration_by_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">)</span>
+    <span class="n">exp_stats</span> <span class="o">=</span> <span class="n">stats_jobs</span><span class="o">.</span><span class="n">StatisticsAggregator</span><span class="o">.</span><span class="n">get_statistics</span><span class="p">(</span>
+        <span class="n">exploration_id</span><span class="p">,</span> <span class="n">exploration_version</span><span class="p">)</span>
+
+    <span class="n">last_updated</span> <span class="o">=</span> <span class="n">exp_stats</span><span class="p">[</span><span class="s">&#39;last_updated&#39;</span><span class="p">]</span>
+    <span class="n">state_hit_counts</span> <span class="o">=</span> <span class="n">exp_stats</span><span class="p">[</span><span class="s">&#39;state_hit_counts&#39;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s">&#39;improvements&#39;</span><span class="p">:</span> <span class="n">get_state_improvements</span><span class="p">(</span>
+             <span class="n">exploration_id</span><span class="p">,</span> <span class="n">exploration_version</span><span class="p">),</span>
+        <span class="s">&#39;last_updated&#39;</span><span class="p">:</span> <span class="n">last_updated</span><span class="p">,</span>
+        <span class="s">&#39;num_completions&#39;</span><span class="p">:</span> <span class="n">exp_stats</span><span class="p">[</span><span class="s">&#39;complete_exploration_count&#39;</span><span class="p">],</span>
+        <span class="s">&#39;num_starts&#39;</span><span class="p">:</span> <span class="n">exp_stats</span><span class="p">[</span><span class="s">&#39;start_exploration_count&#39;</span><span class="p">],</span>
+        <span class="s">&#39;state_stats&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">state_name</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">state_name</span><span class="p">,</span>
+                <span class="s">&#39;firstEntryCount&#39;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="n">state_hit_counts</span><span class="p">[</span><span class="n">state_name</span><span class="p">][</span><span class="s">&#39;first_entry_count&#39;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="n">state_hit_counts</span> <span class="k">else</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="s">&#39;totalEntryCount&#39;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="n">state_hit_counts</span><span class="p">[</span><span class="n">state_name</span><span class="p">][</span><span class="s">&#39;total_entry_count&#39;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="n">state_hit_counts</span> <span class="k">else</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">}</span> <span class="k">for</span> <span class="n">state_name</span> <span class="ow">in</span> <span class="n">exploration</span><span class="o">.</span><span class="n">states</span>
+        <span class="p">},</span>
+    <span class="p">}</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

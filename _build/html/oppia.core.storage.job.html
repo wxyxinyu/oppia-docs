@@ -1,0 +1,253 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.storage.job package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-core-storage-job-package">
+<h1>oppia.core.storage.job package<a class="headerlink" href="#oppia-core-storage-job-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core.storage.job.gae_models">
+<span id="oppia-core-storage-job-gae-models-module"></span><h2>oppia.core.storage.job.gae_models module<a class="headerlink" href="#module-oppia.core.storage.job.gae_models" title="Permalink to this headline">¶</a></h2>
+<p>Models for long-running jobs.</p>
+<dl class="class">
+<dt id="oppia.core.storage.job.gae_models.ContinuousComputationModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.job.gae_models.</code><code class="descname">ContinuousComputationModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/job/gae_models.html#ContinuousComputationModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.job.gae_models.ContinuousComputationModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>Class representing a continuous computation.</p>
+<p>The id of each instance of this model is the name of the continuous
+computation manager class.</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.ContinuousComputationModel.active_realtime_layer_index">
+<code class="descname">active_realtime_layer_index</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.ContinuousComputationModel.active_realtime_layer_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.ContinuousComputationModel.last_finished_msec">
+<code class="descname">last_finished_msec</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.ContinuousComputationModel.last_finished_msec" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python float.</p>
+<p>Note: int, long and bool are also allowed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.ContinuousComputationModel.last_started_msec">
+<code class="descname">last_started_msec</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.ContinuousComputationModel.last_started_msec" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python float.</p>
+<p>Note: int, long and bool are also allowed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.ContinuousComputationModel.last_stopped_msec">
+<code class="descname">last_stopped_msec</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.ContinuousComputationModel.last_stopped_msec" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python float.</p>
+<p>Note: int, long and bool are also allowed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.ContinuousComputationModel.status_code">
+<code class="descname">status_code</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.ContinuousComputationModel.status_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.job.gae_models.JobModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.job.gae_models.</code><code class="descname">JobModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/job/gae_models.html#JobModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>Class representing a datastore entity for a long-running job.</p>
+<dl class="classmethod">
+<dt id="oppia.core.storage.job.gae_models.JobModel.do_unfinished_jobs_exist">
+<em class="property">classmethod </em><code class="descname">do_unfinished_jobs_exist</code><span class="sig-paren">(</span><em>job_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/job/gae_models.html#JobModel.do_unfinished_jobs_exist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.do_unfinished_jobs_exist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.JobModel.error">
+<code class="descname">error</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unindexed Property whose value is a text string of unlimited length.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.job.gae_models.JobModel.get_all_unfinished_jobs">
+<em class="property">classmethod </em><code class="descname">get_all_unfinished_jobs</code><span class="sig-paren">(</span><em>limit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/job/gae_models.html#JobModel.get_all_unfinished_jobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.get_all_unfinished_jobs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.job.gae_models.JobModel.get_new_id">
+<em class="property">classmethod </em><code class="descname">get_new_id</code><span class="sig-paren">(</span><em>entity_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/job/gae_models.html#JobModel.get_new_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.get_new_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overwrites superclass method.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.job.gae_models.JobModel.get_recent_jobs">
+<em class="property">classmethod </em><code class="descname">get_recent_jobs</code><span class="sig-paren">(</span><em>limit</em>, <em>recency_msec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/job/gae_models.html#JobModel.get_recent_jobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.get_recent_jobs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.job.gae_models.JobModel.get_unfinished_jobs">
+<em class="property">classmethod </em><code class="descname">get_unfinished_jobs</code><span class="sig-paren">(</span><em>job_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/job/gae_models.html#JobModel.get_unfinished_jobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.get_unfinished_jobs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.JobModel.has_been_cleaned_up">
+<code class="descname">has_been_cleaned_up</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.has_been_cleaned_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python bool.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.JobModel.is_cancelable">
+<code class="descname">is_cancelable</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.is_cancelable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.JobModel.job_type">
+<code class="descname">job_type</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.job_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.JobModel.metadata">
+<code class="descname">metadata</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.JobModel.output">
+<code class="descname">output</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.JobModel.status_code">
+<code class="descname">status_code</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.status_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.JobModel.time_finished_msec">
+<code class="descname">time_finished_msec</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.time_finished_msec" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python float.</p>
+<p>Note: int, long and bool are also allowed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.JobModel.time_queued_msec">
+<code class="descname">time_queued_msec</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.time_queued_msec" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python float.</p>
+<p>Note: int, long and bool are also allowed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.job.gae_models.JobModel.time_started_msec">
+<code class="descname">time_started_msec</code><a class="headerlink" href="#oppia.core.storage.job.gae_models.JobModel.time_started_msec" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python float.</p>
+<p>Note: int, long and bool are also allowed.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.core.storage.job">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.core.storage.job" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.core.storage.job package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.core.storage.job.gae_models">oppia.core.storage.job.gae_models module</a></li>
+<li><a class="reference internal" href="#module-oppia.core.storage.job">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.core.storage.job.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.core.storage.job.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

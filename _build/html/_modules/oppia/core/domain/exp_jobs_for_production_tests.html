@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.exp_jobs_for_production_tests &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.exp_jobs_for_production_tests</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Jobs operating on explorations that can be used for production tests.</span>
+<span class="sd">To use these jobs, first need to register them in jobs_registry (at</span>
+<span class="sd">the moment they are not displayed there to avoid accidental use).&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Marcel Schmittfull&#39;</span>
+
+<span class="kn">from</span> <span class="nn">core</span> <span class="kn">import</span> <span class="n">jobs</span>
+<span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_domain</span>
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">base_models</span><span class="p">,</span> <span class="n">exp_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">base_model</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">exploration</span><span class="p">])</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+
+<span class="kn">from</span> <span class="nn">google.appengine.ext</span> <span class="kn">import</span> <span class="n">ndb</span>
+
+
+<div class="viewcode-block" id="ExpCopiesRealtimeModel"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.ExpCopiesRealtimeModel">[docs]</a><span class="k">class</span> <span class="nc">ExpCopiesRealtimeModel</span><span class="p">(</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">BaseRealtimeDatastoreClassForContinuousComputations</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ExpCopiesAggregator"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.ExpCopiesAggregator">[docs]</a><span class="k">class</span> <span class="nc">ExpCopiesAggregator</span><span class="p">(</span><span class="n">jobs</span><span class="o">.</span><span class="n">BaseContinuousComputationManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A continuous-computation job creating 10 published copies of every</span>
+<span class="sd">    existing exploration, with the eid being &#39;[old_eid]copy[copy_number]&#39;,</span>
+<span class="sd">    title &#39;Copy&#39; and category &#39;Copies&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExpCopiesAggregator.get_event_types_listened_to"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.ExpCopiesAggregator.get_event_types_listened_to">[docs]</a>    <span class="k">def</span> <span class="nf">get_event_types_listened_to</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_realtime_datastore_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ExpCopiesRealtimeModel</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_batch_job_manager_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ExpCopiesMRJobManager</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_handle_incoming_event</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">active_realtime_layer</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ExpCopiesMRJobManager"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.ExpCopiesMRJobManager">[docs]</a><span class="k">class</span> <span class="nc">ExpCopiesMRJobManager</span><span class="p">(</span>
+    <span class="n">jobs</span><span class="o">.</span><span class="n">BaseMapReduceJobManagerForContinuousComputations</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A continuous-computation job creating 10 published copies of every</span>
+<span class="sd">    existing exploration, with the eid being &#39;[old_eid]copy[copy_number]&#39;,</span>
+<span class="sd">    title &#39;Copy&#39; and category &#39;Copies&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_continuous_computation_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ExpCopiesAggregator</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ExpCopiesMRJobManager.entity_classes_to_map_over"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.ExpCopiesMRJobManager.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="p">]</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExpCopiesMRJobManager.map"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.ExpCopiesMRJobManager.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_services</span>
+        <span class="k">if</span> <span class="n">ExpCopiesMRJobManager</span><span class="o">.</span><span class="n">_entity_created_before_job_queued</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">copy</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">count</span><span class="p">),</span>
+                       <span class="n">exp_services</span><span class="o">.</span><span class="n">get_exploration_from_model</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">())</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ExpCopiesMRJobManager.reduce"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.ExpCopiesMRJobManager.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">exp_id</span><span class="p">,</span> <span class="n">list_of_exps</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_services</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">rights_manager</span>
+        <span class="k">for</span> <span class="n">stringified_exp</span> <span class="ow">in</span> <span class="n">list_of_exps</span><span class="p">:</span>
+            <span class="n">exploration</span> <span class="o">=</span> <span class="n">exp_domain</span><span class="o">.</span><span class="n">Exploration</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span>
+                <span class="n">exp_id</span><span class="p">,</span> <span class="s">&#39;Copy&#39;</span><span class="p">,</span> <span class="s">&#39;Copies&#39;</span><span class="p">,</span> <span class="n">stringified_exp</span><span class="p">)</span>
+            <span class="n">exp_services</span><span class="o">.</span><span class="n">save_new_exploration</span><span class="p">(</span>
+                <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_COMMITTER_ID</span><span class="p">,</span> <span class="n">exploration</span><span class="p">)</span>
+            <span class="n">rights_manager</span><span class="o">.</span><span class="n">publish_exploration</span><span class="p">(</span>
+                <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_COMMITTER_ID</span><span class="p">,</span> <span class="n">exp_id</span><span class="p">)</span>
+
+
+<span class="c"># Job to delete all copied explorations.</span></div></div>
+<div class="viewcode-block" id="DeleteExpCopiesRealtimeModel"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.DeleteExpCopiesRealtimeModel">[docs]</a><span class="k">class</span> <span class="nc">DeleteExpCopiesRealtimeModel</span><span class="p">(</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">BaseRealtimeDatastoreClassForContinuousComputations</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="DeleteExpCopiesAggregator"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.DeleteExpCopiesAggregator">[docs]</a><span class="k">class</span> <span class="nc">DeleteExpCopiesAggregator</span><span class="p">(</span><span class="n">jobs</span><span class="o">.</span><span class="n">BaseContinuousComputationManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A continuous-computation job deleting all explorations in category</span>
+<span class="sd">    &#39;Copies&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="DeleteExpCopiesAggregator.get_event_types_listened_to"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.DeleteExpCopiesAggregator.get_event_types_listened_to">[docs]</a>    <span class="k">def</span> <span class="nf">get_event_types_listened_to</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_realtime_datastore_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DeleteExpCopiesRealtimeModel</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_batch_job_manager_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DeleteExpCopiesMRJobManager</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_handle_incoming_event</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">active_realtime_layer</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="DeleteExpCopiesMRJobManager"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.DeleteExpCopiesMRJobManager">[docs]</a><span class="k">class</span> <span class="nc">DeleteExpCopiesMRJobManager</span><span class="p">(</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">BaseMapReduceJobManagerForContinuousComputations</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Job that deletes all explorations in category &#39;Copies&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_continuous_computation_class</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DeleteExpCopiesAggregator</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="DeleteExpCopiesMRJobManager.entity_classes_to_map_over"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.DeleteExpCopiesMRJobManager.entity_classes_to_map_over">[docs]</a>    <span class="k">def</span> <span class="nf">entity_classes_to_map_over</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">exp_models</span><span class="o">.</span><span class="n">ExplorationModel</span><span class="p">]</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="DeleteExpCopiesMRJobManager.map"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.DeleteExpCopiesMRJobManager.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">core.domain</span> <span class="kn">import</span> <span class="n">exp_services</span>
+        <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">category</span> <span class="o">==</span> <span class="s">&#39;Copies&#39;</span><span class="p">:</span>
+            <span class="n">exp_services</span><span class="o">.</span><span class="n">delete_exploration</span><span class="p">(</span>
+                <span class="n">feconf</span><span class="o">.</span><span class="n">SYSTEM_COMMITTER_ID</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">force_deletion</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="DeleteExpCopiesMRJobManager.reduce"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.exp_jobs_for_production_tests.DeleteExpCopiesMRJobManager.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">exp_id</span><span class="p">,</span> <span class="n">list_of_exps</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

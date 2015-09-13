@@ -1,0 +1,220 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.storage.file.gae_models &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.storage.file.gae_models</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Models relating to the per-exploration file system.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">core.storage.base_model.gae_models</span> <span class="kn">as</span> <span class="nn">base_models</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="kn">from</span> <span class="nn">google.appengine.ext</span> <span class="kn">import</span> <span class="n">ndb</span>
+
+
+<div class="viewcode-block" id="FileMetadataSnapshotMetadataModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileMetadataSnapshotMetadataModel">[docs]</a><span class="k">class</span> <span class="nc">FileMetadataSnapshotMetadataModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseSnapshotMetadataModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for storing the file metadata snapshot commit history.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="FileMetadataSnapshotContentModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileMetadataSnapshotContentModel">[docs]</a><span class="k">class</span> <span class="nc">FileMetadataSnapshotContentModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseSnapshotContentModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for storing the content of the file metadata snapshots.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="FileMetadataModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileMetadataModel">[docs]</a><span class="k">class</span> <span class="nc">FileMetadataModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">VersionedModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;File metadata model, keyed by exploration id and absolute file name.&quot;&quot;&quot;</span>
+    <span class="n">SNAPSHOT_METADATA_CLASS</span> <span class="o">=</span> <span class="n">FileMetadataSnapshotMetadataModel</span>
+    <span class="n">SNAPSHOT_CONTENT_CLASS</span> <span class="o">=</span> <span class="n">FileMetadataSnapshotContentModel</span>
+
+    <span class="c"># The size of the file.</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FileMetadataModel.get_new_id"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileMetadataModel.get_new_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">entity_name</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FileMetadataModel.get_undeleted"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileMetadataModel.get_undeleted">[docs]</a>    <span class="k">def</span> <span class="nf">get_undeleted</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_all</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">deleted</span> <span class="o">==</span> <span class="bp">False</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span>
+            <span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_QUERY_LIMIT</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_construct_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">vfs_construct_path</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FileMetadataModel.create"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileMetadataModel.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_construct_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span> <span class="n">deleted</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FileMetadataModel.get_model"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileMetadataModel.get_model">[docs]</a>    <span class="k">def</span> <span class="nf">get_model</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_construct_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">FileMetadataModel</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">model_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FileMetadataModel.get_version"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileMetadataModel.get_version">[docs]</a>    <span class="k">def</span> <span class="nf">get_version</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">version_number</span><span class="p">):</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_construct_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">FileMetadataModel</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">get_version</span><span class="p">(</span>
+            <span class="n">model_id</span><span class="p">,</span> <span class="n">version_number</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FileMetadataModel.commit"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileMetadataModel.commit">[docs]</a>    <span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">FileMetadataModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span>
+            <span class="n">committer_id</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="FileSnapshotMetadataModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileSnapshotMetadataModel">[docs]</a><span class="k">class</span> <span class="nc">FileSnapshotMetadataModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseSnapshotMetadataModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for storing the file snapshot commit history.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="FileSnapshotContentModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileSnapshotContentModel">[docs]</a><span class="k">class</span> <span class="nc">FileSnapshotContentModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseSnapshotContentModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for storing the content of the file snapshots.&quot;&quot;&quot;</span>
+
+    <span class="c"># Overwrite the superclass member to use a BlobProperty for raw strings.</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">BlobProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="FileModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileModel">[docs]</a><span class="k">class</span> <span class="nc">FileModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">VersionedModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;File data model, keyed by exploration id and absolute file name.&quot;&quot;&quot;</span>
+    <span class="n">SNAPSHOT_METADATA_CLASS</span> <span class="o">=</span> <span class="n">FileSnapshotMetadataModel</span>
+    <span class="n">SNAPSHOT_CONTENT_CLASS</span> <span class="o">=</span> <span class="n">FileSnapshotContentModel</span>
+
+    <span class="c"># The contents of the file.</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">BlobProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_reconstitute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">snapshot_blob</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Manually overwrite the superclass method.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">content</span> <span class="o">=</span> <span class="n">snapshot_blob</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_compute_snapshot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Manually overwrite the superclass method.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">content</span>
+
+<div class="viewcode-block" id="FileModel.get_new_id"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileModel.get_new_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">entity_name</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_construct_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">vfs_construct_path</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FileModel.create"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileModel.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_construct_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span> <span class="n">deleted</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FileModel.get_model"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileModel.get_model">[docs]</a>    <span class="k">def</span> <span class="nf">get_model</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_construct_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">FileModel</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">model_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FileModel.commit"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileModel.commit">[docs]</a>    <span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">committer_id</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">FileModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">committer_id</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">commit_cmds</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FileModel.get_version"><a class="viewcode-back" href="../../../../../oppia.core.storage.file.html#oppia.core.storage.file.gae_models.FileModel.get_version">[docs]</a>    <span class="k">def</span> <span class="nf">get_version</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">version_number</span><span class="p">):</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_construct_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">FileModel</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">get_version</span><span class="p">(</span><span class="n">model_id</span><span class="p">,</span> <span class="n">version_number</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

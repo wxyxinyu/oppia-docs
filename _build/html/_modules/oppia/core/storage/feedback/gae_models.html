@@ -1,0 +1,312 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.storage.feedback.gae_models &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.storage.feedback.gae_models</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Models for Oppia feedback threads and messages.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Koji Ashida&#39;</span>
+
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">base_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span><span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">base_model</span><span class="p">])</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="kn">from</span> <span class="nn">google.appengine.ext</span> <span class="kn">import</span> <span class="n">ndb</span>
+
+<span class="n">STATUS_CHOICES_OPEN</span> <span class="o">=</span> <span class="s">&#39;open&#39;</span>
+<span class="n">STATUS_CHOICES_FIXED</span> <span class="o">=</span> <span class="s">&#39;fixed&#39;</span>
+<span class="n">STATUS_CHOICES_IGNORED</span> <span class="o">=</span> <span class="s">&#39;ignored&#39;</span>
+<span class="n">STATUS_CHOICES_COMPLIMENT</span> <span class="o">=</span> <span class="s">&#39;compliment&#39;</span>
+<span class="n">STATUS_CHOICES_NOT_ACTIONABLE</span> <span class="o">=</span> <span class="s">&#39;not_actionable&#39;</span>
+<span class="n">STATUS_CHOICES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">STATUS_CHOICES_OPEN</span><span class="p">,</span>
+    <span class="n">STATUS_CHOICES_FIXED</span><span class="p">,</span>
+    <span class="n">STATUS_CHOICES_IGNORED</span><span class="p">,</span>
+    <span class="n">STATUS_CHOICES_COMPLIMENT</span><span class="p">,</span>
+    <span class="n">STATUS_CHOICES_NOT_ACTIONABLE</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="FeedbackThreadModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackThreadModel">[docs]</a><span class="k">class</span> <span class="nc">FeedbackThreadModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Threads for each exploration.</span>
+
+<span class="sd">    The id/key of instances of this class has the form</span>
+<span class="sd">        [EXPLORATION_ID].[THREAD_ID]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># ID of the exploration the thread is about.</span>
+    <span class="n">exploration_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># ID of state the thread is for. Does not exist if the thread is about the</span>
+    <span class="c"># entire exploration.</span>
+    <span class="n">state_name</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># ID of the user who started the thread. This may be None if the feedback</span>
+    <span class="c"># was given anonymously by a learner.</span>
+    <span class="n">original_author_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Latest status of the thread.</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">STATUS_CHOICES_OPEN</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="n">STATUS_CHOICES</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c"># Latest subject of the thread.</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Summary text of the thread.</span>
+    <span class="n">summary</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">TextProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FeedbackThreadModel.generate_new_thread_id"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.generate_new_thread_id">[docs]</a>    <span class="k">def</span> <span class="nf">generate_new_thread_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates a new thread id, unique within the exploration.</span>
+
+<span class="sd">        Exploration ID + the generated thread ID is globally unique.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">MAX_RETRIES</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="n">RAND_RANGE</span> <span class="o">=</span> <span class="mi">127</span> <span class="o">*</span> <span class="mi">127</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">MAX_RETRIES</span><span class="p">):</span>
+            <span class="n">thread_id</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">utils</span><span class="o">.</span><span class="n">base64_from_int</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">())</span> <span class="o">+</span>
+                <span class="n">utils</span><span class="o">.</span><span class="n">base64_from_int</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">get_random_int</span><span class="p">(</span><span class="n">RAND_RANGE</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_by_exp_and_thread_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">thread_id</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s">&#39;New thread id generator is producing too many collisions.&#39;</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_generate_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">])</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FeedbackThreadModel.create"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new FeedbackThreadModel entry.</span>
+
+<span class="sd">        Throws an exception if a thread with the given exploration ID and</span>
+<span class="sd">        thread ID combination exists already.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">instance_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_generate_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">instance_id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Feedback thread ID conflict on create.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">instance_id</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FeedbackThreadModel.get_by_exp_and_thread_id"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.get_by_exp_and_thread_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_by_exp_and_thread_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the FeedbackThreadModel entry for the given ID.</span>
+
+<span class="sd">        Returns None if the thread is not found or is already deleted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_generate_id</span><span class="p">(</span><span class="n">exploration_id</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">))</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FeedbackThreadModel.get_threads"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackThreadModel.get_threads">[docs]</a>    <span class="k">def</span> <span class="nf">get_threads</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an array of threads associated to the exploration.</span>
+
+<span class="sd">        Does not include the deleted entries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_all</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">exploration_id</span> <span class="o">==</span> <span class="n">exploration_id</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span>
+                <span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_QUERY_LIMIT</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="FeedbackMessageModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackMessageModel">[docs]</a><span class="k">class</span> <span class="nc">FeedbackMessageModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Feedback messages. One or more of these messages make a thread.</span>
+
+<span class="sd">    The id/key of instances of this class has the form</span>
+<span class="sd">        [EXPLORATION_ID].[THREAD_ID].[MESSAGE_ID]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># ID corresponding to an entry of FeedbackThreadModel in the form of</span>
+    <span class="c">#   [EXPLORATION_ID].[THREAD_ID]</span>
+    <span class="n">thread_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># 0-based sequential numerical ID. Sorting by this field will create the</span>
+    <span class="c"># thread in chronological order.</span>
+    <span class="n">message_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># ID of the user who posted this message. This may be None if the feedback</span>
+    <span class="c"># was given anonymously by a learner.</span>
+    <span class="n">author_id</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># New thread status. Must exist in the first message of a thread. For the</span>
+    <span class="c"># rest of the thread, should exist only when the status changes.</span>
+    <span class="n">updated_status</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">choices</span><span class="o">=</span><span class="n">STATUS_CHOICES</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># New thread subject. Must exist in the first message of a thread. For the</span>
+    <span class="c"># rest of the thread, should exist only when the subject changes.</span>
+    <span class="n">updated_subject</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Message text. Allowed not to exist (e.g. post only to update the status).</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_generate_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">,</span> <span class="n">message_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">thread_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">message_id</span><span class="p">)])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exploration_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="FeedbackMessageModel.get_thread_subject"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_thread_subject">[docs]</a>    <span class="k">def</span> <span class="nf">get_thread_subject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FeedbackThreadModel</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thread_id</span><span class="p">)</span><span class="o">.</span><span class="n">subject</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FeedbackMessageModel.create"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">,</span> <span class="n">message_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new FeedbackMessageModel entry.</span>
+
+<span class="sd">        Throws an exception if a message with the given thread ID and message</span>
+<span class="sd">        ID combination exists already.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">instance_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_generate_id</span><span class="p">(</span><span class="n">thread_id</span><span class="p">,</span> <span class="n">message_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">instance_id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Feedback message ID conflict on create.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">instance_id</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FeedbackMessageModel.get"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">,</span> <span class="n">message_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets the FeedbackMessageModel entry for the given ID.</span>
+
+<span class="sd">        If the message id is valid and it is not marked as deleted, returns the</span>
+<span class="sd">        message instance. Otherwise:</span>
+<span class="sd">        - if strict is True, raises EntityNotFoundError</span>
+<span class="sd">        - if strict is False, returns None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">instance_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_generate_id</span><span class="p">(</span><span class="n">thread_id</span><span class="p">,</span> <span class="n">message_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">FeedbackMessageModel</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">instance_id</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FeedbackMessageModel.get_messages"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_messages">[docs]</a>    <span class="k">def</span> <span class="nf">get_messages</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an array of messages in the thread.</span>
+
+<span class="sd">        Does not include the deleted entries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_all</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">thread_id</span> <span class="o">==</span> <span class="n">thread_id</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">feconf</span><span class="o">.</span><span class="n">DEFAULT_QUERY_LIMIT</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FeedbackMessageModel.get_most_recent_message"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_most_recent_message">[docs]</a>    <span class="k">def</span> <span class="nf">get_most_recent_message</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_all</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">thread_id</span> <span class="o">==</span> <span class="n">thread_id</span><span class="p">)</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="o">-</span><span class="n">cls</span><span class="o">.</span><span class="n">last_updated</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FeedbackMessageModel.get_message_count"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_message_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_message_count</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">thread_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the number of messages in the thread.</span>
+
+<span class="sd">        Includes the deleted entries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_all</span><span class="p">(</span><span class="n">include_deleted_entities</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">thread_id</span> <span class="o">==</span> <span class="n">thread_id</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FeedbackMessageModel.get_all_messages"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackMessageModel.get_all_messages">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_messages</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">page_size</span><span class="p">,</span> <span class="n">urlsafe_start_cursor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_fetch_page_sorted_by_last_updated</span><span class="p">(</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">query</span><span class="p">(),</span> <span class="n">page_size</span><span class="p">,</span> <span class="n">urlsafe_start_cursor</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="FeedbackAnalyticsModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackAnalyticsModel">[docs]</a><span class="k">class</span> <span class="nc">FeedbackAnalyticsModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseMapReduceBatchResultsModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Model for storing feedback thread analytics for an exploration.</span>
+
+<span class="sd">    The key of each instance is the exploration id.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># The number of open feedback threads filed against this exploration.</span>
+    <span class="n">num_open_threads</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Total number of feedback threads filed against this exploration.</span>
+    <span class="n">num_total_threads</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FeedbackAnalyticsModel.create"><a class="viewcode-back" href="../../../../../oppia.core.storage.feedback.html#oppia.core.storage.feedback.gae_models.FeedbackAnalyticsModel.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">num_open_threads</span><span class="p">,</span> <span class="n">num_total_threads</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new FeedbackAnalyticsModel entry.&quot;&quot;&quot;</span>
+        <span class="n">cls</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">id</span><span class="p">,</span>
+            <span class="n">num_open_threads</span><span class="o">=</span><span class="n">num_open_threads</span><span class="p">,</span>
+            <span class="n">num_total_threads</span><span class="o">=</span><span class="n">num_total_threads</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

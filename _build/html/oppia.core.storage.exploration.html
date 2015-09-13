@@ -1,0 +1,589 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.storage.exploration package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-core-storage-exploration-package">
+<h1>oppia.core.storage.exploration package<a class="headerlink" href="#oppia-core-storage-exploration-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core.storage.exploration.gae_models">
+<span id="oppia-core-storage-exploration-gae-models-module"></span><h2>oppia.core.storage.exploration.gae_models module<a class="headerlink" href="#module-oppia.core.storage.exploration.gae_models" title="Permalink to this headline">¶</a></h2>
+<p>Model for an Oppia exploration.</p>
+<dl class="class">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.exploration.gae_models.</code><code class="descname">ExpSummaryModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExpSummaryModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>Summary model for an Oppia exploration.</p>
+<p>This should be used whenever the content blob of the exploration is not
+needed (e.g. gallery, search, etc).</p>
+<p>A ExpSummaryModel instance stores the following information:</p>
+<blockquote>
+<div>id, title, category, objective, language_code, tags,
+last_updated, created_on, status (private, public or
+publicized), community_owned, owner_ids, editor_ids,
+viewer_ids, version.</div></blockquote>
+<p>The key of each instance is the exploration id.</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.category">
+<code class="descname">category</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.category" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.community_owned">
+<code class="descname">community_owned</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.community_owned" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python bool.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.editor_ids">
+<code class="descname">editor_ids</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.editor_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.exploration_model_created_on">
+<code class="descname">exploration_model_created_on</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.exploration_model_created_on" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a datetime object.</p>
+<p>Note: Unlike Django, auto_now_add can be overridden by setting the
+value before writing the entity.  And unlike classic db, auto_now
+does not supply a default value.  Also unlike classic db, when the
+entity is written, the property values are updated to match what
+was written.  Finally, beware that this also updates the value in
+the in-process cache, <em>and</em> that auto_now_add may interact weirdly
+with transaction retries (a retry of a property with auto_now_add
+set will reuse the value that was set on the first try).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.exploration_model_last_updated">
+<code class="descname">exploration_model_last_updated</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.exploration_model_last_updated" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a datetime object.</p>
+<p>Note: Unlike Django, auto_now_add can be overridden by setting the
+value before writing the entity.  And unlike classic db, auto_now
+does not supply a default value.  Also unlike classic db, when the
+entity is written, the property values are updated to match what
+was written.  Finally, beware that this also updates the value in
+the in-process cache, <em>and</em> that auto_now_add may interact weirdly
+with transaction retries (a retry of a property with auto_now_add
+set will reuse the value that was set on the first try).</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.get_at_least_editable">
+<em class="property">classmethod </em><code class="descname">get_at_least_editable</code><span class="sig-paren">(</span><em>user_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExpSummaryModel.get_at_least_editable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.get_at_least_editable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an iterable with exp summaries that are at least
+editable by the given user.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.get_non_private">
+<em class="property">classmethod </em><code class="descname">get_non_private</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExpSummaryModel.get_non_private"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.get_non_private" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an iterable with non-private exp summary models.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.get_private_at_least_viewable">
+<em class="property">classmethod </em><code class="descname">get_private_at_least_viewable</code><span class="sig-paren">(</span><em>user_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExpSummaryModel.get_private_at_least_viewable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.get_private_at_least_viewable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an iterable with private exp summaries that are at least
+viewable by the given user.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.language_code">
+<code class="descname">language_code</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.language_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.objective">
+<code class="descname">objective</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.objective" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unindexed Property whose value is a text string of unlimited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.owner_ids">
+<code class="descname">owner_ids</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.owner_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.ratings">
+<code class="descname">ratings</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.ratings" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.status">
+<code class="descname">status</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.tags">
+<code class="descname">tags</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.title">
+<code class="descname">title</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.title" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.version">
+<code class="descname">version</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExpSummaryModel.viewer_ids">
+<code class="descname">viewer_ids</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExpSummaryModel.viewer_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.exploration.gae_models.</code><code class="descname">ExplorationCommitLogEntryModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExplorationCommitLogEntryModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>Log of commits to explorations.</p>
+<p>A new instance of this model is created and saved every time a commit to
+ExplorationModel or ExplorationRightsModel occurs.</p>
+<p>The id for this model is of the form
+&#8216;exploration-{{EXP_ID}}-{{EXP_VERSION}}&#8217;.</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.commit_cmds">
+<code class="descname">commit_cmds</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.commit_cmds" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.commit_message">
+<code class="descname">commit_message</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.commit_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unindexed Property whose value is a text string of unlimited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.commit_type">
+<code class="descname">commit_type</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.commit_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.created_on">
+<code class="descname">created_on</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.created_on" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a datetime object.</p>
+<p>Note: Unlike Django, auto_now_add can be overridden by setting the
+value before writing the entity.  And unlike classic db, auto_now
+does not supply a default value.  Also unlike classic db, when the
+entity is written, the property values are updated to match what
+was written.  Finally, beware that this also updates the value in
+the in-process cache, <em>and</em> that auto_now_add may interact weirdly
+with transaction retries (a retry of a property with auto_now_add
+set will reuse the value that was set on the first try).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.exploration_id">
+<code class="descname">exploration_id</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.exploration_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.get_all_commits">
+<em class="property">classmethod </em><code class="descname">get_all_commits</code><span class="sig-paren">(</span><em>page_size</em>, <em>urlsafe_start_cursor</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExplorationCommitLogEntryModel.get_all_commits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.get_all_commits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.get_all_non_private_commits">
+<em class="property">classmethod </em><code class="descname">get_all_non_private_commits</code><span class="sig-paren">(</span><em>page_size</em>, <em>urlsafe_start_cursor</em>, <em>max_age=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExplorationCommitLogEntryModel.get_all_non_private_commits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.get_all_non_private_commits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.last_updated">
+<code class="descname">last_updated</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.last_updated" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a datetime object.</p>
+<p>Note: Unlike Django, auto_now_add can be overridden by setting the
+value before writing the entity.  And unlike classic db, auto_now
+does not supply a default value.  Also unlike classic db, when the
+entity is written, the property values are updated to match what
+was written.  Finally, beware that this also updates the value in
+the in-process cache, <em>and</em> that auto_now_add may interact weirdly
+with transaction retries (a retry of a property with auto_now_add
+set will reuse the value that was set on the first try).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.post_commit_community_owned">
+<code class="descname">post_commit_community_owned</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.post_commit_community_owned" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python bool.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.post_commit_is_private">
+<code class="descname">post_commit_is_private</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.post_commit_is_private" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python bool.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.post_commit_status">
+<code class="descname">post_commit_status</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.post_commit_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.user_id">
+<code class="descname">user_id</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.user_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.username">
+<code class="descname">username</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.username" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.version">
+<code class="descname">version</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationCommitLogEntryModel.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.exploration.gae_models.</code><code class="descname">ExplorationModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExplorationModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.VersionedModel</span></code></p>
+<p>Versioned storage model for an Oppia exploration.</p>
+<p>This class should only be imported by the exploration domain file, the
+exploration services file, and the Exploration model test file.</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.ALLOW_REVERT">
+<code class="descname">ALLOW_REVERT</code><em class="property"> = True</em><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.ALLOW_REVERT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.SNAPSHOT_CONTENT_CLASS">
+<code class="descname">SNAPSHOT_CONTENT_CLASS</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.SNAPSHOT_CONTENT_CLASS" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#oppia.core.storage.exploration.gae_models.ExplorationSnapshotContentModel" title="oppia.core.storage.exploration.gae_models.ExplorationSnapshotContentModel"><code class="xref py py-class docutils literal"><span class="pre">ExplorationSnapshotContentModel</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.SNAPSHOT_METADATA_CLASS">
+<code class="descname">SNAPSHOT_METADATA_CLASS</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.SNAPSHOT_METADATA_CLASS" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#oppia.core.storage.exploration.gae_models.ExplorationSnapshotMetadataModel" title="oppia.core.storage.exploration.gae_models.ExplorationSnapshotMetadataModel"><code class="xref py py-class docutils literal"><span class="pre">ExplorationSnapshotMetadataModel</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.author_notes">
+<code class="descname">author_notes</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.author_notes" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unindexed Property whose value is a text string of unlimited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.blurb">
+<code class="descname">blurb</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.blurb" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unindexed Property whose value is a text string of unlimited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.category">
+<code class="descname">category</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.category" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.commit">
+<code class="descname">commit</code><span class="sig-paren">(</span><em>committer_id</em>, <em>commit_message</em>, <em>commit_cmds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExplorationModel.commit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.commit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the exploration using the properties dict, then saves it.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.default_skin">
+<code class="descname">default_skin</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.default_skin" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.get_exploration_count">
+<em class="property">classmethod </em><code class="descname">get_exploration_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExplorationModel.get_exploration_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.get_exploration_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total number of explorations.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.init_state_name">
+<code class="descname">init_state_name</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.init_state_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.language_code">
+<code class="descname">language_code</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.language_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.objective">
+<code class="descname">objective</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.objective" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unindexed Property whose value is a text string of unlimited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.param_changes">
+<code class="descname">param_changes</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.param_changes" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.param_specs">
+<code class="descname">param_specs</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.param_specs" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.skill_tags">
+<code class="descname">skill_tags</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.skill_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.skin_customizations">
+<code class="descname">skin_customizations</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.skin_customizations" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.states">
+<code class="descname">states</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.states" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.states_schema_version">
+<code class="descname">states_schema_version</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.states_schema_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.tags">
+<code class="descname">tags</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationModel.title">
+<code class="descname">title</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationModel.title" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.exploration.gae_models.</code><code class="descname">ExplorationRightsModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExplorationRightsModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.VersionedModel</span></code></p>
+<p>Storage model for rights related to an exploration.</p>
+<p>The id of each instance is the id of the corresponding exploration.</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsModel.ALLOW_REVERT">
+<code class="descname">ALLOW_REVERT</code><em class="property"> = False</em><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsModel.ALLOW_REVERT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsModel.SNAPSHOT_CONTENT_CLASS">
+<code class="descname">SNAPSHOT_CONTENT_CLASS</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsModel.SNAPSHOT_CONTENT_CLASS" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsSnapshotContentModel" title="oppia.core.storage.exploration.gae_models.ExplorationRightsSnapshotContentModel"><code class="xref py py-class docutils literal"><span class="pre">ExplorationRightsSnapshotContentModel</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsModel.SNAPSHOT_METADATA_CLASS">
+<code class="descname">SNAPSHOT_METADATA_CLASS</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsModel.SNAPSHOT_METADATA_CLASS" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsSnapshotMetadataModel" title="oppia.core.storage.exploration.gae_models.ExplorationRightsSnapshotMetadataModel"><code class="xref py py-class docutils literal"><span class="pre">ExplorationRightsSnapshotMetadataModel</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsModel.cloned_from">
+<code class="descname">cloned_from</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsModel.cloned_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsModel.community_owned">
+<code class="descname">community_owned</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsModel.community_owned" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python bool.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsModel.editor_ids">
+<code class="descname">editor_ids</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsModel.editor_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsModel.owner_ids">
+<code class="descname">owner_ids</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsModel.owner_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsModel.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>committer_id</em>, <em>commit_message</em>, <em>commit_cmds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExplorationRightsModel.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsModel.save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsModel.status">
+<code class="descname">status</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsModel.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsModel.viewable_if_private">
+<code class="descname">viewable_if_private</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsModel.viewable_if_private" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python bool.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsModel.viewer_ids">
+<code class="descname">viewer_ids</code><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsModel.viewer_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsSnapshotContentModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.exploration.gae_models.</code><code class="descname">ExplorationRightsSnapshotContentModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExplorationRightsSnapshotContentModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsSnapshotContentModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseSnapshotContentModel</span></code></p>
+<p>Storage model for the content of an exploration rights snapshot.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationRightsSnapshotMetadataModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.exploration.gae_models.</code><code class="descname">ExplorationRightsSnapshotMetadataModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExplorationRightsSnapshotMetadataModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationRightsSnapshotMetadataModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseSnapshotMetadataModel</span></code></p>
+<p>Storage model for the metadata for an exploration rights snapshot.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationSnapshotContentModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.exploration.gae_models.</code><code class="descname">ExplorationSnapshotContentModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExplorationSnapshotContentModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationSnapshotContentModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseSnapshotContentModel</span></code></p>
+<p>Storage model for the content of an exploration snapshot.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.exploration.gae_models.ExplorationSnapshotMetadataModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.exploration.gae_models.</code><code class="descname">ExplorationSnapshotMetadataModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/exploration/gae_models.html#ExplorationSnapshotMetadataModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.exploration.gae_models.ExplorationSnapshotMetadataModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseSnapshotMetadataModel</span></code></p>
+<p>Storage model for the metadata for an exploration snapshot.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.core.storage.exploration">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.core.storage.exploration" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.core.storage.exploration package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.core.storage.exploration.gae_models">oppia.core.storage.exploration.gae_models module</a></li>
+<li><a class="reference internal" href="#module-oppia.core.storage.exploration">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.core.storage.exploration.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.core.storage.exploration.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

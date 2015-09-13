@@ -1,0 +1,330 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.storage.user package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-core-storage-user-package">
+<h1>oppia.core.storage.user package<a class="headerlink" href="#oppia-core-storage-user-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core.storage.user.gae_models">
+<span id="oppia-core-storage-user-gae-models-module"></span><h2>oppia.core.storage.user.gae_models module<a class="headerlink" href="#module-oppia.core.storage.user.gae_models" title="Permalink to this headline">¶</a></h2>
+<p>Models for Oppia users.</p>
+<dl class="class">
+<dt id="oppia.core.storage.user.gae_models.ExplorationUserDataModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.user.gae_models.</code><code class="descname">ExplorationUserDataModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/user/gae_models.html#ExplorationUserDataModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.user.gae_models.ExplorationUserDataModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>User-specific data pertaining to a specific exploration.</p>
+<p>Instances of this class have keys of the form
+[USER_ID].[EXPLORATION_ID]</p>
+<dl class="classmethod">
+<dt id="oppia.core.storage.user.gae_models.ExplorationUserDataModel.create">
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>user_id</em>, <em>exploration_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/user/gae_models.html#ExplorationUserDataModel.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.user.gae_models.ExplorationUserDataModel.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new ExplorationUserDataModel entry and returns it.</p>
+<p>Note that the client is responsible for actually saving this entity to
+the datastore.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.ExplorationUserDataModel.exploration_id">
+<code class="descname">exploration_id</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.ExplorationUserDataModel.exploration_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.user.gae_models.ExplorationUserDataModel.get">
+<em class="property">classmethod </em><code class="descname">get</code><span class="sig-paren">(</span><em>user_id</em>, <em>exploration_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/user/gae_models.html#ExplorationUserDataModel.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.user.gae_models.ExplorationUserDataModel.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the ExplorationUserDataModel for the given ids.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.ExplorationUserDataModel.rated_on">
+<code class="descname">rated_on</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.ExplorationUserDataModel.rated_on" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a datetime object.</p>
+<p>Note: Unlike Django, auto_now_add can be overridden by setting the
+value before writing the entity.  And unlike classic db, auto_now
+does not supply a default value.  Also unlike classic db, when the
+entity is written, the property values are updated to match what
+was written.  Finally, beware that this also updates the value in
+the in-process cache, <em>and</em> that auto_now_add may interact weirdly
+with transaction retries (a retry of a property with auto_now_add
+set will reuse the value that was set on the first try).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.ExplorationUserDataModel.rating">
+<code class="descname">rating</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.ExplorationUserDataModel.rating" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.ExplorationUserDataModel.user_id">
+<code class="descname">user_id</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.ExplorationUserDataModel.user_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.user.gae_models.UserEmailPreferencesModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.user.gae_models.</code><code class="descname">UserEmailPreferencesModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/user/gae_models.html#UserEmailPreferencesModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserEmailPreferencesModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>Email preferences for a particular user.</p>
+<p>Instances of this class are keyed by the user id.</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserEmailPreferencesModel.site_updates">
+<code class="descname">site_updates</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserEmailPreferencesModel.site_updates" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python bool.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.user.gae_models.UserRecentChangesBatchModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.user.gae_models.</code><code class="descname">UserRecentChangesBatchModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/user/gae_models.html#UserRecentChangesBatchModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserRecentChangesBatchModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseMapReduceBatchResultsModel</span></code></p>
+<p>A list of recent changes corresponding to things a user subscribes to.</p>
+<p>This is computed using a MapReduce batch job and may not be up to date.
+Instances of this class are keyed by the user id.</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserRecentChangesBatchModel.job_queued_msec">
+<code class="descname">job_queued_msec</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserRecentChangesBatchModel.job_queued_msec" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python float.</p>
+<p>Note: int, long and bool are also allowed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserRecentChangesBatchModel.output">
+<code class="descname">output</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserRecentChangesBatchModel.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.user.gae_models.UserSettingsModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.user.gae_models.</code><code class="descname">UserSettingsModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/user/gae_models.html#UserSettingsModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSettingsModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>Settings and preferences for a particular user.</p>
+<p>Instances of this class are keyed by the user id.</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserSettingsModel.email">
+<code class="descname">email</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSettingsModel.email" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.user.gae_models.UserSettingsModel.get_by_normalized_username">
+<em class="property">classmethod </em><code class="descname">get_by_normalized_username</code><span class="sig-paren">(</span><em>normalized_username</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/user/gae_models.html#UserSettingsModel.get_by_normalized_username"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSettingsModel.get_by_normalized_username" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a user model given a normalized username</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.user.gae_models.UserSettingsModel.is_normalized_username_taken">
+<em class="property">classmethod </em><code class="descname">is_normalized_username_taken</code><span class="sig-paren">(</span><em>normalized_username</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/user/gae_models.html#UserSettingsModel.is_normalized_username_taken"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSettingsModel.is_normalized_username_taken" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether or a given normalized_username is taken.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserSettingsModel.last_agreed_to_terms">
+<code class="descname">last_agreed_to_terms</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSettingsModel.last_agreed_to_terms" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a datetime object.</p>
+<p>Note: Unlike Django, auto_now_add can be overridden by setting the
+value before writing the entity.  And unlike classic db, auto_now
+does not supply a default value.  Also unlike classic db, when the
+entity is written, the property values are updated to match what
+was written.  Finally, beware that this also updates the value in
+the in-process cache, <em>and</em> that auto_now_add may interact weirdly
+with transaction retries (a retry of a property with auto_now_add
+set will reuse the value that was set on the first try).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserSettingsModel.last_started_state_editor_tutorial">
+<code class="descname">last_started_state_editor_tutorial</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSettingsModel.last_started_state_editor_tutorial" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a datetime object.</p>
+<p>Note: Unlike Django, auto_now_add can be overridden by setting the
+value before writing the entity.  And unlike classic db, auto_now
+does not supply a default value.  Also unlike classic db, when the
+entity is written, the property values are updated to match what
+was written.  Finally, beware that this also updates the value in
+the in-process cache, <em>and</em> that auto_now_add may interact weirdly
+with transaction retries (a retry of a property with auto_now_add
+set will reuse the value that was set on the first try).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserSettingsModel.lc">
+<code class="descname">lc</code><em class="property"> = {'code': 'vi', 'description': u'Ti\u1ebfng Vi\u1ec7t (Vietnamese)'}</em><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSettingsModel.lc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserSettingsModel.normalized_username">
+<code class="descname">normalized_username</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSettingsModel.normalized_username" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserSettingsModel.preferred_language_codes">
+<code class="descname">preferred_language_codes</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSettingsModel.preferred_language_codes" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserSettingsModel.profile_picture_data_url">
+<code class="descname">profile_picture_data_url</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSettingsModel.profile_picture_data_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unindexed Property whose value is a text string of unlimited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserSettingsModel.user_bio">
+<code class="descname">user_bio</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSettingsModel.user_bio" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unindexed Property whose value is a text string of unlimited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserSettingsModel.username">
+<code class="descname">username</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSettingsModel.username" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.user.gae_models.UserSubscriptionsModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.user.gae_models.</code><code class="descname">UserSubscriptionsModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/user/gae_models.html#UserSubscriptionsModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSubscriptionsModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>A list of things that a user subscribes to.</p>
+<p>Instances of this class are keyed by the user id.</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserSubscriptionsModel.activity_ids">
+<code class="descname">activity_ids</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSubscriptionsModel.activity_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserSubscriptionsModel.feedback_thread_ids">
+<code class="descname">feedback_thread_ids</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSubscriptionsModel.feedback_thread_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.user.gae_models.UserSubscriptionsModel.last_checked">
+<code class="descname">last_checked</code><a class="headerlink" href="#oppia.core.storage.user.gae_models.UserSubscriptionsModel.last_checked" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a datetime object.</p>
+<p>Note: Unlike Django, auto_now_add can be overridden by setting the
+value before writing the entity.  And unlike classic db, auto_now
+does not supply a default value.  Also unlike classic db, when the
+entity is written, the property values are updated to match what
+was written.  Finally, beware that this also updates the value in
+the in-process cache, <em>and</em> that auto_now_add may interact weirdly
+with transaction retries (a retry of a property with auto_now_add
+set will reuse the value that was set on the first try).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.core.storage.user">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.core.storage.user" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.core.storage.user package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.core.storage.user.gae_models">oppia.core.storage.user.gae_models module</a></li>
+<li><a class="reference internal" href="#module-oppia.core.storage.user">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.core.storage.user.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.core.storage.user.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

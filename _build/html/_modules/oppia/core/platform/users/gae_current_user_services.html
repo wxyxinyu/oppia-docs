@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.platform.users.gae_current_user_services &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.platform.users.gae_current_user_services</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Provides a seam for user-related services.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="kn">from</span> <span class="nn">google.appengine.api</span> <span class="kn">import</span> <span class="n">users</span>
+<span class="kn">from</span> <span class="nn">google.appengine.ext</span> <span class="kn">import</span> <span class="n">ndb</span>
+
+
+<div class="viewcode-block" id="create_login_url"><a class="viewcode-back" href="../../../../../oppia.core.platform.users.html#oppia.core.platform.users.gae_current_user_services.create_login_url">[docs]</a><span class="k">def</span> <span class="nf">create_login_url</span><span class="p">(</span><span class="n">slug</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a login url.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">users</span><span class="o">.</span><span class="n">create_login_url</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">set_url_query_parameter</span><span class="p">(</span>
+        <span class="n">feconf</span><span class="o">.</span><span class="n">SIGNUP_URL</span><span class="p">,</span> <span class="s">&#39;return_url&#39;</span><span class="p">,</span> <span class="n">slug</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="create_logout_url"><a class="viewcode-back" href="../../../../../oppia.core.platform.users.html#oppia.core.platform.users.gae_current_user_services.create_logout_url">[docs]</a><span class="k">def</span> <span class="nf">create_logout_url</span><span class="p">(</span><span class="n">slug</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a logout url.&quot;&quot;&quot;</span>
+    <span class="n">logout_url</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">set_url_query_parameter</span><span class="p">(</span><span class="s">&#39;/logout&#39;</span><span class="p">,</span> <span class="s">&#39;return_url&#39;</span><span class="p">,</span> <span class="n">slug</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">logout_url</span>
+
+</div>
+<div class="viewcode-block" id="get_current_user"><a class="viewcode-back" href="../../../../../oppia.core.platform.users.html#oppia.core.platform.users.gae_current_user_services.get_current_user">[docs]</a><span class="k">def</span> <span class="nf">get_current_user</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the current user.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">users</span><span class="o">.</span><span class="n">get_current_user</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="is_super_admin"><a class="viewcode-back" href="../../../../../oppia.core.platform.users.html#oppia.core.platform.users.gae_current_user_services.is_super_admin">[docs]</a><span class="k">def</span> <span class="nf">is_super_admin</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks whether the user with the given user_id owns this app.</span>
+
+<span class="sd">    For GAE, the user in question is also required to be the current user.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">users</span><span class="o">.</span><span class="n">get_current_user</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">()</span> <span class="o">==</span> <span class="n">user_id</span> <span class="ow">and</span> <span class="n">users</span><span class="o">.</span><span class="n">is_current_user_admin</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="get_user_id_from_email"><a class="viewcode-back" href="../../../../../oppia.core.platform.users.html#oppia.core.platform.users.gae_current_user_services.get_user_id_from_email">[docs]</a><span class="k">def</span> <span class="nf">get_user_id_from_email</span><span class="p">(</span><span class="n">email</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given an email address, returns a user id.</span>
+
+<span class="sd">    Returns None if the email address does not correspond to a valid user id.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">_FakeUser</span><span class="p">(</span><span class="n">ndb</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+        <span class="n">_use_memcache</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">_use_cache</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">UserProperty</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">users</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">users</span><span class="o">.</span><span class="n">UserNotFoundError</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s">&#39;The email address </span><span class="si">%s</span><span class="s"> does not correspond to a valid user_id&#39;</span>
+            <span class="o">%</span> <span class="n">email</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="n">key</span> <span class="o">=</span> <span class="n">_FakeUser</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">email</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">u</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">()</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">_FakeUser</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">id</span><span class="p">())</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">user_id</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="get_user_id"><a class="viewcode-back" href="../../../../../oppia.core.platform.users.html#oppia.core.platform.users.gae_current_user_services.get_user_id">[docs]</a><span class="k">def</span> <span class="nf">get_user_id</span><span class="p">(</span><span class="n">user</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Given an user object, get the user id. &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="get_user_email"><a class="viewcode-back" href="../../../../../oppia.core.platform.users.html#oppia.core.platform.users.gae_current_user_services.get_user_email">[docs]</a><span class="k">def</span> <span class="nf">get_user_email</span><span class="p">(</span><span class="n">user</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Given an user object, get the user&#39;s email. &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

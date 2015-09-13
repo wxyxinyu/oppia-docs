@@ -1,0 +1,681 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.storage.statistics package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-core-storage-statistics-package">
+<h1>oppia.core.storage.statistics package<a class="headerlink" href="#oppia-core-storage-statistics-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core.storage.statistics.gae_models">
+<span id="oppia-core-storage-statistics-gae-models-module"></span><h2>oppia.core.storage.statistics.gae_models module<a class="headerlink" href="#module-oppia.core.storage.statistics.gae_models" title="Permalink to this headline">¶</a></h2>
+<p>Models for Oppia statistics.</p>
+<dl class="class">
+<dt id="oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.statistics.gae_models.</code><code class="descname">CompleteExplorationEventLogEntryModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#CompleteExplorationEventLogEntryModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>An event triggered by a learner reaching a terminal state of an
+exploration.</p>
+<dl class="docutils">
+<dt>V1:</dt>
+<dd><p class="first">event_type: &#8216;complete&#8217;
+exploration_id: id of exploration currently being played
+exploration_version: version of exploration
+state_name: Name of the terminal state
+play_type: &#8216;normal&#8217;
+created_on date
+event_schema_version: 1
+session_id: ID of current student&#8217;s session
+params: current parameter values, in the form of a map of parameter</p>
+<blockquote>
+<div>name to value</div></blockquote>
+<dl class="last docutils">
+<dt>client_time_spent_in_secs: time spent in this state before the event</dt>
+<dd>was triggered</dd>
+</dl>
+</dd>
+</dl>
+<p>Note: shortly after the release of v2.0.0.rc.3, some of these events
+were migrated from MaybeLeaveExplorationEventLogEntryModel. These events
+have the wrong &#8216;last updated&#8217; timestamp. However, the &#8216;created_on&#8217;
+timestamp is the same as that of the original model.</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.CURRENT_EVENT_SCHEMA_VERSION">
+<code class="descname">CURRENT_EVENT_SCHEMA_VERSION</code><em class="property"> = 1</em><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.CURRENT_EVENT_SCHEMA_VERSION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.client_time_spent_in_secs">
+<code class="descname">client_time_spent_in_secs</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.client_time_spent_in_secs" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python float.</p>
+<p>Note: int, long and bool are also allowed.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.create">
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>exp_id</em>, <em>exp_version</em>, <em>state_name</em>, <em>session_id</em>, <em>client_time_spent_in_secs</em>, <em>params</em>, <em>play_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#CompleteExplorationEventLogEntryModel.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new exploration completion event.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.event_schema_version">
+<code class="descname">event_schema_version</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.event_schema_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.event_type">
+<code class="descname">event_type</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.event_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.exploration_id">
+<code class="descname">exploration_id</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.exploration_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.exploration_version">
+<code class="descname">exploration_version</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.exploration_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.get_new_event_entity_id">
+<em class="property">classmethod </em><code class="descname">get_new_event_entity_id</code><span class="sig-paren">(</span><em>exp_id</em>, <em>session_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#CompleteExplorationEventLogEntryModel.get_new_event_entity_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.get_new_event_entity_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.params">
+<code class="descname">params</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.params" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.play_type">
+<code class="descname">play_type</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.play_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.session_id">
+<code class="descname">session_id</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.session_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.state_name">
+<code class="descname">state_name</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.CompleteExplorationEventLogEntryModel.state_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.statistics.gae_models.</code><code class="descname">ExplorationAnnotationsModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#ExplorationAnnotationsModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseMapReduceBatchResultsModel</span></code></p>
+<p>Batch model for storing MapReduce calculation output for
+exploration-level statistics.</p>
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.create">
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>exp_id</em>, <em>version</em>, <em>num_starts</em>, <em>num_completions</em>, <em>state_hit_counts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#ExplorationAnnotationsModel.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new ExplorationAnnotationsModel.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.exploration_id">
+<code class="descname">exploration_id</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.exploration_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.get_entity_id">
+<em class="property">classmethod </em><code class="descname">get_entity_id</code><span class="sig-paren">(</span><em>exploration_id</em>, <em>exploration_version</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#ExplorationAnnotationsModel.get_entity_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.get_entity_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.get_versions">
+<em class="property">classmethod </em><code class="descname">get_versions</code><span class="sig-paren">(</span><em>exploration_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#ExplorationAnnotationsModel.get_versions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.get_versions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.num_completions">
+<code class="descname">num_completions</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.num_completions" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.num_starts">
+<code class="descname">num_starts</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.num_starts" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.state_hit_counts">
+<code class="descname">state_hit_counts</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.state_hit_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.version">
+<code class="descname">version</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.ExplorationAnnotationsModel.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.statistics.gae_models.</code><code class="descname">MaybeLeaveExplorationEventLogEntryModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#MaybeLeaveExplorationEventLogEntryModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>An event triggered by a reader attempting to leave the
+exploration without completing.</p>
+<p>Due to complexity on browser end, this event may be logged when user clicks
+close and then cancel. Thus, the real event is the last event of this type
+logged for the session id.</p>
+<p>Note: shortly after the release of v2.0.0.rc.2, some of these events
+were migrated from StateHitEventLogEntryModel. These events have their
+client_time_spent_in_secs field set to 0.0 (since this field was not
+recorded in StateHitEventLogEntryModel), and they also have the wrong
+&#8216;last updated&#8217; timestamp. However, the &#8216;created_on&#8217; timestamp is the
+same as that of the original model.</p>
+<dl class="docutils">
+<dt>V1:</dt>
+<dd><p class="first">event_type: &#8216;leave&#8217; (there are no &#8216;maybe leave&#8217; events in V0)
+exploration_id: id of exploration currently being played
+exploration_version: version of exploration
+state_name: Name of current state
+play_type: &#8216;normal&#8217;
+created_on date
+event_schema_version: 1
+session_id: ID of current student&#8217;s session
+params: current parameter values, in the form of a map of parameter</p>
+<blockquote>
+<div>name to value</div></blockquote>
+<dl class="last docutils">
+<dt>client_time_spent_in_secs: time spent in this state before the event</dt>
+<dd>was triggered</dd>
+</dl>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.CURRENT_EVENT_SCHEMA_VERSION">
+<code class="descname">CURRENT_EVENT_SCHEMA_VERSION</code><em class="property"> = 1</em><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.CURRENT_EVENT_SCHEMA_VERSION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.client_time_spent_in_secs">
+<code class="descname">client_time_spent_in_secs</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.client_time_spent_in_secs" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python float.</p>
+<p>Note: int, long and bool are also allowed.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.create">
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>exp_id</em>, <em>exp_version</em>, <em>state_name</em>, <em>session_id</em>, <em>client_time_spent_in_secs</em>, <em>params</em>, <em>play_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#MaybeLeaveExplorationEventLogEntryModel.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new leave exploration event.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.event_schema_version">
+<code class="descname">event_schema_version</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.event_schema_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.event_type">
+<code class="descname">event_type</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.event_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.exploration_id">
+<code class="descname">exploration_id</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.exploration_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.exploration_version">
+<code class="descname">exploration_version</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.exploration_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.get_new_event_entity_id">
+<em class="property">classmethod </em><code class="descname">get_new_event_entity_id</code><span class="sig-paren">(</span><em>exp_id</em>, <em>session_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#MaybeLeaveExplorationEventLogEntryModel.get_new_event_entity_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.get_new_event_entity_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.params">
+<code class="descname">params</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.params" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.play_type">
+<code class="descname">play_type</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.play_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.session_id">
+<code class="descname">session_id</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.session_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.state_name">
+<code class="descname">state_name</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.MaybeLeaveExplorationEventLogEntryModel.state_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.statistics.gae_models.</code><code class="descname">StartExplorationEventLogEntryModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#StartExplorationEventLogEntryModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>An event triggered by a student starting the exploration.</p>
+<dl class="docutils">
+<dt>V1:</dt>
+<dd><p class="first">event_type: &#8216;start&#8217;
+exploration_id: id of exploration currently being played
+exploration_version: version of exploration
+state_name: Name of current state
+client_time_spent_in_secs: 0
+play_type: &#8216;normal&#8217;
+created_on date
+event_schema_version: 1
+session_id: ID of current student&#8217;s session
+params: current parameter values, in the form of a map of parameter</p>
+<blockquote class="last">
+<div>name to value</div></blockquote>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.CURRENT_EVENT_SCHEMA_VERSION">
+<code class="descname">CURRENT_EVENT_SCHEMA_VERSION</code><em class="property"> = 1</em><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.CURRENT_EVENT_SCHEMA_VERSION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.client_time_spent_in_secs">
+<code class="descname">client_time_spent_in_secs</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.client_time_spent_in_secs" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python float.</p>
+<p>Note: int, long and bool are also allowed.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.create">
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>exp_id</em>, <em>exp_version</em>, <em>state_name</em>, <em>session_id</em>, <em>params</em>, <em>play_type</em>, <em>version=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#StartExplorationEventLogEntryModel.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new start exploration event.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.event_schema_version">
+<code class="descname">event_schema_version</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.event_schema_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.event_type">
+<code class="descname">event_type</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.event_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.exploration_id">
+<code class="descname">exploration_id</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.exploration_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.exploration_version">
+<code class="descname">exploration_version</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.exploration_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.get_new_event_entity_id">
+<em class="property">classmethod </em><code class="descname">get_new_event_entity_id</code><span class="sig-paren">(</span><em>exp_id</em>, <em>session_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#StartExplorationEventLogEntryModel.get_new_event_entity_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.get_new_event_entity_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.params">
+<code class="descname">params</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.params" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.play_type">
+<code class="descname">play_type</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.play_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.session_id">
+<code class="descname">session_id</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.session_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.state_name">
+<code class="descname">state_name</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StartExplorationEventLogEntryModel.state_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.statistics.gae_models.StateCounterModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.statistics.gae_models.</code><code class="descname">StateCounterModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#StateCounterModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateCounterModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>A set of counts that correspond to a state.</p>
+<dl class="docutils">
+<dt>The id/key of instances of this class has the form</dt>
+<dd>[EXPLORATION_ID].[STATE_NAME].</dd>
+</dl>
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateCounterModel.active_answer_count">
+<code class="descname">active_answer_count</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateCounterModel.active_answer_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateCounterModel.first_entry_count">
+<code class="descname">first_entry_count</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateCounterModel.first_entry_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.StateCounterModel.get_or_create">
+<em class="property">classmethod </em><code class="descname">get_or_create</code><span class="sig-paren">(</span><em>exploration_id</em>, <em>state_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#StateCounterModel.get_or_create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateCounterModel.get_or_create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateCounterModel.resolved_answer_count">
+<code class="descname">resolved_answer_count</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateCounterModel.resolved_answer_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateCounterModel.subsequent_entries_count">
+<code class="descname">subsequent_entries_count</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateCounterModel.subsequent_entries_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.statistics.gae_models.</code><code class="descname">StateHitEventLogEntryModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#StateHitEventLogEntryModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>An event triggered by a student getting to a particular state. The
+definitions of the fields are as follows:
+- event_type: &#8216;state_hit&#8217;
+- exploration_id: id of exploration currently being played
+- exploration_version: version of exploration
+- state_name: Name of current state
+- play_type: &#8216;normal&#8217;
+- created_on date
+- event_schema_version: 1
+- session_id: ID of current student&#8217;s session
+- params: current parameter values, in the form of a map of parameter name</p>
+<blockquote>
+<div>to its value</div></blockquote>
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.CURRENT_EVENT_SCHEMA_VERSION">
+<code class="descname">CURRENT_EVENT_SCHEMA_VERSION</code><em class="property"> = 1</em><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.CURRENT_EVENT_SCHEMA_VERSION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.create">
+<em class="property">classmethod </em><code class="descname">create</code><span class="sig-paren">(</span><em>exp_id</em>, <em>exp_version</em>, <em>state_name</em>, <em>session_id</em>, <em>params</em>, <em>play_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#StateHitEventLogEntryModel.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new leave exploration event.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.event_schema_version">
+<code class="descname">event_schema_version</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.event_schema_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.event_type">
+<code class="descname">event_type</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.event_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.exploration_id">
+<code class="descname">exploration_id</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.exploration_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.exploration_version">
+<code class="descname">exploration_version</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.exploration_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Property whose value is a Python int or long (or bool).</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.get_new_event_entity_id">
+<em class="property">classmethod </em><code class="descname">get_new_event_entity_id</code><span class="sig-paren">(</span><em>exp_id</em>, <em>session_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#StateHitEventLogEntryModel.get_new_event_entity_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.get_new_event_entity_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.params">
+<code class="descname">params</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.params" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.play_type">
+<code class="descname">play_type</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.play_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.session_id">
+<code class="descname">session_id</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.session_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.state_name">
+<code class="descname">state_name</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateHitEventLogEntryModel.state_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>An indexed Property whose value is a text string of limited length.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="oppia.core.storage.statistics.gae_models.StateRuleAnswerLogModel">
+<em class="property">class </em><code class="descclassname">oppia.core.storage.statistics.gae_models.</code><code class="descname">StateRuleAnswerLogModel</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#StateRuleAnswerLogModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateRuleAnswerLogModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">core.storage.base_model.gae_models.BaseModel</span></code></p>
+<p>The log of all answers hitting a given state rule.</p>
+<dl class="docutils">
+<dt>The id/key of instances of this class has the form</dt>
+<dd>[EXPLORATION_ID].[STATE_NAME].[HANDLER_NAME].[RULE_NAME]</dd>
+</dl>
+<p>WARNING: If a change is made to existing rules in data/objects (e.g.
+renaming them or changing their signature), this class will contain
+invalid values.</p>
+<p>WARNING: Rule names and args that are used to construct the key here must
+be &lt; 400 characters in length, since these are used as part of the key.</p>
+<dl class="attribute">
+<dt id="oppia.core.storage.statistics.gae_models.StateRuleAnswerLogModel.answers">
+<code class="descname">answers</code><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateRuleAnswerLogModel.answers" title="Permalink to this definition">¶</a></dt>
+<dd><p>A property whose value is any Json-encodable Python object.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.StateRuleAnswerLogModel.get_or_create">
+<em class="property">classmethod </em><code class="descname">get_or_create</code><span class="sig-paren">(</span><em>exploration_id</em>, <em>state_name</em>, <em>rule_str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#StateRuleAnswerLogModel.get_or_create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateRuleAnswerLogModel.get_or_create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.storage.statistics.gae_models.StateRuleAnswerLogModel.get_or_create_multi">
+<em class="property">classmethod </em><code class="descname">get_or_create_multi</code><span class="sig-paren">(</span><em>exploration_id</em>, <em>rule_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#StateRuleAnswerLogModel.get_or_create_multi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.StateRuleAnswerLogModel.get_or_create_multi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets or creates entities for the given rules.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>exploration_id</strong> &#8211; the exploration id</li>
+<li><strong>rule_data</strong> &#8211; a list of dicts, each with the following keys:
+(state_name, rule_str).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.storage.statistics.gae_models.process_submitted_answer">
+<code class="descclassname">oppia.core.storage.statistics.gae_models.</code><code class="descname">process_submitted_answer</code><span class="sig-paren">(</span><em>exploration_id</em>, <em>exploration_version</em>, <em>state_name</em>, <em>rule_spec_string</em>, <em>answer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#process_submitted_answer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.process_submitted_answer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an answer to the answer log for the rule it hits.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>exploration_id</strong> &#8211; the exploration id</li>
+<li><strong>state_name</strong> &#8211; the state name</li>
+<li><strong>answer</strong> &#8211; an HTML string representation of the answer</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="oppia.core.storage.statistics.gae_models.resolve_answers">
+<code class="descclassname">oppia.core.storage.statistics.gae_models.</code><code class="descname">resolve_answers</code><span class="sig-paren">(</span><em>exploration_id</em>, <em>state_name</em>, <em>rule_str</em>, <em>answers</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/storage/statistics/gae_models.html#resolve_answers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.storage.statistics.gae_models.resolve_answers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves selected answers for the given rule.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>exploration_id</strong> &#8211; the exploration id</li>
+<li><strong>state_name</strong> &#8211; the state name</li>
+<li><strong>rule_str</strong> &#8211; a string representation of the rule</li>
+<li><strong>answers</strong> &#8211; a list of HTML string representations of the resolved answers</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.core.storage.statistics">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.core.storage.statistics" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.core.storage.statistics package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.core.storage.statistics.gae_models">oppia.core.storage.statistics.gae_models module</a></li>
+<li><a class="reference internal" href="#module-oppia.core.storage.statistics">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.core.storage.statistics.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.core.storage.statistics.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

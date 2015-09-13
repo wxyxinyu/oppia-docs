@@ -1,0 +1,391 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.domain.fs_domain &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.domain.fs_domain</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Domain objects representing a file system and a file stream.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">file_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">file</span>
+<span class="p">])</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="n">CHANGE_LIST_SAVE</span> <span class="o">=</span> <span class="p">[{</span><span class="s">&#39;cmd&#39;</span><span class="p">:</span> <span class="s">&#39;save&#39;</span><span class="p">}]</span>
+
+
+<div class="viewcode-block" id="FileMetadata"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.FileMetadata">[docs]</a><span class="k">class</span> <span class="nc">FileMetadata</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class representing the metadata of a file.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">size</span> <span class="k">if</span> <span class="p">(</span><span class="n">metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span> <span class="k">else</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span>
+
+</div>
+<div class="viewcode-block" id="FileStreamWithMetadata"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.FileStreamWithMetadata">[docs]</a><span class="k">class</span> <span class="nc">FileStreamWithMetadata</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class that wraps a file stream, but adds extra attributes to it.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The args are a file content blob and a metadata model object.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_content</span> <span class="o">=</span> <span class="n">content</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_version</span> <span class="o">=</span> <span class="n">version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span> <span class="o">=</span> <span class="n">FileMetadata</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FileStreamWithMetadata.read"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.FileStreamWithMetadata.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Emulates stream.read(). Returns all bytes and emulates EOF.&quot;&quot;&quot;</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_content</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_content</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">content</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_version</span>
+
+</div>
+<div class="viewcode-block" id="ExplorationFileSystem"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.ExplorationFileSystem">[docs]</a><span class="k">class</span> <span class="nc">ExplorationFileSystem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A datastore-backed read-write file system for a single exploration.</span>
+
+<span class="sd">    The conceptual intention is for each exploration to have its own asset</span>
+<span class="sd">    folder. An asset has no meaning outside its exploration, so the assets in</span>
+<span class="sd">    these asset folders should therefore not be edited directly. They should</span>
+<span class="sd">    only be modified as side-effects of some other operation (such as adding an</span>
+<span class="sd">    image to an exploration).</span>
+
+<span class="sd">    The content of an exploration should include a reference to the asset</span>
+<span class="sd">    together with the version number of the asset. This allows the</span>
+<span class="sd">    exploration to refer to asset versions.</span>
+
+<span class="sd">    In general, assets should be retrieved only within the context of the</span>
+<span class="sd">    exploration that contains them, and should not be retrieved outside this</span>
+<span class="sd">    context.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_DEFAULT_VERSION_NUMBER</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exploration_id</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exploration_id</span> <span class="o">=</span> <span class="n">exploration_id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exploration_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exploration_id</span>
+
+    <span class="k">def</span> <span class="nf">_get_file_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the desired file metadata.</span>
+
+<span class="sd">        Returns None if the file does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">file_models</span><span class="o">.</span><span class="n">FileMetadataModel</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_exploration_id</span><span class="p">,</span> <span class="s">&#39;assets/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">file_models</span><span class="o">.</span><span class="n">FileMetadataModel</span><span class="o">.</span><span class="n">get_version</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_exploration_id</span><span class="p">,</span> <span class="s">&#39;assets/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_file_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the desired file content.</span>
+
+<span class="sd">        Returns None if the file does not exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">file_models</span><span class="o">.</span><span class="n">FileModel</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_exploration_id</span><span class="p">,</span> <span class="s">&#39;assets/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">file_models</span><span class="o">.</span><span class="n">FileModel</span><span class="o">.</span><span class="n">get_version</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_exploration_id</span><span class="p">,</span> <span class="s">&#39;assets/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_save_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create or update a file.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_bytes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">feconf</span><span class="o">.</span><span class="n">MAX_FILE_SIZE_BYTES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;The maximum allowed file size is 1 MB.&#39;</span><span class="p">)</span>
+
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file_metadata</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">metadata</span><span class="p">:</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">file_models</span><span class="o">.</span><span class="n">FileMetadataModel</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_exploration_id</span><span class="p">,</span> <span class="s">&#39;assets/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="n">metadata</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_bytes</span><span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file_data</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">file_models</span><span class="o">.</span><span class="n">FileModel</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_exploration_id</span><span class="p">,</span> <span class="s">&#39;assets/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">content</span> <span class="o">=</span> <span class="n">raw_bytes</span>
+
+        <span class="n">data</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">CHANGE_LIST_SAVE</span><span class="p">)</span>
+        <span class="n">metadata</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">CHANGE_LIST_SAVE</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ExplorationFileSystem.get"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.ExplorationFileSystem.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets a file as an unencoded stream of raw bytes.</span>
+
+<span class="sd">        If `version` is not supplied, the latest version is retrieved. If the</span>
+<span class="sd">        file does not exist, None is returned.</span>
+
+<span class="sd">        The &#39;mode&#39; argument is unused. It is included so that this method</span>
+<span class="sd">        signature matches that of other file systems.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file_metadata</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">metadata</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file_data</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">version</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">version</span>
+                <span class="k">return</span> <span class="n">FileStreamWithMetadata</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="s">&#39;Metadata and data for file </span><span class="si">%s</span><span class="s"> (version </span><span class="si">%s</span><span class="s">) are out of &#39;</span>
+                    <span class="s">&#39;sync.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="p">))</span>
+                <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="ExplorationFileSystem.commit"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.ExplorationFileSystem.commit">[docs]</a>    <span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Saves a raw bytestring as a file in the database.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_file</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ExplorationFileSystem.delete"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.ExplorationFileSystem.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Marks the current version of a file as deleted.&quot;&quot;&quot;</span>
+
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file_metadata</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">metadata</span><span class="p">:</span>
+            <span class="n">metadata</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file_data</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ExplorationFileSystem.isfile"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.ExplorationFileSystem.isfile">[docs]</a>    <span class="k">def</span> <span class="nf">isfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks the existence of a file.&quot;&quot;&quot;</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_file_metadata</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ExplorationFileSystem.listdir"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.ExplorationFileSystem.listdir">[docs]</a>    <span class="k">def</span> <span class="nf">listdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Lists all files in a directory.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dir_name: The directory whose files should be listed. This should</span>
+<span class="sd">                not start with &#39;/&#39; or end with &#39;/&#39;.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List of str. This is a lexicographically-sorted list of filenames,</span>
+<span class="sd">            each of which is prefixed with dir_name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># The trailing slash is necessary to prevent non-identical directory</span>
+        <span class="c"># names with the same prefix from matching, e.g. /abcd/123.png should</span>
+        <span class="c"># not match a query for files under /abc/.</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">utils</span><span class="o">.</span><span class="n">vfs_construct_path</span><span class="p">(</span>
+            <span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exploration_id</span><span class="p">,</span> <span class="s">&#39;assets&#39;</span><span class="p">,</span> <span class="n">dir_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">prefix</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">):</span>
+            <span class="n">prefix</span> <span class="o">+=</span> <span class="s">&#39;/&#39;</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">metadata_models</span> <span class="o">=</span> <span class="n">file_models</span><span class="o">.</span><span class="n">FileMetadataModel</span><span class="o">.</span><span class="n">get_undeleted</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">metadata_model</span> <span class="ow">in</span> <span class="n">metadata_models</span><span class="p">:</span>
+            <span class="n">filepath</span> <span class="o">=</span> <span class="n">metadata_model</span><span class="o">.</span><span class="n">id</span>
+            <span class="k">if</span> <span class="n">filepath</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filepath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="mi">3</span><span class="p">:]))</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+
+</div></div>
+<div class="viewcode-block" id="DiskBackedFileSystem"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.DiskBackedFileSystem">[docs]</a><span class="k">class</span> <span class="nc">DiskBackedFileSystem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implementation for a disk-backed file system.</span>
+
+<span class="sd">    This implementation ignores versioning and is used only by tests.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructor for this class.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            root: the path to append to the oppia/ directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">root</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exploration_id</span> <span class="o">=</span> <span class="s">&#39;test&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exploration_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exploration_id</span>
+
+<div class="viewcode-block" id="DiskBackedFileSystem.isfile"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.DiskBackedFileSystem.isfile">[docs]</a>    <span class="k">def</span> <span class="nf">isfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks if a file exists.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="p">,</span> <span class="n">filepath</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="DiskBackedFileSystem.get"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.DiskBackedFileSystem.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a bytestring with the file content, but no metadata.&quot;&quot;&quot;</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_file_contents</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="p">,</span> <span class="n">filepath</span><span class="p">),</span> <span class="n">raw_bytes</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FileStreamWithMetadata</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DiskBackedFileSystem.commit"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.DiskBackedFileSystem.commit">[docs]</a>    <span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="DiskBackedFileSystem.delete"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.DiskBackedFileSystem.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="DiskBackedFileSystem.listdir"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.DiskBackedFileSystem.listdir">[docs]</a>    <span class="k">def</span> <span class="nf">listdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_name</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+</div></div>
+<div class="viewcode-block" id="AbstractFileSystem"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.AbstractFileSystem">[docs]</a><span class="k">class</span> <span class="nc">AbstractFileSystem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Interface for a file system.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">impl</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_impl</span> <span class="o">=</span> <span class="n">impl</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_impl</span>
+
+    <span class="k">def</span> <span class="nf">_check_filepath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Raises an error if a filepath is invalid.&quot;&quot;&quot;</span>
+        <span class="n">base_dir</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">vfs_construct_path</span><span class="p">(</span>
+            <span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="o">.</span><span class="n">exploration_id</span><span class="p">,</span> <span class="s">&#39;assets&#39;</span><span class="p">)</span>
+        <span class="n">absolute_path</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">vfs_construct_path</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="n">normalized_path</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">vfs_normpath</span><span class="p">(</span><span class="n">absolute_path</span><span class="p">)</span>
+
+        <span class="c"># This check prevents directory traversal.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">normalized_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">base_dir</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s">&#39;Invalid filepath: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">filepath</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AbstractFileSystem.isfile"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.AbstractFileSystem.isfile">[docs]</a>    <span class="k">def</span> <span class="nf">isfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks if a file exists. Similar to os.path.isfile(...).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_filepath</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_impl</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AbstractFileSystem.open"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.AbstractFileSystem.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a stream with the file content. Similar to open(...).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_filepath</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_impl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AbstractFileSystem.get"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.AbstractFileSystem.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a bytestring with the file content, but no metadata.&quot;&quot;&quot;</span>
+        <span class="n">file_stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file_stream</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span>
+                <span class="s">&#39;File </span><span class="si">%s</span><span class="s"> (version </span><span class="si">%s</span><span class="s">) not found.&#39;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">version</span> <span class="k">if</span> <span class="n">version</span> <span class="k">else</span> <span class="s">&#39;latest&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">file_stream</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="AbstractFileSystem.commit"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.AbstractFileSystem.commit">[docs]</a>    <span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Replaces the contents of the file with the given bytestring.&quot;&quot;&quot;</span>
+        <span class="n">raw_bytes</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">raw_bytes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_filepath</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_impl</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">raw_bytes</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AbstractFileSystem.delete"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.AbstractFileSystem.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deletes a file and the metadata associated with it.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_filepath</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_impl</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AbstractFileSystem.listdir"><a class="viewcode-back" href="../../../../oppia.core.domain.html#oppia.core.domain.fs_domain.AbstractFileSystem.listdir">[docs]</a>    <span class="k">def</span> <span class="nf">listdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Lists all the files in a directory. Similar to os.listdir(...).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_filepath</span><span class="p">(</span><span class="n">dir_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_impl</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dir_name</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,543 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.feconf &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.feconf</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Stores various configuration options and constants for Oppia.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="c"># Whether to unconditionally log info messages.</span>
+<span class="n">DEBUG</span> <span class="o">=</span> <span class="bp">False</span>
+
+<span class="c"># The platform for the storage backend. This is used in the model-switching</span>
+<span class="c"># code in core/platform.</span>
+<span class="n">PLATFORM</span> <span class="o">=</span> <span class="s">&#39;gae&#39;</span>
+
+<span class="c"># Whether we should serve the development or production experience.</span>
+<span class="k">if</span> <span class="n">PLATFORM</span> <span class="o">==</span> <span class="s">&#39;gae&#39;</span><span class="p">:</span>
+    <span class="n">DEV_MODE</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;SERVER_SOFTWARE&#39;</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;SERVER_SOFTWARE&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;Development&#39;</span><span class="p">))</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Invalid platform: expected one of [</span><span class="se">\&#39;</span><span class="s">gae</span><span class="se">\&#39;</span><span class="s">]&#39;</span><span class="p">)</span>
+
+<span class="n">TESTS_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;core&#39;</span><span class="p">,</span> <span class="s">&#39;tests&#39;</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">)</span>
+<span class="n">SAMPLE_EXPLORATIONS_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;data&#39;</span><span class="p">,</span> <span class="s">&#39;explorations&#39;</span><span class="p">)</span>
+<span class="n">INTERACTIONS_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;extensions&#39;</span><span class="p">,</span> <span class="s">&#39;interactions&#39;</span><span class="p">)</span>
+<span class="n">GADGETS_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;extensions&#39;</span><span class="p">,</span> <span class="s">&#39;gadgets&#39;</span><span class="p">)</span>
+<span class="n">RTE_EXTENSIONS_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;extensions&#39;</span><span class="p">,</span> <span class="s">&#39;rich_text_components&#39;</span><span class="p">)</span>
+<span class="n">RULES_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;extensions&#39;</span><span class="p">,</span> <span class="s">&#39;rules&#39;</span><span class="p">)</span>
+
+<span class="n">OBJECT_TEMPLATES_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;extensions&#39;</span><span class="p">,</span> <span class="s">&#39;objects&#39;</span><span class="p">,</span> <span class="s">&#39;templates&#39;</span><span class="p">)</span>
+<span class="n">SKINS_TEMPLATES_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;extensions&#39;</span><span class="p">,</span> <span class="s">&#39;skins&#39;</span><span class="p">)</span>
+<span class="n">TEMPLATES_DIR_PREFIX</span> <span class="o">=</span> <span class="s">&#39;dev&#39;</span> <span class="k">if</span> <span class="n">DEV_MODE</span> <span class="k">else</span> <span class="s">&#39;prod&#39;</span>
+<span class="n">FRONTEND_TEMPLATES_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+    <span class="s">&#39;core&#39;</span><span class="p">,</span> <span class="s">&#39;templates&#39;</span><span class="p">,</span> <span class="n">TEMPLATES_DIR_PREFIX</span><span class="p">,</span> <span class="s">&#39;head&#39;</span><span class="p">)</span>
+<span class="n">DEPENDENCIES_TEMPLATES_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;extensions&#39;</span><span class="p">,</span> <span class="s">&#39;dependencies&#39;</span><span class="p">)</span>
+<span class="n">VALUE_GENERATORS_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;extensions&#39;</span><span class="p">,</span> <span class="s">&#39;value_generators&#39;</span><span class="p">)</span>
+
+<span class="c"># The maximum number of results to retrieve in a datastore query.</span>
+<span class="n">DEFAULT_QUERY_LIMIT</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="c"># The current version of the exploration states blob schema. If any backward-</span>
+<span class="c"># incompatible changes are made to the states blob schema in the data store,</span>
+<span class="c"># this version number must be changed and the exploration migration job</span>
+<span class="c"># executed.</span>
+<span class="n">CURRENT_EXPLORATION_STATES_SCHEMA_VERSION</span> <span class="o">=</span> <span class="mi">5</span>
+
+<span class="c"># The default number of exploration tiles to load at a time in the gallery</span>
+<span class="c"># page.</span>
+<span class="n">GALLERY_PAGE_SIZE</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="c"># The default number of commits to show on a page in the exploration history</span>
+<span class="c"># tab.</span>
+<span class="n">COMMIT_LIST_PAGE_SIZE</span> <span class="o">=</span> <span class="mi">50</span>
+
+<span class="c"># The default number of items to show on a page in the exploration feedback</span>
+<span class="c"># tab.</span>
+<span class="n">FEEDBACK_TAB_PAGE_SIZE</span> <span class="o">=</span> <span class="mi">20</span>
+
+<span class="c"># Default name for the initial state of an exploration.</span>
+<span class="n">DEFAULT_INIT_STATE_NAME</span> <span class="o">=</span> <span class="s">&#39;First Card&#39;</span>
+<span class="c"># The default content text for the initial state of an exploration.</span>
+<span class="n">DEFAULT_INIT_STATE_CONTENT_STR</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+<span class="c"># Default valid parameter for instantiating Explorations when explicit</span>
+<span class="c"># skin customizations aren&#39;t provided.</span>
+<span class="n">DEFAULT_SKIN_CUSTOMIZATIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;panels_contents&#39;</span><span class="p">:</span> <span class="p">{}}</span>
+
+<span class="c"># A dict containing the accepted image formats (as determined by the imghdr</span>
+<span class="c"># module) and the corresponding allowed extensions in the filenames of uploaded</span>
+<span class="c"># files.</span>
+<span class="n">ACCEPTED_IMAGE_FORMATS_AND_EXTENSIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;jpeg&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;jpg&#39;</span><span class="p">,</span> <span class="s">&#39;jpeg&#39;</span><span class="p">],</span>
+    <span class="s">&#39;png&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;png&#39;</span><span class="p">],</span>
+    <span class="s">&#39;gif&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;gif&#39;</span><span class="p">]</span>
+<span class="p">}</span>
+
+<span class="c"># Static file url to path mapping</span>
+<span class="n">PATH_MAP</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;/css&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;core&#39;</span><span class="p">,</span> <span class="s">&#39;templates&#39;</span><span class="p">,</span> <span class="s">&#39;dev&#39;</span><span class="p">,</span> <span class="s">&#39;head&#39;</span><span class="p">,</span> <span class="s">&#39;css&#39;</span><span class="p">),</span>
+    <span class="s">&#39;/extensions/gadgets&#39;</span><span class="p">:</span> <span class="n">GADGETS_DIR</span><span class="p">,</span>
+    <span class="s">&#39;/extensions/interactions&#39;</span><span class="p">:</span> <span class="n">INTERACTIONS_DIR</span><span class="p">,</span>
+    <span class="s">&#39;/extensions/rich_text_components&#39;</span><span class="p">:</span> <span class="n">RTE_EXTENSIONS_DIR</span><span class="p">,</span>
+    <span class="s">&#39;/favicon.ico&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;static&#39;</span><span class="p">,</span> <span class="s">&#39;images&#39;</span><span class="p">,</span> <span class="s">&#39;favicon.ico&#39;</span><span class="p">),</span>
+    <span class="s">&#39;/images&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;static&#39;</span><span class="p">,</span> <span class="s">&#39;images&#39;</span><span class="p">),</span>
+    <span class="s">&#39;/lib/static&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;lib&#39;</span><span class="p">,</span> <span class="s">&#39;static&#39;</span><span class="p">),</span>
+    <span class="s">&#39;/third_party/static&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;third_party&#39;</span><span class="p">,</span> <span class="s">&#39;static&#39;</span><span class="p">),</span>
+<span class="p">}</span>
+
+<span class="c"># A string containing the disallowed characters in state or exploration names.</span>
+<span class="c"># The underscore is needed because spaces in names must be converted to</span>
+<span class="c"># underscores when displayed as part of a URL or key. The other conventions</span>
+<span class="c"># here are derived from the Wikipedia guidelines for naming articles.</span>
+<span class="n">INVALID_NAME_CHARS</span> <span class="o">=</span> <span class="s">u&#39;:#/|_%&lt;&gt;[]{}</span><span class="se">\ufffd\\</span><span class="s">&#39;</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">127</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">32</span><span class="p">):</span>
+    <span class="n">INVALID_NAME_CHARS</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span>
+<span class="c"># Prefix for data sent from the server to the client via JSON.</span>
+<span class="n">XSSI_PREFIX</span> <span class="o">=</span> <span class="s">&#39;)]}</span><span class="se">\&#39;\n</span><span class="s">&#39;</span>
+<span class="c"># A regular expression for alphanumeric characters.</span>
+<span class="n">ALPHANUMERIC_REGEX</span> <span class="o">=</span> <span class="s">r&#39;^[A-Za-z0-9]+$&#39;</span>
+<span class="c"># A regular expression for tags.</span>
+<span class="n">TAG_REGEX</span> <span class="o">=</span> <span class="s">r&#39;^[a-z ]+$&#39;</span>
+
+<span class="c"># Invalid names for parameters used in expressions.</span>
+<span class="n">AUTOMATICALLY_SET_PARAMETER_NAMES</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;answer&#39;</span><span class="p">,</span> <span class="s">&#39;choices&#39;</span><span class="p">]</span>
+<span class="n">INVALID_PARAMETER_NAMES</span> <span class="o">=</span> <span class="n">AUTOMATICALLY_SET_PARAMETER_NAMES</span> <span class="o">+</span> <span class="p">[</span>
+    <span class="s">&#39;abs&#39;</span><span class="p">,</span> <span class="s">&#39;all&#39;</span><span class="p">,</span> <span class="s">&#39;and&#39;</span><span class="p">,</span> <span class="s">&#39;any&#39;</span><span class="p">,</span> <span class="s">&#39;else&#39;</span><span class="p">,</span> <span class="s">&#39;floor&#39;</span><span class="p">,</span> <span class="s">&#39;if&#39;</span><span class="p">,</span> <span class="s">&#39;log&#39;</span><span class="p">,</span> <span class="s">&#39;or&#39;</span><span class="p">,</span>
+    <span class="s">&#39;pow&#39;</span><span class="p">,</span> <span class="s">&#39;round&#39;</span><span class="p">,</span> <span class="s">&#39;then&#39;</span><span class="p">]</span>
+
+<span class="c"># These are here rather than in rating_services.py to avoid import</span>
+<span class="c"># circularities with exp_services.</span>
+<span class="c"># TODO (Jacob) Refactor exp_services to remove this problem.</span>
+<span class="n">_EMPTY_RATINGS</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;1&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;2&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;3&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;4&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;5&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+<div class="viewcode-block" id="get_empty_ratings"><a class="viewcode-back" href="../../oppia.html#oppia.feconf.get_empty_ratings">[docs]</a><span class="k">def</span> <span class="nf">get_empty_ratings</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">_EMPTY_RATINGS</span><span class="p">)</span>
+
+<span class="c"># Committer id for system actions.</span></div>
+<span class="n">SYSTEM_COMMITTER_ID</span> <span class="o">=</span> <span class="s">&#39;admin&#39;</span>
+<span class="n">SYSTEM_EMAIL_ADDRESS</span> <span class="o">=</span> <span class="s">&#39;system@example.com&#39;</span>
+<span class="n">ADMIN_EMAIL_ADDRESS</span> <span class="o">=</span> <span class="s">&#39;testadmin@example.com&#39;</span>
+<span class="c"># Ensure that SYSTEM_EMAIL_ADDRESS and ADMIN_EMAIL_ADDRESS are both valid and</span>
+<span class="c"># correspond to owners of the app before setting this to True. If</span>
+<span class="c"># SYSTEM_EMAIL_ADDRESS is not that of an app owner, email messages from this</span>
+<span class="c"># address cannot be sent.</span>
+<span class="n">CAN_SEND_EMAILS_TO_ADMIN</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="c"># Ensure that SYSTEM_EMAIL_ADDRESS is valid and corresponds to an owner of the</span>
+<span class="c"># app before setting this to True. Emails will be sent from</span>
+<span class="c"># SYSTEM_EMAIL_ADDRESS. If SYSTEM_EMAIL_ADDRESS is not that of an app owner,</span>
+<span class="c"># email messages from this user cannot be sent.</span>
+<span class="n">CAN_SEND_EMAILS_TO_USERS</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="c"># Whether to send email updates to a user who has not specified a preference.</span>
+<span class="n">DEFAULT_EMAIL_UPDATES_PREFERENCE</span> <span class="o">=</span> <span class="bp">False</span>
+
+<span class="c"># The maximum size of an uploaded file, in bytes.</span>
+<span class="n">MAX_FILE_SIZE_BYTES</span> <span class="o">=</span> <span class="mi">1048576</span>
+
+<span class="c"># The default language code for an exploration.</span>
+<span class="n">DEFAULT_LANGUAGE_CODE</span> <span class="o">=</span> <span class="s">&#39;en&#39;</span>
+
+<span class="c"># Whether to include a page with the Oppia discussion forum.</span>
+<span class="n">SHOW_FORUM_PAGE</span> <span class="o">=</span> <span class="bp">True</span>
+
+<span class="c"># User id and username for exploration migration bot.</span>
+<span class="n">MIGRATION_BOT_USER_ID</span> <span class="o">=</span> <span class="s">&#39;OppiaMigrationBot&#39;</span>
+<span class="n">MIGRATION_BOT_USERNAME</span> <span class="o">=</span> <span class="s">&#39;OppiaMigrationBot&#39;</span>
+
+<span class="c"># Ids and locations of the permitted extensions.</span>
+<span class="n">ALLOWED_RTE_EXTENSIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;Collapsible&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;dir&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">RTE_EXTENSIONS_DIR</span><span class="p">,</span> <span class="s">&#39;Collapsible&#39;</span><span class="p">)</span>
+    <span class="p">},</span>
+    <span class="s">&#39;Image&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;dir&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">RTE_EXTENSIONS_DIR</span><span class="p">,</span> <span class="s">&#39;Image&#39;</span><span class="p">)</span>
+    <span class="p">},</span>
+    <span class="s">&#39;Link&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;dir&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">RTE_EXTENSIONS_DIR</span><span class="p">,</span> <span class="s">&#39;Link&#39;</span><span class="p">)</span>
+    <span class="p">},</span>
+    <span class="s">&#39;Math&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;dir&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">RTE_EXTENSIONS_DIR</span><span class="p">,</span> <span class="s">&#39;Math&#39;</span><span class="p">)</span>
+    <span class="p">},</span>
+    <span class="s">&#39;Tabs&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;dir&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">RTE_EXTENSIONS_DIR</span><span class="p">,</span> <span class="s">&#39;Tabs&#39;</span><span class="p">)</span>
+    <span class="p">},</span>
+    <span class="s">&#39;Video&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;dir&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">RTE_EXTENSIONS_DIR</span><span class="p">,</span> <span class="s">&#39;Video&#39;</span><span class="p">)</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c"># These categories and interactions are displayed in the order in which they</span>
+<span class="c"># appear in the interaction selector.</span>
+<span class="n">ALLOWED_INTERACTION_CATEGORIES</span> <span class="o">=</span> <span class="p">[{</span>
+    <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;General&#39;</span><span class="p">,</span>
+    <span class="s">&#39;interaction_ids&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s">&#39;Continue&#39;</span><span class="p">,</span>
+        <span class="s">&#39;EndExploration&#39;</span><span class="p">,</span>
+        <span class="s">&#39;ImageClickInput&#39;</span><span class="p">,</span>
+        <span class="s">&#39;MultipleChoiceInput&#39;</span><span class="p">,</span>
+        <span class="s">&#39;TextInput&#39;</span>
+    <span class="p">],</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;Math&#39;</span><span class="p">,</span>
+    <span class="s">&#39;interaction_ids&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s">&#39;GraphInput&#39;</span><span class="p">,</span>
+        <span class="s">&#39;LogicProof&#39;</span><span class="p">,</span>
+        <span class="s">&#39;NumericInput&#39;</span><span class="p">,</span>
+        <span class="s">&#39;SetInput&#39;</span><span class="p">,</span>
+    <span class="p">]</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;Programming&#39;</span><span class="p">,</span>
+    <span class="s">&#39;interaction_ids&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;CodeRepl&#39;</span><span class="p">],</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;Music&#39;</span><span class="p">,</span>
+    <span class="s">&#39;interaction_ids&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s">&#39;MusicNotesInput&#39;</span>
+    <span class="p">],</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="s">&#39;Geography&#39;</span><span class="p">,</span>
+    <span class="s">&#39;interaction_ids&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s">&#39;InteractiveMap&#39;</span>
+    <span class="p">],</span>
+<span class="p">}]</span>
+
+<span class="n">ALLOWED_GADGETS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;AdviceBar&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;dir&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">GADGETS_DIR</span><span class="p">,</span> <span class="s">&#39;AdviceBar&#39;</span><span class="p">)</span>
+    <span class="p">},</span>
+    <span class="s">&#39;ScoreBar&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;dir&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">GADGETS_DIR</span><span class="p">,</span> <span class="s">&#39;ScoreBar&#39;</span><span class="p">)</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c"># Demo explorations to load on startup. The id assigned to each exploration</span>
+<span class="c"># is based on the index of the exploration in this list, so if you want to</span>
+<span class="c"># add a new exploration and preserve the existing ids, add that exploration</span>
+<span class="c"># to the end of the list.</span>
+<span class="c"># Each item is represented as a tuple: (filepath, title, category). If the</span>
+<span class="c"># filepath is a yaml file it should end with &#39;.yaml&#39;, otherwise it should</span>
+<span class="c"># be the path to the directory WITHOUT a trailing &#39;/&#39;.</span>
+<span class="n">DEMO_EXPLORATIONS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s">&#39;welcome.yaml&#39;</span><span class="p">,</span> <span class="s">&#39;Welcome to Oppia!&#39;</span><span class="p">,</span> <span class="s">&#39;Welcome&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;multiples.yaml&#39;</span><span class="p">,</span> <span class="s">&#39;Project Euler Problem 1&#39;</span><span class="p">,</span> <span class="s">&#39;Coding&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;binary_search&#39;</span><span class="p">,</span> <span class="s">&#39;The Lazy Magician&#39;</span><span class="p">,</span> <span class="s">&#39;Mathematics&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;root_linear_coefficient_theorem.yaml&#39;</span><span class="p">,</span> <span class="s">&#39;Root Linear Coefficient Theorem&#39;</span><span class="p">,</span>
+     <span class="s">&#39;Mathematics&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;three_balls&#39;</span><span class="p">,</span> <span class="s">&#39;Three Balls&#39;</span><span class="p">,</span> <span class="s">&#39;Mathematics&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;cities.yaml&#39;</span><span class="p">,</span> <span class="s">&#39;World Cities&#39;</span><span class="p">,</span> <span class="s">&#39;Geography&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;boot_verbs.yaml&#39;</span><span class="p">,</span> <span class="s">&#39;Boot Verbs&#39;</span><span class="p">,</span> <span class="s">&#39;Languages&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;hola.yaml&#39;</span><span class="p">,</span> <span class="s">u&#39;¡Hola!&#39;</span><span class="p">,</span> <span class="s">&#39;Languages&#39;</span><span class="p">),</span>
+    <span class="c"># This exploration is included to show other applications of Oppia, but</span>
+    <span class="c"># please note that Oppia lacks many of the features of a full interactive</span>
+    <span class="c"># fiction engine!</span>
+    <span class="p">(</span><span class="s">&#39;adventure.yaml&#39;</span><span class="p">,</span> <span class="s">&#39;Parameterized Adventure&#39;</span><span class="p">,</span> <span class="s">&#39;Interactive Fiction&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;pitch_perfect.yaml&#39;</span><span class="p">,</span> <span class="s">&#39;Pitch Perfect&#39;</span><span class="p">,</span> <span class="s">&#39;Music&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;test_interactions&#39;</span><span class="p">,</span> <span class="s">&#39;Test of expressions and interactions&#39;</span><span class="p">,</span> <span class="s">&#39;Test&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;modeling_graphs&#39;</span><span class="p">,</span> <span class="s">&#39;Graph Modeling&#39;</span><span class="p">,</span> <span class="s">&#39;Mathematics&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;protractor_test_1.yaml&#39;</span><span class="p">,</span> <span class="s">&#39;Protractor Test&#39;</span><span class="p">,</span> <span class="s">&#39;Mathematics&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;solar_system&#39;</span><span class="p">,</span> <span class="s">&#39;The Solar System&#39;</span><span class="p">,</span> <span class="s">&#39;Physics&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&#39;about_oppia.yaml&#39;</span><span class="p">,</span> <span class="s">&#39;About Oppia&#39;</span><span class="p">,</span> <span class="s">&#39;Welcome&#39;</span><span class="p">),</span>
+    <span class="c"># TODO(anuzis): Replace about_oppia.yaml with this dev version when gadget</span>
+    <span class="c"># visibility by state is functional. Currently an AdviceBar gadget that</span>
+    <span class="c"># should only display on the Helsinki map state is visible during the</span>
+    <span class="c"># entire exploration as a dev demo.</span>
+    <span class="p">(</span><span class="s">&#39;about_oppia_w_gadgets.yaml&#39;</span><span class="p">,</span> <span class="s">&#39;Welcome with Gadgets! (DEV ONLY)&#39;</span><span class="p">,</span>
+     <span class="s">&#39;Welcome&#39;</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="c"># TODO(sll): Add all other URLs here.</span>
+<span class="n">CONTRIBUTE_GALLERY_URL</span> <span class="o">=</span> <span class="s">&#39;/contribute&#39;</span>
+<span class="n">EDITOR_URL_PREFIX</span> <span class="o">=</span> <span class="s">&#39;/create&#39;</span>
+<span class="n">EXPLORATION_RIGHTS_PREFIX</span> <span class="o">=</span> <span class="s">&#39;/createhandler/rights&#39;</span>
+<span class="n">EXPLORATION_DATA_PREFIX</span> <span class="o">=</span> <span class="s">&#39;/createhandler/data&#39;</span>
+<span class="n">EXPLORATION_URL_PREFIX</span> <span class="o">=</span> <span class="s">&#39;/explore&#39;</span>
+<span class="n">EXPLORATION_INIT_URL_PREFIX</span> <span class="o">=</span> <span class="s">&#39;/explorehandler/init&#39;</span>
+<span class="n">FEEDBACK_LAST_UPDATED_URL_PREFIX</span> <span class="o">=</span> <span class="s">&#39;/feedback_last_updated&#39;</span>
+<span class="n">FEEDBACK_THREAD_URL_PREFIX</span> <span class="o">=</span> <span class="s">&#39;/threadhandler&#39;</span>
+<span class="n">FEEDBACK_THREADLIST_URL_PREFIX</span> <span class="o">=</span> <span class="s">&#39;/threadlisthandler&#39;</span>
+<span class="n">GALLERY_URL</span> <span class="o">=</span> <span class="s">&#39;/gallery&#39;</span>
+<span class="n">GALLERY_CREATE_MODE_URL</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">?mode=create&#39;</span> <span class="o">%</span> <span class="n">GALLERY_URL</span>
+<span class="n">GALLERY_DATA_URL</span> <span class="o">=</span> <span class="s">&#39;/galleryhandler/data&#39;</span>
+<span class="n">LEARN_GALLERY_URL</span> <span class="o">=</span> <span class="s">&#39;/learn&#39;</span>
+<span class="n">NEW_EXPLORATION_URL</span> <span class="o">=</span> <span class="s">&#39;/contributehandler/create_new&#39;</span>
+<span class="n">PLAYTEST_QUEUE_URL</span> <span class="o">=</span> <span class="s">&#39;/playtest&#39;</span>
+<span class="n">RECENT_COMMITS_DATA_URL</span> <span class="o">=</span> <span class="s">&#39;/recentcommitshandler/recent_commits&#39;</span>
+<span class="n">RECENT_FEEDBACK_MESSAGES_DATA_URL</span> <span class="o">=</span> <span class="s">&#39;/recent_feedback_messages&#39;</span>
+<span class="n">SIGNUP_URL</span> <span class="o">=</span> <span class="s">&#39;/signup&#39;</span>
+<span class="n">SIGNUP_DATA_URL</span> <span class="o">=</span> <span class="s">&#39;/signuphandler/data&#39;</span>
+<span class="n">UPLOAD_EXPLORATION_URL</span> <span class="o">=</span> <span class="s">&#39;/contributehandler/upload&#39;</span>
+<span class="n">USERNAME_CHECK_DATA_URL</span> <span class="o">=</span> <span class="s">&#39;/usernamehandler/data&#39;</span>
+
+<span class="n">NAV_MODE_ABOUT</span> <span class="o">=</span> <span class="s">&#39;about&#39;</span>
+<span class="n">NAV_MODE_CREATE</span> <span class="o">=</span> <span class="s">&#39;create&#39;</span>
+<span class="n">NAV_MODE_EXPLORE</span> <span class="o">=</span> <span class="s">&#39;explore&#39;</span>
+<span class="n">NAV_MODE_GALLERY</span> <span class="o">=</span> <span class="s">&#39;gallery&#39;</span>
+<span class="n">NAV_MODE_HOME</span> <span class="o">=</span> <span class="s">&#39;home&#39;</span>
+<span class="n">NAV_MODE_PARTICIPATE</span> <span class="o">=</span> <span class="s">&#39;participate&#39;</span>
+<span class="n">NAV_MODE_PROFILE</span> <span class="o">=</span> <span class="s">&#39;profile&#39;</span>
+<span class="n">NAV_MODE_SIGNUP</span> <span class="o">=</span> <span class="s">&#39;signup&#39;</span>
+
+<span class="c"># Event types.</span>
+<span class="n">EVENT_TYPE_STATE_HIT</span> <span class="o">=</span> <span class="s">&#39;state_hit&#39;</span>
+<span class="n">EVENT_TYPE_ANSWER_SUBMITTED</span> <span class="o">=</span> <span class="s">&#39;answer_submitted&#39;</span>
+<span class="n">EVENT_TYPE_DEFAULT_ANSWER_RESOLVED</span> <span class="o">=</span> <span class="s">&#39;default_answer_resolved&#39;</span>
+<span class="n">EVENT_TYPE_EXPLORATION_CHANGE</span> <span class="o">=</span> <span class="s">&#39;exploration_change&#39;</span>
+<span class="n">EVENT_TYPE_EXPLORATION_STATUS_CHANGE</span> <span class="o">=</span> <span class="s">&#39;exploration_status_change&#39;</span>
+<span class="n">EVENT_TYPE_NEW_THREAD_CREATED</span> <span class="o">=</span> <span class="s">&#39;feedback_thread_created&#39;</span>
+<span class="n">EVENT_TYPE_THREAD_STATUS_CHANGED</span> <span class="o">=</span> <span class="s">&#39;feedback_thread_status_changed&#39;</span>
+<span class="c"># The values for these event types should be left as-is for backwards</span>
+<span class="c"># compatibility.</span>
+<span class="n">EVENT_TYPE_START_EXPLORATION</span> <span class="o">=</span> <span class="s">&#39;start&#39;</span>
+<span class="n">EVENT_TYPE_MAYBE_LEAVE_EXPLORATION</span> <span class="o">=</span> <span class="s">&#39;leave&#39;</span>
+<span class="n">EVENT_TYPE_COMPLETE_EXPLORATION</span> <span class="o">=</span> <span class="s">&#39;complete&#39;</span>
+
+<span class="c"># Play type constants</span>
+<span class="n">PLAY_TYPE_PLAYTEST</span> <span class="o">=</span> <span class="s">&#39;playtest&#39;</span>
+<span class="n">PLAY_TYPE_NORMAL</span> <span class="o">=</span> <span class="s">&#39;normal&#39;</span>
+
+<span class="c"># Predefined commit messages.</span>
+<span class="n">COMMIT_MESSAGE_EXPLORATION_DELETED</span> <span class="o">=</span> <span class="s">&#39;Exploration deleted.&#39;</span>
+
+<span class="c"># Unlaunched feature.</span>
+<span class="n">SHOW_SKIN_CHOOSER</span> <span class="o">=</span> <span class="bp">False</span>
+
+<span class="c"># Output formats of downloaded explorations.</span>
+<span class="n">OUTPUT_FORMAT_JSON</span> <span class="o">=</span> <span class="s">&#39;json&#39;</span>
+<span class="n">OUTPUT_FORMAT_ZIP</span> <span class="o">=</span> <span class="s">&#39;zip&#39;</span>
+
+<span class="c"># Types of updates shown in the &#39;recent updates&#39; table in the dashboard page.</span>
+<span class="n">UPDATE_TYPE_EXPLORATION_COMMIT</span> <span class="o">=</span> <span class="s">&#39;exploration_commit&#39;</span>
+<span class="n">UPDATE_TYPE_FEEDBACK_MESSAGE</span> <span class="o">=</span> <span class="s">&#39;feedback_thread&#39;</span>
+
+<span class="c"># Default color</span>
+<span class="n">COLOR_TEAL</span> <span class="o">=</span> <span class="s">&#39;teal&#39;</span>
+<span class="c"># Social sciences</span>
+<span class="n">COLOR_SALMON</span> <span class="o">=</span> <span class="s">&#39;salmon&#39;</span>
+<span class="c"># Art</span>
+<span class="n">COLOR_SUNNYSIDE</span> <span class="o">=</span> <span class="s">&#39;sunnyside&#39;</span>
+<span class="c"># Mathematics and computing</span>
+<span class="n">COLOR_SHARKFIN</span> <span class="o">=</span> <span class="s">&#39;sharkfin&#39;</span>
+<span class="c"># Science</span>
+<span class="n">COLOR_GUNMETAL</span> <span class="o">=</span> <span class="s">&#39;gunmetal&#39;</span>
+<span class="n">DEFAULT_COLOR</span> <span class="o">=</span> <span class="n">COLOR_TEAL</span>
+
+<span class="c"># List of supported default categories. For now, each category has</span>
+<span class="c"># a specific color associated with it.</span>
+<span class="n">CATEGORIES_TO_COLORS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;Architecture&#39;</span><span class="p">:</span> <span class="n">COLOR_SUNNYSIDE</span><span class="p">,</span>
+    <span class="s">&#39;Art&#39;</span><span class="p">:</span> <span class="n">COLOR_SUNNYSIDE</span><span class="p">,</span>
+    <span class="s">&#39;Biology&#39;</span><span class="p">:</span> <span class="n">COLOR_GUNMETAL</span><span class="p">,</span>
+    <span class="s">&#39;Business&#39;</span><span class="p">:</span> <span class="n">COLOR_SALMON</span><span class="p">,</span>
+    <span class="s">&#39;Chemistry&#39;</span><span class="p">:</span> <span class="n">COLOR_GUNMETAL</span><span class="p">,</span>
+    <span class="s">&#39;Computing&#39;</span><span class="p">:</span> <span class="n">COLOR_SHARKFIN</span><span class="p">,</span>
+    <span class="s">&#39;Economics&#39;</span><span class="p">:</span> <span class="n">COLOR_SALMON</span><span class="p">,</span>
+    <span class="s">&#39;Education&#39;</span><span class="p">:</span> <span class="n">COLOR_TEAL</span><span class="p">,</span>
+    <span class="s">&#39;Engineering&#39;</span><span class="p">:</span> <span class="n">COLOR_GUNMETAL</span><span class="p">,</span>
+    <span class="s">&#39;Environment&#39;</span><span class="p">:</span> <span class="n">COLOR_GUNMETAL</span><span class="p">,</span>
+    <span class="s">&#39;Geography&#39;</span><span class="p">:</span> <span class="n">COLOR_SALMON</span><span class="p">,</span>
+    <span class="s">&#39;Government&#39;</span><span class="p">:</span> <span class="n">COLOR_SALMON</span><span class="p">,</span>
+    <span class="s">&#39;Hobbies&#39;</span><span class="p">:</span> <span class="n">COLOR_TEAL</span><span class="p">,</span>
+    <span class="s">&#39;Languages&#39;</span><span class="p">:</span> <span class="n">COLOR_SUNNYSIDE</span><span class="p">,</span>
+    <span class="s">&#39;Law&#39;</span><span class="p">:</span> <span class="n">COLOR_SALMON</span><span class="p">,</span>
+    <span class="s">&#39;Life Skills&#39;</span><span class="p">:</span> <span class="n">COLOR_TEAL</span><span class="p">,</span>
+    <span class="s">&#39;Mathematics&#39;</span><span class="p">:</span> <span class="n">COLOR_SHARKFIN</span><span class="p">,</span>
+    <span class="s">&#39;Medicine&#39;</span><span class="p">:</span> <span class="n">COLOR_GUNMETAL</span><span class="p">,</span>
+    <span class="s">&#39;Music&#39;</span><span class="p">:</span> <span class="n">COLOR_SUNNYSIDE</span><span class="p">,</span>
+    <span class="s">&#39;Philosophy&#39;</span><span class="p">:</span> <span class="n">COLOR_SALMON</span><span class="p">,</span>
+    <span class="s">&#39;Physics&#39;</span><span class="p">:</span> <span class="n">COLOR_GUNMETAL</span><span class="p">,</span>
+    <span class="s">&#39;Programming&#39;</span><span class="p">:</span> <span class="n">COLOR_SHARKFIN</span><span class="p">,</span>
+    <span class="s">&#39;Psychology&#39;</span><span class="p">:</span> <span class="n">COLOR_SALMON</span><span class="p">,</span>
+    <span class="s">&#39;Puzzles&#39;</span><span class="p">:</span> <span class="n">COLOR_TEAL</span><span class="p">,</span>
+    <span class="s">&#39;Reading&#39;</span><span class="p">:</span> <span class="n">COLOR_TEAL</span><span class="p">,</span>
+    <span class="s">&#39;Religion&#39;</span><span class="p">:</span> <span class="n">COLOR_SALMON</span><span class="p">,</span>
+    <span class="s">&#39;Sport&#39;</span><span class="p">:</span> <span class="n">COLOR_SUNNYSIDE</span><span class="p">,</span>
+    <span class="s">&#39;Statistics&#39;</span><span class="p">:</span> <span class="n">COLOR_SHARKFIN</span><span class="p">,</span>
+    <span class="s">&#39;Welcome&#39;</span><span class="p">:</span> <span class="n">COLOR_TEAL</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c"># A sorted list of default categories.</span>
+<span class="n">DEFAULT_CATEGORIES</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">CATEGORIES_TO_COLORS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+<span class="c"># List of supported language codes. Each description has a</span>
+<span class="c"># parenthetical part that may be stripped out to give a shorter</span>
+<span class="c"># description.</span>
+<span class="n">ALL_LANGUAGE_CODES</span> <span class="o">=</span> <span class="p">[{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;en&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;English&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;ar&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;العربية (Arabic)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;bg&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;български (Bulgarian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;ca&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;català (Catalan)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;zh&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;中文 (Chinese)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;hr&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;hrvatski (Croatian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;cs&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;čeština (Czech)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;da&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;dansk (Danish)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;nl&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;Nederlands (Dutch)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;tl&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;Filipino (Filipino)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;fi&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;suomi (Finnish)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;fr&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;français (French)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;de&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;Deutsch (German)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;el&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;ελληνικά (Greek)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;he&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;עברית (Hebrew)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;hi&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;हिन्दी (Hindi)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;hu&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;magyar (Hungarian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;Bahasa Indonesia (Indonesian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;it&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;italiano (Italian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;ja&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;日本語 (Japanese)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;ko&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;한국어 (Korean)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;lv&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;latviešu (Latvian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;lt&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;lietuvių (Lithuanian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;no&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;Norsk (Norwegian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;fa&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;فارسی (Persian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;pl&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;polski (Polish)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;pt&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;português (Portuguese)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;ro&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;română (Romanian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;ru&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;русский (Russian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;sr&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;српски (Serbian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;sk&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;slovenčina (Slovak)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;sl&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;slovenščina (Slovenian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;es&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;español (Spanish)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;sv&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;svenska (Swedish)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;th&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;ภาษาไทย (Thai)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;tr&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;Türkçe (Turkish)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;uk&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;українська (Ukrainian)&#39;</span><span class="p">,</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="s">&#39;code&#39;</span><span class="p">:</span> <span class="s">&#39;vi&#39;</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">u&#39;Tiếng Việt (Vietnamese)&#39;</span><span class="p">,</span>
+<span class="p">}]</span>
+
+<span class="c"># Defaults for topic similarities</span>
+<span class="n">DEFAULT_TOPIC_SIMILARITY</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">SAME_TOPIC_SIMILARITY</span> <span class="o">=</span> <span class="mf">1.0</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

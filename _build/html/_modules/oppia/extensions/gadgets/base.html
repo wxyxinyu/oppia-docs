@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.extensions.gadgets.base &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.extensions.gadgets.base</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Base class for defining gadgets.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Michael Anuzis&#39;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">extensions</span> <span class="kn">import</span> <span class="n">domain</span>
+<span class="kn">import</span> <span class="nn">feconf</span>
+<span class="kn">import</span> <span class="nn">schema_utils</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+
+<div class="viewcode-block" id="BaseGadget"><a class="viewcode-back" href="../../../../oppia.extensions.gadgets.html#oppia.extensions.gadgets.base.BaseGadget">[docs]</a><span class="k">class</span> <span class="nc">BaseGadget</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base gadget definition class.</span>
+
+<span class="sd">    This class is not meant to be user-editable. The only methods on it should</span>
+<span class="sd">    be get()-type methods.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># The human-readable name of the gadget. Overridden in subclasses.</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="c"># A description of the gadget. Overridden in subclasses.</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="c"># Customization arg specifications for the component, including their</span>
+    <span class="c"># descriptions, schemas and default values. Overridden in subclasses.</span>
+    <span class="n">_customization_arg_specs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c"># Additional JS library dependencies that should be loaded in pages</span>
+    <span class="c"># containing this gadget. These should correspond to names of files in</span>
+    <span class="c"># feconf.DEPENDENCIES_TEMPLATES_DIR. Overridden in subclasses.</span>
+    <span class="n">_dependency_ids</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">customization_arg_specs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">domain</span><span class="o">.</span><span class="n">CustomizationArgSpec</span><span class="p">(</span><span class="o">**</span><span class="n">cas</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cas</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_customization_arg_specs</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dependency_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dependency_ids</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BaseGadget.validate_customization_arg_values"><a class="viewcode-back" href="../../../../oppia.extensions.gadgets.html#oppia.extensions.gadgets.base.BaseGadget.validate_customization_arg_values">[docs]</a>    <span class="k">def</span> <span class="nf">validate_customization_arg_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">customization_args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validates customization arg values. The input is a dict whose</span>
+<span class="sd">        keys are the names of the customization args.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">ca_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">customization_arg_specs</span><span class="p">:</span>
+            <span class="n">schema_utils</span><span class="o">.</span><span class="n">normalize_against_schema</span><span class="p">(</span>
+                <span class="n">customization_args</span><span class="p">[</span><span class="n">ca_spec</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="s">&#39;value&#39;</span><span class="p">],</span>
+                <span class="n">ca_spec</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">html_body</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The HTML code containing directives and templates for the</span>
+<span class="sd">        gadget. This contains everything needed to display the gadget</span>
+<span class="sd">        once the necessary attributes are supplied.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">js_directives</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_file_contents</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">feconf</span><span class="o">.</span><span class="n">GADGETS_DIR</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.js&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+        <span class="n">html_templates</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_file_contents</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">feconf</span><span class="o">.</span><span class="n">GADGETS_DIR</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.html&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;script&gt;</span><span class="si">%s</span><span class="s">&lt;/script&gt;</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">js_directives</span><span class="p">,</span> <span class="n">html_templates</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BaseGadget.get_width"><a class="viewcode-back" href="../../../../oppia.extensions.gadgets.html#oppia.extensions.gadgets.base.BaseGadget.get_width">[docs]</a>    <span class="k">def</span> <span class="nf">get_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">customization_args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an integer representing the gadget&#39;s width in pixels.</span>
+
+<span class="sd">        Some gadgets might not require data from customization args to</span>
+<span class="sd">        calculate width and height, but the method requires passing args</span>
+<span class="sd">        for consistency.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">        - An AdviceBar&#39;s height and width will change depending on how many</span>
+<span class="sd">        tips it contains.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Subclasses must override this method.&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BaseGadget.get_height"><a class="viewcode-back" href="../../../../oppia.extensions.gadgets.html#oppia.extensions.gadgets.base.BaseGadget.get_height">[docs]</a>    <span class="k">def</span> <span class="nf">get_height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">customization_args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an integer representing the gadget&#39;s height in pixels.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Subclasses must override this method.&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BaseGadget.validate"><a class="viewcode-back" href="../../../../oppia.extensions.gadgets.html#oppia.extensions.gadgets.base.BaseGadget.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">customization_args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subclasses may override to perform additional validation.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="BaseGadget.to_dict"><a class="viewcode-back" href="../../../../oppia.extensions.gadgets.html#oppia.extensions.gadgets.base.BaseGadget.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets a dict representing this gadget. Only default values are</span>
+<span class="sd">        provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="s">&#39;customization_arg_specs&#39;</span><span class="p">:</span> <span class="p">[{</span>
+                <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">ca_spec</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="n">ca_spec</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                <span class="s">&#39;default_value&#39;</span><span class="p">:</span> <span class="n">ca_spec</span><span class="o">.</span><span class="n">default_value</span><span class="p">,</span>
+                <span class="s">&#39;schema&#39;</span><span class="p">:</span> <span class="n">ca_spec</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span>
+            <span class="p">}</span> <span class="k">for</span> <span class="n">ca_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">customization_arg_specs</span><span class="p">],</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">result</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

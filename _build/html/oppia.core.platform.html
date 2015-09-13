@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.platform package &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="oppia-core-platform-package">
+<h1>oppia.core.platform package<a class="headerlink" href="#oppia-core-platform-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.platform.email.html">oppia.core.platform.email package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.email.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.email.html#module-oppia.core.platform.email.gae_email_services">oppia.core.platform.email.gae_email_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.email.html#oppia-core-platform-email-gae-email-services-test-module">oppia.core.platform.email.gae_email_services_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.email.html#module-oppia.core.platform.email">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.platform.memcache.html">oppia.core.platform.memcache package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.memcache.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.memcache.html#module-oppia.core.platform.memcache.gae_memcache_services">oppia.core.platform.memcache.gae_memcache_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.memcache.html#module-oppia.core.platform.memcache">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.platform.search.html">oppia.core.platform.search package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.search.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.search.html#module-oppia.core.platform.search.gae_search_services">oppia.core.platform.search.gae_search_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.search.html#oppia-core-platform-search-gae-search-services-test-module">oppia.core.platform.search.gae_search_services_test module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.search.html#module-oppia.core.platform.search">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.platform.taskqueue.html">oppia.core.platform.taskqueue package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.taskqueue.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.taskqueue.html#module-oppia.core.platform.taskqueue.gae_taskqueue_services">oppia.core.platform.taskqueue.gae_taskqueue_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.taskqueue.html#module-oppia.core.platform.taskqueue">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.platform.transactions.html">oppia.core.platform.transactions package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.transactions.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.transactions.html#module-oppia.core.platform.transactions.gae_transaction_services">oppia.core.platform.transactions.gae_transaction_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.transactions.html#module-oppia.core.platform.transactions">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="oppia.core.platform.users.html">oppia.core.platform.users package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.users.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.users.html#module-oppia.core.platform.users.gae_current_user_services">oppia.core.platform.users.gae_current_user_services module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="oppia.core.platform.users.html#module-oppia.core.platform.users">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-oppia.core.platform.models">
+<span id="oppia-core-platform-models-module"></span><h2>oppia.core.platform.models module<a class="headerlink" href="#module-oppia.core.platform.models" title="Permalink to this headline">¶</a></h2>
+<p>Interface for storage model switching.</p>
+<dl class="class">
+<dt id="oppia.core.platform.models.Registry">
+<em class="property">class </em><code class="descclassname">oppia.core.platform.models.</code><code class="descname">Registry</code><a class="reference internal" href="_modules/oppia/core/platform/models.html#Registry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.models.Registry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dl class="classmethod">
+<dt id="oppia.core.platform.models.Registry.import_current_user_services">
+<em class="property">classmethod </em><code class="descname">import_current_user_services</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/platform/models.html#Registry.import_current_user_services"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.models.Registry.import_current_user_services" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.platform.models.Registry.import_email_services">
+<em class="property">classmethod </em><code class="descname">import_email_services</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/platform/models.html#Registry.import_email_services"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.models.Registry.import_email_services" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.platform.models.Registry.import_memcache_services">
+<em class="property">classmethod </em><code class="descname">import_memcache_services</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/platform/models.html#Registry.import_memcache_services"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.models.Registry.import_memcache_services" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.platform.models.Registry.import_models">
+<em class="property">classmethod </em><code class="descname">import_models</code><span class="sig-paren">(</span><em>model_names</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/platform/models.html#Registry.import_models"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.models.Registry.import_models" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.platform.models.Registry.import_search_services">
+<em class="property">classmethod </em><code class="descname">import_search_services</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/platform/models.html#Registry.import_search_services"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.models.Registry.import_search_services" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.platform.models.Registry.import_taskqueue_services">
+<em class="property">classmethod </em><code class="descname">import_taskqueue_services</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/platform/models.html#Registry.import_taskqueue_services"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.models.Registry.import_taskqueue_services" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="oppia.core.platform.models.Registry.import_transaction_services">
+<em class="property">classmethod </em><code class="descname">import_transaction_services</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/oppia/core/platform/models.html#Registry.import_transaction_services"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#oppia.core.platform.models.Registry.import_transaction_services" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-oppia.core.platform">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-oppia.core.platform" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">oppia.core.platform package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-oppia.core.platform.models">oppia.core.platform.models module</a></li>
+<li><a class="reference internal" href="#module-oppia.core.platform">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/oppia.core.platform.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/oppia.core.platform.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

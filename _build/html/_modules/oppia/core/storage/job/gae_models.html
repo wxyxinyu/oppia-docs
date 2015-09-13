@@ -1,0 +1,233 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.storage.job.gae_models &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.storage.job.gae_models</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &quot;AS-IS&quot; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Models for long-running jobs.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Sean Lip&#39;</span>
+
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">from</span> <span class="nn">core.platform</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="p">(</span><span class="n">base_models</span><span class="p">,)</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Registry</span><span class="o">.</span><span class="n">import_models</span><span class="p">([</span><span class="n">models</span><span class="o">.</span><span class="n">NAMES</span><span class="o">.</span><span class="n">base_model</span><span class="p">])</span>
+<span class="kn">import</span> <span class="nn">utils</span>
+
+<span class="kn">from</span> <span class="nn">google.appengine.ext</span> <span class="kn">import</span> <span class="n">ndb</span>
+
+
+<span class="c"># These are the possible status codes for a job.</span>
+<span class="n">STATUS_CODE_NEW</span> <span class="o">=</span> <span class="s">&#39;new&#39;</span>
+<span class="n">STATUS_CODE_QUEUED</span> <span class="o">=</span> <span class="s">&#39;queued&#39;</span>
+<span class="n">STATUS_CODE_STARTED</span> <span class="o">=</span> <span class="s">&#39;started&#39;</span>
+<span class="n">STATUS_CODE_COMPLETED</span> <span class="o">=</span> <span class="s">&#39;completed&#39;</span>
+<span class="n">STATUS_CODE_FAILED</span> <span class="o">=</span> <span class="s">&#39;failed&#39;</span>
+<span class="n">STATUS_CODE_CANCELED</span> <span class="o">=</span> <span class="s">&#39;canceled&#39;</span>
+
+
+<div class="viewcode-block" id="JobModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.job.html#oppia.core.storage.job.gae_models.JobModel">[docs]</a><span class="k">class</span> <span class="nc">JobModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a datastore entity for a long-running job.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JobModel.get_new_id"><a class="viewcode-back" href="../../../../../oppia.core.storage.job.html#oppia.core.storage.job.gae_models.JobModel.get_new_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">entity_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Overwrites superclass method.&quot;&quot;&quot;</span>
+        <span class="n">job_type</span> <span class="o">=</span> <span class="n">entity_name</span>
+        <span class="n">current_time_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()))</span>
+        <span class="n">random_int</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">job_type</span><span class="p">,</span> <span class="n">current_time_str</span><span class="p">,</span> <span class="n">random_int</span><span class="p">)</span>
+
+    <span class="c"># The job type.</span></div>
+    <span class="n">job_type</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The time at which the job was queued, in milliseconds since the epoch.</span>
+    <span class="n">time_queued_msec</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">FloatProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The time at which the job was started, in milliseconds since the epoch.</span>
+    <span class="c"># This is never set if the job was canceled before it was started.</span>
+    <span class="n">time_started_msec</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">FloatProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The time at which the job was completed, failed or canceled, in</span>
+    <span class="c"># milliseconds since the epoch.</span>
+    <span class="n">time_finished_msec</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">FloatProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The current status code for the job.</span>
+    <span class="n">status_code</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span>
+        <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">STATUS_CODE_NEW</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">STATUS_CODE_NEW</span><span class="p">,</span> <span class="n">STATUS_CODE_QUEUED</span><span class="p">,</span> <span class="n">STATUS_CODE_STARTED</span><span class="p">,</span>
+            <span class="n">STATUS_CODE_COMPLETED</span><span class="p">,</span> <span class="n">STATUS_CODE_FAILED</span><span class="p">,</span> <span class="n">STATUS_CODE_CANCELED</span>
+        <span class="p">])</span>
+    <span class="c"># Any metadata for the job, such as the root pipeline id for mapreduce</span>
+    <span class="c"># jobs.</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># The output of the job. This is only populated if the job has status code</span>
+    <span class="c"># STATUS_CODE_COMPLETED, and is None otherwise.</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">JsonProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># The error message, if applicable. Only populated if the job has status</span>
+    <span class="c"># code STATUS_CODE_FAILED or STATUS_CODE_CANCELED; None otherwise.</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">TextProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c"># Whether the datastore models associated with this job have been cleaned</span>
+    <span class="c"># up (i.e., deleted).</span>
+    <span class="n">has_been_cleaned_up</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">BooleanProperty</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_cancelable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Whether the job is currently in &#39;queued&#39; or &#39;started&#39; status.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status_code</span> <span class="ow">in</span> <span class="p">[</span><span class="n">STATUS_CODE_QUEUED</span><span class="p">,</span> <span class="n">STATUS_CODE_STARTED</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JobModel.get_recent_jobs"><a class="viewcode-back" href="../../../../../oppia.core.storage.job.html#oppia.core.storage.job.gae_models.JobModel.get_recent_jobs">[docs]</a>    <span class="k">def</span> <span class="nf">get_recent_jobs</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">recency_msec</span><span class="p">):</span>
+        <span class="n">earliest_time_msec</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">get_current_time_in_millisecs</span><span class="p">()</span> <span class="o">-</span> <span class="n">recency_msec</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">query</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">time_queued_msec</span> <span class="o">&gt;</span> <span class="n">earliest_time_msec</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="o">-</span><span class="n">cls</span><span class="o">.</span><span class="n">time_queued_msec</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JobModel.get_all_unfinished_jobs"><a class="viewcode-back" href="../../../../../oppia.core.storage.job.html#oppia.core.storage.job.gae_models.JobModel.get_all_unfinished_jobs">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_unfinished_jobs</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">limit</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">query</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">JobModel</span><span class="o">.</span><span class="n">status_code</span><span class="o">.</span><span class="n">IN</span><span class="p">([</span><span class="n">STATUS_CODE_QUEUED</span><span class="p">,</span> <span class="n">STATUS_CODE_STARTED</span><span class="p">])</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="o">-</span><span class="n">cls</span><span class="o">.</span><span class="n">time_queued_msec</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JobModel.get_unfinished_jobs"><a class="viewcode-back" href="../../../../../oppia.core.storage.job.html#oppia.core.storage.job.gae_models.JobModel.get_unfinished_jobs">[docs]</a>    <span class="k">def</span> <span class="nf">get_unfinished_jobs</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_type</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">query</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">job_type</span> <span class="o">==</span> <span class="n">job_type</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">JobModel</span><span class="o">.</span><span class="n">status_code</span><span class="o">.</span><span class="n">IN</span><span class="p">([</span><span class="n">STATUS_CODE_QUEUED</span><span class="p">,</span> <span class="n">STATUS_CODE_STARTED</span><span class="p">]))</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JobModel.do_unfinished_jobs_exist"><a class="viewcode-back" href="../../../../../oppia.core.storage.job.html#oppia.core.storage.job.gae_models.JobModel.do_unfinished_jobs_exist">[docs]</a>    <span class="k">def</span> <span class="nf">do_unfinished_jobs_exist</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">job_type</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">get_unfinished_jobs</span><span class="p">(</span><span class="n">job_type</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">limit</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+
+
+<span class="c"># Allowed transitions: idle --&gt; running --&gt; stopping --&gt; idle.</span></div></div>
+<span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_IDLE</span> <span class="o">=</span> <span class="s">&#39;idle&#39;</span>
+<span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_RUNNING</span> <span class="o">=</span> <span class="s">&#39;running&#39;</span>
+<span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_STOPPING</span> <span class="o">=</span> <span class="s">&#39;stopping&#39;</span>
+
+
+<div class="viewcode-block" id="ContinuousComputationModel"><a class="viewcode-back" href="../../../../../oppia.core.storage.job.html#oppia.core.storage.job.gae_models.ContinuousComputationModel">[docs]</a><span class="k">class</span> <span class="nc">ContinuousComputationModel</span><span class="p">(</span><span class="n">base_models</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a continuous computation.</span>
+
+<span class="sd">    The id of each instance of this model is the name of the continuous</span>
+<span class="sd">    computation manager class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># The current status code for the computation.</span>
+    <span class="n">status_code</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">StringProperty</span><span class="p">(</span>
+        <span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_IDLE</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_IDLE</span><span class="p">,</span>
+            <span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_RUNNING</span><span class="p">,</span>
+            <span class="n">CONTINUOUS_COMPUTATION_STATUS_CODE_STOPPING</span>
+        <span class="p">])</span>
+    <span class="c"># The realtime layer that is currently &#39;active&#39; (i.e., the one that is</span>
+    <span class="c"># going to be cleared immediately after the current batch job run</span>
+    <span class="c"># completes).</span>
+    <span class="n">active_realtime_layer_index</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">IntegerProperty</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+    <span class="c"># The time at which a batch job for this computation was last kicked off,</span>
+    <span class="c"># in milliseconds since the epoch.</span>
+    <span class="n">last_started_msec</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">FloatProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The time at which a batch job for this computation was last completed or</span>
+    <span class="c"># failed, in milliseconds since the epoch.</span>
+    <span class="n">last_finished_msec</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">FloatProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># The time at which a halt signal was last sent to this batch job, in</span>
+    <span class="c"># milliseconds since the epoch.</span>
+    <span class="n">last_stopped_msec</span> <span class="o">=</span> <span class="n">ndb</span><span class="o">.</span><span class="n">FloatProperty</span><span class="p">(</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

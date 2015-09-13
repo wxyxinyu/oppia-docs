@@ -1,0 +1,435 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>oppia.core.platform.search.gae_search_services &mdash; Oppia rc4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     'rc4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Oppia rc4 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for oppia.core.platform.search.gae_search_services</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+<span class="c">#</span>
+<span class="c"># Copyright 2014 The Oppia Authors. All Rights Reserved.</span>
+<span class="c">#</span>
+<span class="c"># Licensed under the Apache License, Version 2.0 (the &#39;License&#39;);</span>
+<span class="c"># you may not use this file except in compliance with the License.</span>
+<span class="c"># You may obtain a copy of the License at</span>
+<span class="c">#</span>
+<span class="c">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c">#</span>
+<span class="c"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c"># distributed under the License is distributed on an &#39;AS-IS&#39; BASIS,</span>
+<span class="c"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c"># See the License for the specific language governing permissions and</span>
+<span class="c"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Provides search services.&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Frederik Creemers&#39;</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numbers</span>
+
+<span class="kn">import</span> <span class="nn">feconf</span>
+
+<span class="kn">from</span> <span class="nn">google.appengine.api</span> <span class="kn">import</span> <span class="n">search</span> <span class="k">as</span> <span class="n">gae_search</span>
+
+<span class="n">DEFAULT_NUM_RETRIES</span> <span class="o">=</span> <span class="mi">3</span>
+
+
+<div class="viewcode-block" id="SearchFailureError"><a class="viewcode-back" href="../../../../../oppia.core.platform.search.html#oppia.core.platform.search.gae_search_services.SearchFailureError">[docs]</a><span class="k">class</span> <span class="nc">SearchFailureError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This error is raised when a search operation fails.</span>
+<span class="sd">       The original_exception will point to what went wrong inside the gae sdk.</span>
+<span class="sd">       Other platform implementations should have a similar way of revealing</span>
+<span class="sd">       platform specific errors.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">original_exception</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SearchFailureError</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+            <span class="s">&#39;</span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">original_exception</span><span class="p">),</span> <span class="n">original_exception</span><span class="o">.</span><span class="n">message</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">original_exception</span> <span class="o">=</span> <span class="n">original_exception</span>
+
+</div>
+<div class="viewcode-block" id="add_documents_to_index"><a class="viewcode-back" href="../../../../../oppia.core.platform.search.html#oppia.core.platform.search.gae_search_services.add_documents_to_index">[docs]</a><span class="k">def</span> <span class="nf">add_documents_to_index</span><span class="p">(</span><span class="n">documents</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="n">DEFAULT_NUM_RETRIES</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds a document to an index.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      - documents: a list of documents. Each document should be a dictionary.</span>
+<span class="sd">          Every key in the document is a field name, and the corresponding</span>
+<span class="sd">          value will be the field&#39;s value.</span>
+<span class="sd">          If there is a key named &#39;id&#39;, its value will be used as the</span>
+<span class="sd">          document&#39;s id.</span>
+<span class="sd">          If there is a key named &#39;rank&#39;, its value will be used as</span>
+<span class="sd">          the document&#39;s rank.</span>
+<span class="sd">          By default, search results are returned ordered by descending rank.</span>
+<span class="sd">          If there is a key named &#39;language_code&#39;, its value will be used as</span>
+<span class="sd">          the document&#39;s language. Otherwise, feconf.DEFAULT_LANGUAGE_CODE is</span>
+<span class="sd">          used.</span>
+<span class="sd">      - index: the name of the index to insert the document into, a string.</span>
+<span class="sd">      - retries: the number of times to retry inserting the documents.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      returns a list of document ids of the documents that were added.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      - SearchFailureError: raised when the indexing fails. If it fails for any</span>
+<span class="sd">        document, none will be inserted.</span>
+<span class="sd">      - ValueError: raised when invalid values are given.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s">&#39;Index must be the unicode/str name of an index, got </span><span class="si">%s</span><span class="s">&#39;</span>
+            <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">gae_docs</span> <span class="o">=</span> <span class="p">[</span><span class="n">_dict_to_search_document</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">documents</span><span class="p">]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;adding the following docs to index </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
+                      <span class="n">index</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">documents</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">gae_docs</span><span class="p">,</span> <span class="n">deadline</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">PutError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s">&#39;PutError raised.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">retries</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">OperationResult</span><span class="o">.</span><span class="n">TRANSIENT_ERROR</span><span class="p">:</span>
+                    <span class="n">new_retries</span> <span class="o">=</span> <span class="n">retries</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%d</span><span class="s"> tries left, retrying.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">new_retries</span><span class="p">))</span>
+                    <span class="k">return</span> <span class="n">add_documents_to_index</span><span class="p">(</span>
+                        <span class="n">documents</span><span class="o">=</span><span class="n">documents</span><span class="p">,</span>
+                        <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="n">retries</span><span class="o">=</span><span class="n">new_retries</span><span class="p">)</span>
+
+        <span class="c"># At this pint, either we don&#39;t have any tries left, or none of the</span>
+        <span class="c"># results has a transient error code.</span>
+        <span class="k">raise</span> <span class="n">SearchFailureError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_dict_to_search_document</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;document should be a dictionary, got </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+
+    <span class="n">doc_id</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">)</span>
+
+    <span class="n">rank</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;rank&#39;</span><span class="p">)</span>
+
+    <span class="n">language_code</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;language_code&#39;</span><span class="p">)</span>
+
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&#39;rank&#39;</span><span class="p">]:</span>
+            <span class="n">fields</span> <span class="o">+=</span> <span class="n">_make_fields</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="n">doc</span> <span class="o">=</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">Document</span><span class="p">(</span>
+        <span class="n">doc_id</span><span class="o">=</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="n">fields</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="n">language_code</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">doc</span>
+
+
+<span class="k">def</span> <span class="nf">_make_fields</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">_validate_list</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">_make_fields</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">v</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">gae_search</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Number</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">gae_search</span><span class="o">.</span><span class="n">NumberField</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">gae_search</span><span class="o">.</span><span class="n">DateField</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)]</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="s">&#39;Value for document field </span><span class="si">%s</span><span class="s"> should be a (unicode) string, numeric &#39;</span>
+        <span class="s">&#39;type, datetime.date, datetime.datetime or list of such types, got </span><span class="si">%s</span><span class="s">&#39;</span>
+        <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span>
+
+
+<span class="k">def</span> <span class="nf">_validate_list</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Validates a list to be included as document fields. The key is just</span>
+<span class="sd">    passed in to make better error messages.&quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)):</span>
+        <span class="n">element</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Number</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&#39;All values of a multi-valued field must be numbers, strings, &#39;</span>
+                <span class="s">&#39;date or datetime instances, The </span><span class="si">%d</span><span class="s">th value for field </span><span class="si">%s</span><span class="s"> has&#39;</span>
+                <span class="s">&#39; type </span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">element</span><span class="p">)))</span>
+
+
+<div class="viewcode-block" id="delete_documents_from_index"><a class="viewcode-back" href="../../../../../oppia.core.platform.search.html#oppia.core.platform.search.gae_search_services.delete_documents_from_index">[docs]</a><span class="k">def</span> <span class="nf">delete_documents_from_index</span><span class="p">(</span>
+        <span class="n">doc_ids</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="n">DEFAULT_NUM_RETRIES</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Deletes documents from an index.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      - doc_ids: a list of document ids of documents to be deleted from the</span>
+<span class="sd">          index.</span>
+<span class="sd">      - index: the name of the index to delete the document from, a string.</span>
+<span class="sd">      - retries: the number of times to retry deleting the documents.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      - SearchFailureError: raised when the deletion fails. If it fails for any</span>
+<span class="sd">        document, none will be deleted.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s">&#39;Index must be the unicode/str name of an index, got </span><span class="si">%s</span><span class="s">&#39;</span>
+            <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">doc_ids</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doc_ids</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;all doc_ids must be string, got </span><span class="si">%s</span><span class="s"> at index </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span>
+                             <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">doc_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">i</span><span class="p">))</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Attempting to delete documents from index </span><span class="si">%s</span><span class="s">, ids: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                      <span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">doc_ids</span><span class="p">)))</span>
+        <span class="n">index</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">doc_ids</span><span class="p">,</span> <span class="n">deadline</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">DeleteError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s">&#39;Something went wrong during deletion.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">retries</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">OperationResult</span><span class="o">.</span><span class="n">TRANSIENT_ERROR</span><span class="p">:</span>
+                    <span class="n">new_retries</span> <span class="o">=</span> <span class="n">retries</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%d</span><span class="s"> tries left, retrying.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">new_retries</span><span class="p">))</span>
+                    <span class="n">delete_documents_from_index</span><span class="p">(</span>
+                        <span class="n">doc_ids</span><span class="o">=</span><span class="n">doc_ids</span><span class="p">,</span>
+                        <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="n">retries</span><span class="o">=</span><span class="n">new_retries</span><span class="p">)</span>
+                    <span class="k">return</span>
+
+        <span class="k">raise</span> <span class="n">SearchFailureError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="clear_index"><a class="viewcode-back" href="../../../../../oppia.core.platform.search.html#oppia.core.platform.search.gae_search_services.clear_index">[docs]</a><span class="k">def</span> <span class="nf">clear_index</span><span class="p">(</span><span class="n">index_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Clears an index completely.</span>
+
+<span class="sd">    WARNING: This does all the clearing in-request, and may therefore fail if</span>
+<span class="sd">    there are too many entries in the index.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      - index: the name of the index to delete the document from, a string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">index_name</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">doc_ids</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">document</span><span class="o">.</span><span class="n">doc_id</span> <span class="k">for</span> <span class="n">document</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">get_range</span><span class="p">(</span><span class="n">ids_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">doc_ids</span><span class="p">:</span>
+            <span class="k">break</span>
+
+        <span class="n">index</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">doc_ids</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="search"><a class="viewcode-back" href="../../../../../oppia.core.platform.search.html#oppia.core.platform.search.gae_search_services.search">[docs]</a><span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">query_string</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">cursor</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">feconf</span><span class="o">.</span><span class="n">GALLERY_PAGE_SIZE</span><span class="p">,</span>
+           <span class="n">sort</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">ids_only</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="n">DEFAULT_NUM_RETRIES</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Searches for documents in an index.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      - query_string: the search query.</span>
+<span class="sd">          The syntax used is described here:</span>
+<span class="sd">          https://developers.google.com/appengine/docs/python/search/query_strings</span>
+<span class="sd">      - index: the name of the index to search.</span>
+<span class="sd">      - cursor: a cursor string, as returned by this function. Pass this in to</span>
+<span class="sd">          get the next &#39;page&#39; of results. Leave as None to start at the</span>
+<span class="sd">          beginning.</span>
+<span class="sd">      - sort: a string indicating how to sort results. This should be a string</span>
+<span class="sd">          of space separated values. Each value should start with a &#39;+&#39; or a</span>
+<span class="sd">          &#39;-&#39; character indicating whether to sort in ascending or descending</span>
+<span class="sd">          order respectively. This character should be followed by a field name</span>
+<span class="sd">          to sort on.</span>
+<span class="sd">      - limit: the maximum number of documents to return.</span>
+<span class="sd">      - ids_only: whether to only return document ids.</span>
+<span class="sd">      - retries: the number of times to retry searching the index.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      returns a tuple with two elements:</span>
+<span class="sd">        - a list of dictionaries representing search documents. If ids_only is</span>
+<span class="sd">          True, this will be a list of strings, doc_ids.</span>
+<span class="sd">        - a cursor that you can pass back in to get the next page of results.</span>
+<span class="sd">          This wil be a web safe string that you can use in urls.</span>
+<span class="sd">          It will be None if there is no next page.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sort_options</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">cursor</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">gae_cursor</span> <span class="o">=</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">Cursor</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">gae_cursor</span> <span class="o">=</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">Cursor</span><span class="p">(</span><span class="n">web_safe_string</span><span class="o">=</span><span class="n">cursor</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sort</span><span class="p">:</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">_string_to_sort_expressions</span><span class="p">(</span><span class="n">sort</span><span class="p">)</span>
+        <span class="n">sort_options</span> <span class="o">=</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">SortOptions</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">QueryOptions</span><span class="p">(</span>
+        <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">,</span>
+        <span class="n">cursor</span><span class="o">=</span><span class="n">gae_cursor</span><span class="p">,</span>
+        <span class="n">ids_only</span><span class="o">=</span><span class="n">ids_only</span><span class="p">,</span>
+        <span class="n">sort_options</span><span class="o">=</span><span class="n">sort_options</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">Query</span><span class="p">(</span><span class="n">query_string</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">QueryError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c"># This can happen for query strings like &quot;NOT&quot; or a string that</span>
+        <span class="c"># contains backslashes.</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s">&#39;Could not parse query string </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">query_string</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="bp">None</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;attempting a search with query </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">query</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">TransientError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s">&#39;something went wrong while searching.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">retries</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%d</span><span class="s"> attempts left, retrying...&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">retries</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">search</span><span class="p">(</span>
+                <span class="n">query_string</span><span class="p">,</span>
+                <span class="n">index</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">cursor</span><span class="o">=</span><span class="n">cursor</span><span class="p">,</span>
+                <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">,</span>
+                <span class="n">sort</span><span class="o">=</span><span class="n">sort</span><span class="p">,</span>
+                <span class="n">ids_only</span><span class="o">=</span><span class="n">ids_only</span><span class="p">,</span>
+                <span class="n">retries</span><span class="o">=</span><span class="n">retries</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SearchFailureError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="n">result_cursor_str</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">cursor</span><span class="p">:</span>
+        <span class="n">result_cursor_str</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">web_safe_string</span>
+
+    <span class="k">if</span> <span class="n">ids_only</span><span class="p">:</span>
+        <span class="n">result_docs</span> <span class="o">=</span> <span class="p">[</span><span class="n">doc</span><span class="o">.</span><span class="n">doc_id</span> <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">results</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result_docs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">_search_document_to_dict</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span> <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">results</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">result_docs</span><span class="p">,</span> <span class="n">result_cursor_str</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_string_to_sort_expressions</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">sort_expressions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">s_tokens</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">expression</span> <span class="ow">in</span> <span class="n">s_tokens</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">expression</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;+&#39;</span><span class="p">):</span>
+            <span class="n">direction</span> <span class="o">=</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">SortExpression</span><span class="o">.</span><span class="n">ASCENDING</span>
+        <span class="k">elif</span> <span class="n">expression</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">):</span>
+            <span class="n">direction</span> <span class="o">=</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">SortExpression</span><span class="o">.</span><span class="n">DESCENDING</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&#39;Fields in the sort expression must start with &quot;+&quot;&#39;</span>
+                <span class="s">&#39; or &quot;-&quot; to indicate sort direction.&#39;</span>
+                <span class="s">&#39; The field </span><span class="si">%s</span><span class="s"> has no such indicator&#39;</span>
+                <span class="s">&#39; in expression &quot;</span><span class="si">%s</span><span class="s">&quot;.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+        <span class="n">sort_expressions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gae_search</span><span class="o">.</span><span class="n">SortExpression</span><span class="p">(</span><span class="n">expression</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                                                          <span class="n">direction</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">sort_expressions</span>
+
+
+<div class="viewcode-block" id="get_document_from_index"><a class="viewcode-back" href="../../../../../oppia.core.platform.search.html#oppia.core.platform.search.gae_search_services.get_document_from_index">[docs]</a><span class="k">def</span> <span class="nf">get_document_from_index</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a document with a give doc_id(s) from the index.</span>
+
+<span class="sd">    args:</span>
+<span class="sd">      - doc_id: a doc_id as a string</span>
+<span class="sd">      - index: the name of an index, a string.</span>
+
+<span class="sd">    returns</span>
+<span class="sd">      - the requested document as a dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">gae_search</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_search_document_to_dict</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">doc_id</span><span class="p">))</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_search_document_to_dict</span><span class="p">(</span><span class="n">doc</span><span class="p">):</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">doc</span><span class="o">.</span><span class="n">doc_id</span><span class="p">,</span> <span class="s">&#39;language_code&#39;</span><span class="p">:</span> <span class="n">doc</span><span class="o">.</span><span class="n">language</span><span class="p">,</span> <span class="s">&#39;rank&#39;</span><span class="p">:</span> <span class="n">doc</span><span class="o">.</span><span class="n">rank</span><span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="k">return</span> <span class="n">d</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, The Oppia Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
